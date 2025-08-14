@@ -252,6 +252,7 @@
             <select id="tickModeSelect">
                 <option value="15min">15-min ticks (285 total)</option>
                 <option value="hourly">Hourly ticks (72 total)</option>
+                <option value="wrap">Wrap mode (72 ticks, 4 laps)</option>
             </select>
         </div>
         
@@ -928,6 +929,8 @@
             renderPhaseB() {
                 if (this.debugSettings.tickMode === 'hourly') {
                     this.renderPhaseBHourly();
+                } else if (this.debugSettings.tickMode === 'wrap') {
+                    this.renderPhaseBWrap();
                 } else {
                     this.renderPhaseB15Min();
                 }
@@ -947,6 +950,36 @@
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     
                     this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, false, 0);
+                }
+            }
+            
+            renderPhaseBWrap() {
+                const totalTicks = 72; // 72 ticks around the circle
+                const minutesInPhaseB = this.totalMinutes - 60;
+                
+                // Calculate how many 15-minute increments we have (each click)
+                const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
+                
+                // Each full lap is 72 increments (18 hours worth)
+                const currentLap = Math.floor(incrementsCompleted / 72);
+                const ticksInCurrentLap = incrementsCompleted % 72;
+                
+                // Current tick is the position in the current lap
+                const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
+                
+                for (let i = 0; i < totalTicks; i++) {
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
+                    
+                    // A tick is filled if:
+                    // 1. We've completed full laps (currentLap > 0) OR
+                    // 2. We're in the current lap and past this tick position
+                    const isFilled = currentLap > 0 || i < ticksInCurrentLap;
+                    const isCurrent = i === currentTickIndex && currentLap < 4; // Don't show current if we're at max
+                    
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
+                    
+                    // Use different visual indicator for multiple laps
+                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier);
                 }
             }
             
@@ -1155,6 +1188,100 @@
                 }
                 
                 return activeMultiplier;
+            }
+            
+            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0) {
+                // Base tick dimensions
+                const baseLength = 15;
+                const actualLength = baseLength * lengthMultiplier;
+                
+                let innerRadius, outerRadius;
+                const lineWidth = 3;
+                
+                // Calculate positions based on alignment
+                switch (this.debugSettings.alignment) {
+                    case 'inward':
+                        innerRadius = this.radius - 5 - actualLength;
+                        outerRadius = this.radius - 5;
+                        break;
+                    case 'outward':
+                        innerRadius = this.radius - 20;
+                        outerRadius = this.radius - 20 + actualLength;
+                        break;
+                    case 'center':
+                        const centerPoint = this.radius - 12.5;
+                        const halfLength = actualLength / 2;
+                        innerRadius = centerPoint - halfLength;
+                        outerRadius = centerPoint + halfLength;
+                        break;
+                }
+                
+                // Calculate positions
+                const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                const y2 = this.centerY + Math.sin(angle) * outerRadius;
+                
+                // Use standard coloring system
+                let strokeColor;
+                
+                if (this.debugSettings.gradientColorMode) {
+                    // Gradient color mode: current = red, others fade from white to gray based on distance
+                    if (isFilled) {
+                        if (isCurrent) {
+                            strokeColor = '#ff0000'; // Current tick is red
+                        } else {
+                            // Calculate distance from current tick for gradient
+                            const totalTicks = 72;
+                            const minutesInPhaseB = this.totalMinutes - 60;
+                            const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
+                            const ticksInCurrentLap = incrementsCompleted % 72;
+                            const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
+                            
+                            if (currentTickIndex >= 0) {
+                                // Find the tick index for this specific tick
+                                const angleStep = 360 / totalTicks;
+                                const tickIndex = Math.round((angle * 180 / Math.PI + 90) / angleStep) % totalTicks;
+                                
+                                let distance = Math.abs(tickIndex - currentTickIndex);
+                                const wrapDistance = totalTicks - distance;
+                                distance = Math.min(distance, wrapDistance);
+                                
+                                // Calculate gradient: closer = whiter, farther = grayer
+                                const maxDistance = Math.floor(totalTicks / 4); // Use quarter circle as max
+                                const normalizedDistance = Math.min(distance / maxDistance, 1);
+                                
+                                // Interpolate from white (255) to gray (120)
+                                const grayValue = Math.floor(255 - (255 - 120) * normalizedDistance);
+                                strokeColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+                            } else {
+                                strokeColor = '#ffffff'; // Default to white if calculation fails
+                            }
+                        }
+                    } else {
+                        strokeColor = '#444444'; // Unfilled ticks remain gray
+                    }
+                } else {
+                    // Standard color mode
+                    if (isFilled) {
+                        strokeColor = '#ff0000'; // Filled ticks are red
+                    } else {
+                        strokeColor = '#444444'; // Unfilled ticks are gray
+                    }
+                }
+                
+                // Draw the tick
+                this.ctx.save();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+                
+                this.ctx.restore();
             }
             
             drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0, isNext = false, progress = 0) {
