@@ -337,14 +337,14 @@
                 
                 // Debug settings
                 this.debugSettings = {
-                    scalingEnabled: true,
+                    scalingEnabled: false,
                     gradientColorMode: true,
                     currentLength: 3.0,
                     adjacentFalloff: 25, // Percentage falloff from current
                     radiusPercent: 10,
                     alignment: 'center',
                     curve: 'easeIn',
-                    tickMode: '15min',
+                    tickMode: 'wrap',
                     autoReset: true,
                     resetDelay: 0.5,
                     gapAngle: 20, // Gap angle in degrees
@@ -962,30 +962,26 @@
             renderPhaseBWrap() {
                 const totalTicks = 72; // 72 ticks around the circle
                 const minutesInPhaseB = this.totalMinutes - 60;
-                
-                // Calculate how many 15-minute increments we have (each click)
                 const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
-                
-                // Each full lap is 72 increments (18 hours worth)
                 const currentLap = Math.floor(incrementsCompleted / 72);
                 const ticksInCurrentLap = incrementsCompleted % 72;
-                
-                // Current tick is the position in the current lap
                 const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
-                
+
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
-                    
-                    // A tick is filled if:
-                    // 1. We've completed full laps (currentLap > 0) OR
-                    // 2. We're in the current lap and past this tick position
-                    const isFilled = currentLap > 0 || i < ticksInCurrentLap;
-                    const isCurrent = i === currentTickIndex && currentLap < 4; // Don't show current if we're at max
-                    
+                    // Only ticks in current lap are colored, previous laps are gray until passed again
+                    let isFilled = false;
+                    if (currentLap === 0) {
+                        isFilled = i < ticksInCurrentLap;
+                    } else {
+                        isFilled = i < ticksInCurrentLap;
+                    }
+                    // If tick is in a previous lap, it should be gray
+                    let lapOfTick = (i < ticksInCurrentLap) ? currentLap : currentLap - 1;
+                    let showAsGray = lapOfTick < currentLap;
+                    const isCurrent = i === currentTickIndex && currentLap < 4;
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
-                    
-                    // Use different visual indicator for multiple laps
-                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier);
+                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray);
                 }
             }
             
@@ -1196,7 +1192,7 @@
                 return activeMultiplier;
             }
             
-            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0) {
+            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0, showAsGray = false) {
                 // Base tick dimensions
                 const baseLength = 15;
                 const actualLength = baseLength * lengthMultiplier;
@@ -1231,7 +1227,9 @@
                 // Use standard coloring system
                 let strokeColor;
                 
-                if (this.debugSettings.gradientColorMode) {
+                if (showAsGray) {
+                    strokeColor = '#444444';
+                } else if (this.debugSettings.gradientColorMode) {
                     // Gradient color mode: current = red, others fade from white to gray based on distance
                     if (isFilled) {
                         if (isCurrent) {
@@ -1243,36 +1241,28 @@
                             const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
                             const ticksInCurrentLap = incrementsCompleted % 72;
                             const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
-                            
                             if (currentTickIndex >= 0) {
-                                // Find the tick index for this specific tick
                                 const angleStep = 360 / totalTicks;
                                 const tickIndex = Math.round((angle * 180 / Math.PI + 90) / angleStep) % totalTicks;
-                                
                                 let distance = Math.abs(tickIndex - currentTickIndex);
                                 const wrapDistance = totalTicks - distance;
                                 distance = Math.min(distance, wrapDistance);
-                                
-                                // Calculate gradient: closer = whiter, farther = grayer
-                                const maxDistance = Math.floor(totalTicks / 4); // Use quarter circle as max
+                                const maxDistance = Math.floor(totalTicks / 4);
                                 const normalizedDistance = Math.min(distance / maxDistance, 1);
-                                
-                                // Interpolate from white (255) to gray (120)
                                 const grayValue = Math.floor(255 - (255 - 120) * normalizedDistance);
                                 strokeColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
                             } else {
-                                strokeColor = '#ffffff'; // Default to white if calculation fails
+                                strokeColor = '#ffffff';
                             }
                         }
                     } else {
-                        strokeColor = '#444444'; // Unfilled ticks remain gray
+                        strokeColor = '#444444';
                     }
                 } else {
-                    // Standard color mode
                     if (isFilled) {
-                        strokeColor = '#ff0000'; // Filled ticks are red
+                        strokeColor = '#ff0000';
                     } else {
-                        strokeColor = '#444444'; // Unfilled ticks are gray
+                        strokeColor = '#444444';
                     }
                 }
                 
