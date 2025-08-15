@@ -119,6 +119,40 @@
             display: none;
         }
         
+        .completion-buttons {
+            position: absolute;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .completion-btn {
+            background: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'JaffleNeue', Arial, sans-serif;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 300ms ease;
+            min-width: 120px;
+        }
+        
+        .completion-btn.active {
+            background: #555;
+            border-color: #777;
+            color: #fff;
+        }
+        
+        .completion-btn:hover {
+            background: #444;
+        }
+        
         .debug-panel {
             position: absolute;
             top: 20px;
@@ -217,6 +251,10 @@
             </div>
             <div class="time-display-main" id="timeDisplayMain">10:00</div>
             <div class="mode-label" id="modeLabel">MIN - SEC</div>
+        </div>
+        <div class="completion-buttons" id="completionButtons">
+            <button class="completion-btn active" id="bitMoreBtn">A bit more</button>
+            <button class="completion-btn" id="keepWarmBtn">Keep warm</button>
         </div>
     </div>
     
@@ -331,6 +369,9 @@
                 this.timeDisplayMain = document.getElementById('timeDisplayMain');
                 this.modeLabel = document.getElementById('modeLabel');
                 this.cookingStatus = document.getElementById('cookingStatus');
+                this.completionButtons = document.getElementById('completionButtons');
+                this.bitMoreBtn = document.getElementById('bitMoreBtn');
+                this.keepWarmBtn = document.getElementById('keepWarmBtn');
                 
                 this.totalMinutes = 10; // Start with 10 minutes
                 this.maxMinutes = 72 * 60;
@@ -368,6 +409,10 @@
                 this.preheatPhase = false;
                 this.preheatFlashState = true;
                 
+                // Completion state properties
+                this.cookingComplete = false;
+                this.selectedButton = 0; // 0 = "A bit more", 1 = "Keep warm"
+                
                 // Debug settings
                 this.debugSettings = {
                     scalingEnabled: false,
@@ -394,9 +439,17 @@
                 document.addEventListener('keydown', (e) => {
                     const key = e.key.toLowerCase();
                     if (key === 'p') {
-                        this.increaseValue();
+                        if (this.cookingComplete) {
+                            this.navigateButtons(1); // Next button
+                        } else {
+                            this.increaseValue();
+                        }
                     } else if (key === 'o') {
-                        this.decreaseValue();
+                        if (this.cookingComplete) {
+                            this.navigateButtons(-1); // Previous button
+                        } else {
+                            this.decreaseValue();
+                        }
                     } else if (key === 'r') {
                         this.restart();
                     } else if (key === 'q') {
@@ -640,7 +693,9 @@
                 this.ctx.fillStyle = 'black';
                 this.ctx.fillRect(0, 0, 400, 400);
                 
-                if (this.ringFillAnimation) {
+                if (this.cookingComplete) {
+                    this.renderCompletionMode();
+                } else if (this.ringFillAnimation) {
                     this.renderRingFillAnimation();
                 } else if (this.countdownMode) {
                     this.renderCountdownMode();
@@ -657,7 +712,9 @@
                 }
                 
                 // Update display
-                if (this.ringFillAnimation) {
+                if (this.cookingComplete) {
+                    this.updateCompletionDisplay();
+                } else if (this.ringFillAnimation) {
                     this.updateStartingDisplay();
                 } else if (this.countdownMode) {
                     this.updateCountdownDisplay();
@@ -667,8 +724,9 @@
             }
             
             updateSetupDisplay() {
-                // Hide cooking status during setup
+                // Hide cooking status and completion buttons during setup
                 this.cookingStatus.style.display = 'none';
+                this.completionButtons.style.display = 'none';
                 
                 // Determine label text based on phase
                 const labelText = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
@@ -695,6 +753,8 @@
             }
             
             updateStartingDisplay() {
+                // Hide completion buttons during starting
+                this.completionButtons.style.display = 'none';
                 // Show cooking status during starting animation
                 this.cookingStatus.style.display = 'block';
                 this.cookingStatus.style.opacity = 1.0;
@@ -712,6 +772,8 @@
             }
             
             updateCountdownDisplay() {
+                // Hide completion buttons during cooking
+                this.completionButtons.style.display = 'none';
                 // Show cooking status above circle
                 this.cookingStatus.style.display = 'block';
                 
@@ -1115,7 +1177,53 @@
                 this.preheatPhase = false;
                 this.preheatFlashState = true;
                 
+                // Reset completion state
+                this.cookingComplete = false;
+                this.selectedButton = 0;
+                
                 this.render();
+            }
+            
+            navigateButtons(direction) {
+                this.selectedButton = (this.selectedButton + direction + 2) % 2; // Keep in range 0-1
+                this.updateButtonSelection();
+            }
+            
+            updateButtonSelection() {
+                this.bitMoreBtn.classList.toggle('active', this.selectedButton === 0);
+                this.keepWarmBtn.classList.toggle('active', this.selectedButton === 1);
+            }
+            
+            renderCompletionMode() {
+                // Draw a full green circle
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = '#2BB671';
+                this.ctx.lineWidth = 20;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+            }
+            
+            updateCompletionDisplay() {
+                // Hide cooking status
+                this.cookingStatus.style.display = 'none';
+                
+                // Show completion buttons
+                this.completionButtons.style.display = 'flex';
+                
+                // Update display content
+                this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                this.tempDisplay.className = 'temp-display inactive';
+                this.timeDisplayMain.textContent = '00:00';
+                this.timeDisplayMain.className = 'time-display-main active';
+                
+                // Change label to "Enjoy"
+                this.modeLabel.textContent = 'Enjoy';
+                this.modeLabel.style.color = '#2BB671';
+                this.modeLabel.style.opacity = 1.0;
+                
+                // Update button selection
+                this.updateButtonSelection();
             }
             
             increaseTime() {
@@ -1205,6 +1313,7 @@
                     if (remaining <= 0) {
                         // Countdown finished
                         this.countdownMode = false;
+                        this.cookingComplete = true;
                         this.totalMinutes = 0;
                     }
                 }
