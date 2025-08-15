@@ -55,6 +55,10 @@
         
         .temp-display {
             font-size: 1.8em;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 2px;
         }
         
         .time-display-main {
@@ -90,6 +94,29 @@
             margin: 12px 0 0 0;
             color: #ccc;
             transition: opacity 300ms ease;
+        }
+        
+        .temp-unit {
+            font-size: 24px;
+            font-family: 'JaffleNeue', Arial, sans-serif;
+            padding-top: 3%;
+            transition: padding-top 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .temp-display.inactive .temp-unit {
+            padding-top: 0.5%;
+        }
+        
+        .cooking-status {
+            position: absolute;
+            top: -75px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2em;
+            color: #ccc;
+            text-align: center;
+            font-family: 'JaffleNeue', Arial, sans-serif;
+            display: none;
         }
         
         .debug-panel {
@@ -181,11 +208,15 @@
 </head>
 <body>
     <div class="container">
+        <div class="cooking-status" id="cookingStatus"></div>
         <canvas id="dial" width="400" height="400"></canvas>
         <div class="center-display">
-            <div class="temp-display" id="tempDisplay">400°F</div>
+            <div class="temp-display" id="tempDisplay">
+                <div class="temp-number">400</div>
+                <div class="temp-unit">°F</div>
+            </div>
             <div class="time-display-main" id="timeDisplayMain">10:00</div>
-            <div class="mode-label" id="modeLabel">TEMP → TIME</div>
+            <div class="mode-label" id="modeLabel">MIN - SEC</div>
         </div>
     </div>
     
@@ -195,8 +226,17 @@
         <h3>Debug Controls</h3>
         
         <div class="debug-control">
-            <label>Enable Tick Scaling:</label>
-            <select id="enableScalingSelect">
+            <label>Phase B Tick Mode:</label>
+            <select id="tickModeSelect">
+                <option value="wrap">Wrap mode (72 ticks, 4 laps)</option>
+                <option value="15min">15-min ticks (285 total)</option>
+                <option value="hourly">Hourly ticks (72 total)</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Enable Preheat:</label>
+            <select id="preheatSelect">
                 <option value="true">Enabled</option>
                 <option value="false">Disabled</option>
             </select>
@@ -207,6 +247,20 @@
             <select id="gradientColorSelect">
                 <option value="true">White-to-Gray Gradient</option>
                 <option value="false">Standard Colors</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Ring Gap (degrees):</label>
+            <input type="range" id="gapAngle" min="0" max="30" step="1" value="20">
+            <div class="debug-value" id="gapAngleValue">20°</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Enable Tick Scaling:</label>
+            <select id="enableScalingSelect">
+                <option value="false">Disabled</option>
+                <option value="true">Enabled</option>
             </select>
         </div>
         
@@ -243,6 +297,15 @@
         </div>
         
         <div class="debug-control scaling-control">
+            <label>Tick Alignment:</label>
+            <select id="alignmentSelect">
+                <option value="center">Centered</option>
+                <option value="inward">Inward</option>
+                <option value="outward">Outward</option>
+            </select>
+        </div>
+        
+        <div class="debug-control scaling-control">
             <label>Falloff Curve:</label>
             <select id="curveSelect">
                 <option value="easeIn">Ease In</option>
@@ -253,37 +316,6 @@
             </select>
         </div>
         
-        <div class="debug-control">
-            <label>Phase B Tick Mode:</label>
-            <select id="tickModeSelect">
-                <option value="15min">15-min ticks (285 total)</option>
-                <option value="hourly">Hourly ticks (72 total)</option>
-                <option value="wrap">Wrap mode (72 ticks, 4 laps)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Tick Alignment:</label>
-            <select id="alignmentSelect">
-                <option value="center">Centered</option>
-                <option value="inward">Inward</option>
-                <option value="outward">Outward</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Ring Gap (degrees):</label>
-            <input type="range" id="gapAngle" min="0" max="30" step="1" value="20">
-            <div class="debug-value" id="gapAngleValue">20°</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Enable Preheat:</label>
-            <select id="preheatSelect">
-                <option value="true">Enabled</option>
-                <option value="false">Disabled</option>
-            </select>
-        </div>
     </div>
     
     <div class="instructions">
@@ -298,6 +330,7 @@
                 this.tempDisplay = document.getElementById('tempDisplay');
                 this.timeDisplayMain = document.getElementById('timeDisplayMain');
                 this.modeLabel = document.getElementById('modeLabel');
+                this.cookingStatus = document.getElementById('cookingStatus');
                 
                 this.totalMinutes = 10; // Start with 10 minutes
                 this.maxMinutes = 72 * 60;
@@ -591,9 +624,15 @@
             }
             
             formatTime() {
-                const hours = Math.floor(this.totalMinutes / 60);
-                const minutes = this.totalMinutes % 60;
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                if (this.totalMinutes < 60) {
+                    // Phase A: Show minutes as M:00 (1:00, 2:00, etc.)
+                    return `${this.totalMinutes}:00`;
+                } else {
+                    // Phase B: Show hours and minutes as H:MM
+                    const hours = Math.floor(this.totalMinutes / 60);
+                    const minutes = this.totalMinutes % 60;
+                    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+                }
             }
             
             render() {
@@ -628,56 +667,100 @@
             }
             
             updateSetupDisplay() {
-                // Determine time unit based on phase
-                const timeUnit = this.totalMinutes < 60 ? '/m' : '/h';
+                // Hide cooking status during setup
+                this.cookingStatus.style.display = 'none';
+                
+                // Determine label text based on phase
+                const labelText = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
                 
                 if (this.tempMode) {
                     // Temperature mode: temperature is active, time is inactive
-                    this.tempDisplay.textContent = `${this.temperature}°F`;
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                     this.tempDisplay.className = 'temp-display active';
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main inactive';
-                    this.modeLabel.innerHTML = `TEMP <span style="color: #666;">→</span> TIME${timeUnit}`;
+                    this.modeLabel.textContent = labelText;
+                    this.modeLabel.style.color = '#666';
+                    this.modeLabel.style.opacity = 1.0;
                 } else {
                     // Time mode: time is active, temperature is inactive
-                    this.tempDisplay.textContent = `${this.temperature}°F`;
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                     this.tempDisplay.className = 'temp-display inactive';
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main active';
-                    this.modeLabel.innerHTML = `TEMP <span style="color: #666;">←</span> TIME${timeUnit}`;
+                    this.modeLabel.textContent = labelText;
+                    this.modeLabel.style.color = '#fff';
+                    this.modeLabel.style.opacity = 1.0;
                 }
             }
             
             updateStartingDisplay() {
-                const timeUnit = this.totalMinutes < 60 ? '/m' : '/h';
-                this.tempDisplay.innerHTML = `${this.temperature}<sup>°F</sup>`;
+                // Show cooking status during starting animation
+                this.cookingStatus.style.display = 'block';
+                this.cookingStatus.style.opacity = 1.0;
+                this.cookingStatus.textContent = this.debugSettings.preheatEnabled ? 'Preheating...' : 'Actively cooking';
+                
+                this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                 this.tempDisplay.className = 'temp-display inactive';
                 this.timeDisplayMain.textContent = this.formatTime();
                 this.timeDisplayMain.className = 'time-display-main active';
-                this.modeLabel.textContent = 'Starting...';
+                
+                // Show appropriate time label below
+                this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
+                this.modeLabel.style.color = '#ccc';
+                this.modeLabel.style.opacity = 1.0;
             }
             
             updateCountdownDisplay() {
+                // Show cooking status above circle
+                this.cookingStatus.style.display = 'block';
+                
                 if (this.preheatPhase && this.debugSettings.preheatEnabled) {
                     // During preheat: show temperature and time set
-                    this.tempDisplay.textContent = `${this.temperature}°F`;
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                     this.tempDisplay.className = 'temp-display inactive';
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main active';
                     
-                    // Flash the label between "Preheating..." and ""
+                    // Flash the cooking status above circle
                     const labelOpacity = this.preheatFlashState ? 1.0 : 0.25;
-                    this.modeLabel.style.opacity = labelOpacity;
-                    this.modeLabel.textContent = 'Preheating...';
+                    this.cookingStatus.style.opacity = labelOpacity;
+                    this.cookingStatus.textContent = 'Preheating...';
+                    
+                    // Keep original label below (HR-MIN since we're in phase B during cooking)
+                    this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
+                    this.modeLabel.style.color = '#ccc';
+                    this.modeLabel.style.opacity = 1.0;
                 } else {
                     // During cooking: show countdown with temperature
-                    this.tempDisplay.textContent = `${this.temperature}°F`;
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                     this.tempDisplay.className = 'temp-display inactive';
                     const { minutes, seconds } = this.getCurrentCountdownTime();
-                    this.timeDisplayMain.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // Format time like 1:15 for 1hr 15min, 59:00 for 59min
+                    const totalMinutesLeft = minutes;
+                    const isUnderOneHour = totalMinutesLeft < 60;
+                    
+                    if (isUnderOneHour) {
+                        // Show as MM:SS format for under 1 hour
+                        this.timeDisplayMain.textContent = `${totalMinutesLeft.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        // Show as H:MM format for 1+ hours
+                        const hours = Math.floor(totalMinutesLeft / 60);
+                        const mins = totalMinutesLeft % 60;
+                        this.timeDisplayMain.textContent = `${hours}:${mins.toString().padStart(2, '0')}`;
+                    }
+                    
                     this.timeDisplayMain.className = 'time-display-main active';
+                    
+                    // Show "Actively cooking" above circle
+                    this.cookingStatus.style.opacity = 1.0;
+                    this.cookingStatus.textContent = 'Actively cooking';
+                    
+                    // Show appropriate label below based on time remaining
+                    this.modeLabel.textContent = isUnderOneHour ? 'MIN - SEC' : 'HR - MIN';
+                    this.modeLabel.style.color = '#ccc';
                     this.modeLabel.style.opacity = 1.0;
-                    this.modeLabel.textContent = 'Actively cooking';
                 }
             }
             
@@ -916,12 +999,12 @@
             }
             
             renderPhaseA() {
-                const totalTicks = 60;
-                const filledTicks = this.totalMinutes;
-                const currentTickIndex = filledTicks > 0 ? filledTicks - 1 : -1;
+                const totalTicks = 59; // 59 ticks for minutes 1-59
+                const filledTicks = Math.max(1, Math.min(this.totalMinutes, 59)); // Always at least 1 tick filled
+                const currentTickIndex = filledTicks - 1;
                 
                 for (let i = 0; i < totalTicks; i++) {
-                    const angle = (i * 6 - 90) * Math.PI / 180; // 6 degrees per tick
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
                     const isFilled = i < filledTicks;
                     const isCurrent = i === currentTickIndex;
                     
@@ -945,8 +1028,8 @@
             renderPhaseB15Min() {
                 const totalTicks = 285; // 71 hours * 4 + 1 for 1:00
                 const minutesInPhaseB = this.totalMinutes - 60;
-                const ticksInPhaseB = Math.floor(minutesInPhaseB / 15) + 1; // +1 for 1:00 tick
-                const currentTickIndex = ticksInPhaseB > 0 ? ticksInPhaseB - 1 : -1;
+                const ticksInPhaseB = Math.max(1, Math.floor(minutesInPhaseB / 15) + 1); // +1 for 1:00 tick, always at least 1
+                const currentTickIndex = ticksInPhaseB - 1;
                 
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
@@ -962,24 +1045,21 @@
             renderPhaseBWrap() {
                 const totalTicks = 72; // 72 ticks around the circle
                 const minutesInPhaseB = this.totalMinutes - 60;
-                const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
-                const currentLap = Math.floor(incrementsCompleted / 72);
-                const ticksInCurrentLap = incrementsCompleted % 72;
-                const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
+                // Each increment is 15 minutes
+                // At 60 min (1:00), we want the first tick filled
+                // At 75 min (1:15), we want the second tick filled, etc.
+                const incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 tick at 1:00
+                const currentLap = Math.floor((incrementsCompleted - 1) / 72); // Adjust for the +1
+                const ticksInCurrentLap = ((incrementsCompleted - 1) % 72) + 1; // Always 1-72
+                const currentTickIndex = ticksInCurrentLap - 1;
 
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
-                    // Only ticks in current lap are colored, previous laps are gray until passed again
-                    let isFilled = false;
-                    if (currentLap === 0) {
-                        isFilled = i < ticksInCurrentLap;
-                    } else {
-                        isFilled = i < ticksInCurrentLap;
-                    }
-                    // If tick is in a previous lap, it should be gray
-                    let lapOfTick = (i < ticksInCurrentLap) ? currentLap : currentLap - 1;
-                    let showAsGray = lapOfTick < currentLap;
-                    const isCurrent = i === currentTickIndex && currentLap < 4;
+                    // Show filled ticks for current lap progress
+                    const isFilled = i < ticksInCurrentLap;
+                    // Show gray for completed laps
+                    const showAsGray = currentLap > 0 && i >= ticksInCurrentLap;
+                    const isCurrent = i === currentTickIndex;
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray);
                 }
@@ -988,8 +1068,8 @@
             renderPhaseBHourly() {
                 const totalTicks = 72; // One tick per hour
                 const minutesInPhaseB = this.totalMinutes - 60;
-                const hoursCompleted = Math.floor(minutesInPhaseB / 60) + 1; // +1 for the 1:00 hour
-                const currentTickIndex = hoursCompleted > 0 ? hoursCompleted - 1 : -1;
+                const hoursCompleted = Math.max(1, Math.floor(minutesInPhaseB / 60) + 1); // +1 for the 1:00 hour, always at least 1
+                const currentTickIndex = hoursCompleted - 1;
                 
                 // Calculate progress within current hour for next tick animation
                 const minutesInCurrentHour = minutesInPhaseB % 60;
@@ -1008,8 +1088,33 @@
             }
             
             restart() {
-                this.totalMinutes = 0;
+                // Reset all values to initial defaults
+                this.totalMinutes = 10; // Start with 10 minutes
+                this.temperature = 400; // Start with 400°F
+                this.tempMode = true; // Start in temperature mode
+                
+                // Reset timer and scaling properties
+                this.lastActionTime = Date.now();
+                this.scalingActive = false;
+                
+                // Reset animation properties
+                this.animationStartTime = null;
+                this.animatingToState = null;
+                this.animationProgress = null;
+                this.previousMultipliers = new Map();
+                
+                // Reset ring fill animation properties
+                this.ringFillAnimation = false;
+                this.ringFillStartTime = null;
+                
+                // Reset countdown mode properties
                 this.countdownMode = false;
+                this.countdownStartTime = null;
+                this.countdownDuration = 0;
+                this.colonBlinkState = true;
+                this.preheatPhase = false;
+                this.preheatFlashState = true;
+                
                 this.render();
             }
             
