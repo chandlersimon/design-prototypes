@@ -11,6 +11,40 @@
             font-weight: normal;
             font-style: normal;
         }
+        
+        :root {
+            /* Color Variables */
+            --text-primary: #fff;
+            --text-tertiary: #979797;
+            --accent: #FA4947;
+            
+            /* Text Variables */
+            --number-5xl-lv2: 84px;
+            --number-5xl-lv2-line-height: 0.8;
+            --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
+            --number-5xl-lv2-weight: 600;
+            --number-5xl-lv2-spacing: 0;
+            
+            --number-2xl-lv2: 43px;
+            --number-2xl-lv2-line-height: 0.8;
+            --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
+            --number-2xl-lv2-weight: 600;
+            --number-2xl-lv2-spacing: 0;
+            
+            --label-sm-lv2: 18px;
+            --label-sm-lv2-line-height: 23px;
+            --label-sm-lv2-font: 'Inter', sans-serif;
+            --label-sm-lv2-weight: 500;
+            --label-sm-lv2-spacing: 0.08em;
+            --label-sm-lv2-features: "ss01" 1, "ss02" 1;
+            
+            --label-xs-lv2: 14px;
+            --label-xs-lv2-line-height: 18px;
+            --label-xs-lv2-font: 'Inter', sans-serif;
+            --label-xs-lv2-weight: 500;
+            --label-xs-lv2-spacing: 0.08em;
+            --label-xs-lv2-features: "ss01" 1, "ss02" 1;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -26,8 +60,8 @@
         
         .container {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 320px;
+            height: 320px;
         }
         
         canvas {
@@ -48,7 +82,6 @@
             transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1), 
                        color 300ms ease,
                        opacity 300ms ease;
-            margin: 8px 0;
             font-weight: bold;
             line-height: 0.8;
         }
@@ -59,46 +92,96 @@
             align-items: flex-start;
             justify-content: center;
             gap: 2px;
+            margin: 34px 0 4px 0;
         }
         
         .time-display-main {
             font-size: 3.2em;
+            margin: 0;
         }
         
         .temp-display.active {
-            font-size: 5.5em;
-            color: white;
+            font-size: var(--number-5xl-lv2);
+            line-height: var(--number-5xl-lv2-line-height);
+            font-family: var(--number-5xl-lv2-font);
+            font-weight: var(--number-5xl-lv2-weight);
+            letter-spacing: var(--number-5xl-lv2-spacing);
+            color: var(--text-primary);
             opacity: 1;
         }
         
         .temp-display.inactive {
-            font-size: 3em;
-            color: #666;
-            opacity: 0.7;
+            font-size: var(--number-2xl-lv2);
+            line-height: var(--number-2xl-lv2-line-height);
+            font-family: var(--number-2xl-lv2-font);
+            font-weight: var(--number-2xl-lv2-weight);
+            letter-spacing: var(--number-2xl-lv2-spacing);
+            color: var(--text-tertiary);
+            opacity: 1;
         }
         
         .time-display-main.active {
-            font-size: 5.5em;
-            color: white;
+            font-size: var(--number-5xl-lv2);
+            line-height: var(--number-5xl-lv2-line-height);
+            font-family: var(--number-5xl-lv2-font);
+            font-weight: var(--number-5xl-lv2-weight);
+            letter-spacing: var(--number-5xl-lv2-spacing);
+            color: var(--text-primary);
             opacity: 1;
         }
         
         .time-display-main.inactive {
-            font-size: 3em;
-            color: #666;
-            opacity: 0.7;
+            font-size: var(--number-2xl-lv2);
+            line-height: var(--number-2xl-lv2-line-height);
+            font-family: var(--number-2xl-lv2-font);
+            font-weight: var(--number-2xl-lv2-weight);
+            letter-spacing: var(--number-2xl-lv2-spacing);
+            color: var(--text-tertiary);
+            opacity: 1;
         }
         
         .mode-label {
-            font-size: 1.2em;
-            margin: 12px 0 0 0;
-            color: #ccc;
+            font-size: var(--label-sm-lv2);
+            line-height: var(--label-sm-lv2-line-height);
+            font-family: var(--label-sm-lv2-font);
+            font-weight: var(--label-sm-lv2-weight);
+            font-feature-settings: var(--label-sm-lv2-features);
+            letter-spacing: var(--label-sm-lv2-spacing);
+            margin: 0;
+            color: var(--text-tertiary);
+            transition: opacity 300ms ease;
+        }
+        
+        .rack-icon {
+            margin: 2px 0 0 0;
+            display: flex;
+            justify-content: center;
+            transition: opacity 300ms ease;
+        }
+        
+        .rack-icon svg {
+            width: 33px;
+            height: 34px;
+        }
+        
+        .rack-label {
+            font-size: var(--label-xs-lv2);
+            line-height: var(--label-xs-lv2-line-height);
+            font-family: var(--label-xs-lv2-font);
+            font-weight: var(--label-xs-lv2-weight);
+            font-feature-settings: var(--label-xs-lv2-features);
+            letter-spacing: var(--label-xs-lv2-spacing);
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
             transition: opacity 300ms ease;
         }
         
         .temp-unit {
             font-size: 24px;
-            font-family: 'JaffleNeue', Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-feature-settings: "ss01" 1, "ss02" 1;
+            letter-spacing: 0.08em;
             padding-top: 3%;
             transition: padding-top 400ms cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -112,10 +195,14 @@
             top: -75px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 1.2em;
+            font-size: var(--label-sm-lv2);
+            line-height: var(--label-sm-lv2-line-height);
+            font-family: var(--label-sm-lv2-font);
+            font-weight: var(--label-sm-lv2-weight);
+            font-feature-settings: var(--label-sm-lv2-features);
+            letter-spacing: var(--label-sm-lv2-spacing);
             color: #ccc;
             text-align: center;
-            font-family: 'JaffleNeue', Arial, sans-serif;
             display: none;
         }
         
@@ -243,14 +330,21 @@
 <body>
     <div class="container">
         <div class="cooking-status" id="cookingStatus"></div>
-        <canvas id="dial" width="400" height="400"></canvas>
+        <canvas id="dial" width="320" height="320"></canvas>
         <div class="center-display">
             <div class="temp-display" id="tempDisplay">
+                <div class="temp-unit" style="opacity: 0;">°F</div>
                 <div class="temp-number">400</div>
                 <div class="temp-unit">°F</div>
             </div>
             <div class="time-display-main" id="timeDisplayMain">10:00</div>
             <div class="mode-label" id="modeLabel">MIN - SEC</div>
+            <div class="rack-icon" id="rackIcon">
+                <svg width="33" height="34" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.3672 10.293H20.4316C19.916 10.0352 19.2715 9.77734 18.2402 9.77734C15.9199 9.77734 14.2441 11.3887 13.9863 13.7734C14.6953 12.8066 15.8555 12.291 17.209 12.291C19.6582 12.291 21.3984 13.9668 21.3984 16.5449C21.3984 19.123 19.3359 20.8633 16.6934 20.8633C13.5352 20.8633 11.7305 18.2207 11.7305 15.0625C11.7305 10.5508 14.502 7.7793 18.3691 7.7793C19.5293 7.7793 20.4961 8.03711 21.0762 8.42383L20.3672 10.293ZM16.6934 18.8652C17.9824 18.8652 19.0781 18.0273 19.0781 16.5449C19.0781 15.127 17.9824 14.2246 16.6934 14.2246C15.3398 14.2246 14.2441 15.127 14.2441 16.5449C14.2441 17.9629 15.4043 18.8652 16.6934 18.8652ZM5.47852 22.6035H8.37891C8.83008 22.6035 9.28125 22.9902 9.3457 23.4414L9.92578 26.084H23.0742L23.6543 23.4414C23.7188 22.9902 24.1699 22.6035 24.6211 22.6035H27.5215C28.1016 22.6035 28.5527 23.1191 28.5527 23.6348C28.5527 24.2148 28.1016 24.666 27.5215 24.666H25.459L24.9434 27.3086C24.8145 27.7598 24.4277 28.1465 23.9121 28.1465H9.08789C8.57227 28.1465 8.18555 27.7598 8.05664 27.3086L7.54102 24.666H5.47852C4.96289 24.666 4.44727 24.2148 4.44727 23.6348C4.44727 23.1191 4.96289 22.6035 5.47852 22.6035Z" fill="var(--text-primary)"/>
+                </svg>
+            </div>
+            <div class="rack-label" id="rackLabel">RACK</div>
         </div>
         <div class="completion-buttons" id="completionButtons">
             <button class="completion-btn active" id="bitMoreBtn">A bit more</button>
@@ -382,9 +476,9 @@
                 
                 this.tempMode = true; // Start in temperature mode
                 
-                this.centerX = 200;
-                this.centerY = 200;
-                this.radius = 150;
+                this.centerX = 160;
+                this.centerY = 160;
+                this.radius = 136;
                 
                 // Timer for scaling reset
                 this.lastActionTime = Date.now();
@@ -691,7 +785,7 @@
             render() {
                 // Clear canvas
                 this.ctx.fillStyle = 'black';
-                this.ctx.fillRect(0, 0, 400, 400);
+                this.ctx.fillRect(0, 0, 320, 320);
                 
                 if (this.cookingComplete) {
                     this.renderCompletionMode();
@@ -738,7 +832,7 @@
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main inactive';
                     this.modeLabel.textContent = labelText;
-                    this.modeLabel.style.color = '#666';
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
                     this.modeLabel.style.opacity = 1.0;
                 } else {
                     // Time mode: time is active, temperature is inactive
@@ -747,7 +841,7 @@
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main active';
                     this.modeLabel.textContent = labelText;
-                    this.modeLabel.style.color = '#fff';
+                    this.modeLabel.style.color = 'var(--text-primary)';
                     this.modeLabel.style.opacity = 1.0;
                 }
             }
@@ -767,7 +861,7 @@
                 
                 // Show appropriate time label below
                 this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
-                this.modeLabel.style.color = '#ccc';
+                this.modeLabel.style.color = 'var(--text-tertiary)';
                 this.modeLabel.style.opacity = 1.0;
             }
             
@@ -791,7 +885,7 @@
                     
                     // Keep original label below (HR-MIN since we're in phase B during cooking)
                     this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
-                    this.modeLabel.style.color = '#ccc';
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
                     this.modeLabel.style.opacity = 1.0;
                 } else {
                     // During cooking: show countdown with temperature
@@ -821,7 +915,7 @@
                     
                     // Show appropriate label below based on time remaining
                     this.modeLabel.textContent = isUnderOneHour ? 'MIN - SEC' : 'HR - MIN';
-                    this.modeLabel.style.color = '#ccc';
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
                     this.modeLabel.style.opacity = 1.0;
                 }
             }
@@ -896,7 +990,7 @@
                             const fillEndAngle = preheatStartAngle - currentFillAngle;
                             this.ctx.beginPath();
                             this.ctx.arc(this.centerX, this.centerY, this.radius, fillEndAngle, preheatStartAngle);
-                            this.ctx.strokeStyle = '#fa4847';
+                            this.ctx.strokeStyle = '#FA4947';
                             this.ctx.lineWidth = 20;
                             this.ctx.lineCap = 'round';
                             this.ctx.stroke();
@@ -904,7 +998,7 @@
                             // Preheat full, filling cooking segment
                             this.ctx.beginPath();
                             this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
-                            this.ctx.strokeStyle = '#fa4847';
+                            this.ctx.strokeStyle = '#FA4947';
                             this.ctx.lineWidth = 20;
                             this.ctx.lineCap = 'round';
                             this.ctx.stroke();
@@ -913,7 +1007,7 @@
                             const cookingFillEndAngle = cookingStartAngle - cookingFillAngle;
                             this.ctx.beginPath();
                             this.ctx.arc(this.centerX, this.centerY, this.radius, cookingFillEndAngle, cookingStartAngle);
-                            this.ctx.strokeStyle = '#fa4847';
+                            this.ctx.strokeStyle = '#FA4947';
                             this.ctx.lineWidth = 20;
                             this.ctx.lineCap = 'round';
                             this.ctx.stroke();
@@ -937,7 +1031,7 @@
                         
                         this.ctx.beginPath();
                         this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, fillEndAngle);
-                        this.ctx.strokeStyle = '#fa4847';
+                        this.ctx.strokeStyle = '#FA4947';
                         this.ctx.lineWidth = 20;
                         this.ctx.lineCap = 'round';
                         this.ctx.stroke();
@@ -1000,7 +1094,7 @@
                             const currentPreheatStartAngle = preheatEndAngle + remainingPreheatAngle;
                             this.ctx.beginPath();
                             this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, currentPreheatStartAngle);
-                            this.ctx.strokeStyle = '#fa4847';
+                            this.ctx.strokeStyle = '#FA4947';
                             this.ctx.lineWidth = 20;
                             this.ctx.lineCap = 'round';
                             this.ctx.stroke();
@@ -1009,7 +1103,7 @@
                         // Keep cooking segment full during preheat
                         this.ctx.beginPath();
                         this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
-                        this.ctx.strokeStyle = '#fa4847';
+                        this.ctx.strokeStyle = '#FA4947';
                         this.ctx.lineWidth = 20;
                         this.ctx.lineCap = 'round';
                         this.ctx.stroke();
@@ -1023,7 +1117,7 @@
                             const currentCookingStartAngle = cookingEndAngle + remainingCookingAngle;
                             this.ctx.beginPath();
                             this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, currentCookingStartAngle);
-                            this.ctx.strokeStyle = '#fa4847';
+                            this.ctx.strokeStyle = '#FA4947';
                             this.ctx.lineWidth = 20;
                             this.ctx.lineCap = 'round';
                             this.ctx.stroke();
@@ -1052,7 +1146,7 @@
                         
                         this.ctx.beginPath();
                         this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, progressEndAngle);
-                        this.ctx.strokeStyle = '#fa4847';
+                        this.ctx.strokeStyle = '#FA4947';
                         this.ctx.lineWidth = 20;
                         this.ctx.lineCap = 'round';
                         this.ctx.stroke();
@@ -1447,7 +1541,7 @@
                     // Gradient color mode: current = red, others fade from white to gray based on distance
                     if (isFilled) {
                         if (isCurrent) {
-                            strokeColor = '#ff0000'; // Current tick is red
+                            strokeColor = '#FA4947'; // Current tick is red
                         } else {
                             // Calculate distance from current tick for gradient
                             const totalTicks = 72;
@@ -1474,7 +1568,7 @@
                     }
                 } else {
                     if (isFilled) {
-                        strokeColor = '#ff0000';
+                        strokeColor = '#FA4947';
                     } else {
                         strokeColor = '#444444';
                     }
@@ -1543,7 +1637,7 @@
                     // Gradient color mode: current = red, others fade from white to gray based on distance
                     if (isFilled) {
                         if (isCurrent) {
-                            strokeColor = '#ff0000'; // Current tick is red
+                            strokeColor = '#FA4947'; // Current tick is red
                         } else {
                             // Calculate distance from current tick for gradient
                             const totalTicks = this.totalMinutes < 60 ? 60 : (this.debugSettings.tickMode === 'hourly' ? 72 : 285);
@@ -1596,7 +1690,7 @@
                 } else {
                     // Standard color mode
                     if (isFilled) {
-                        strokeColor = '#ff0000'; // Filled ticks are red
+                        strokeColor = '#FA4947'; // Filled ticks are red
                     } else if (isNext && isPhaseB && this.debugSettings.tickMode === 'hourly') {
                         // Next tick in hourly mode cycles through opacity based on progress
                         // Starts grey, then progressively becomes red
