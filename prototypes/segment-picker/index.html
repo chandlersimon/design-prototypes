@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slice & Darkness Prototype</title>
+    <style>
+        :root {
+            --selected-red: #FA4947;
+            --unselected-gray: #3D3D3D;
+            --minimized-gray: #B6B6B6;
+            --background-dark: #1a1a1a;
+            --text-tertiary: #979797;
+            --text-primary: #fff;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-sm-lv2 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+            font-size: 18px;
+            line-height: 23px;
+            letter-spacing: 0;
+        }
+
+        .text-base-lv3 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: bold;
+            font-size: 22px;
+            line-height: 28px;
+            letter-spacing: 0;
+        }
+
+        .container {
+            width: 272px;
+        }
+
+        .component {
+            margin-bottom: 60px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: var(--text-tertiary);
+        }
+
+        .count {
+            color: var(--text-primary);
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .minimized .title,
+        .minimized .count {
+            color: var(--text-tertiary);
+        }
+
+        .boxes {
+            display: flex;
+            gap: 2px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .box {
+            flex: 1;
+            height: 51px;
+            border-radius: 3px;
+            background-color: var(--unselected-gray);
+            transition: background-color 0.3s ease, height 0.3s ease;
+        }
+
+        .minimized .box {
+            height: 13px;
+        }
+
+        .box.selected {
+            background-color: var(--selected-red);
+        }
+
+        .darkness .box.selected:nth-child(1) { background-color: #FF8A88; }
+        .darkness .box.selected:nth-child(2) { background-color: #FF7573; }
+        .darkness .box.selected:nth-child(3) { background-color: #FF605E; }
+        .darkness .box.selected:nth-child(4) { background-color: #FA4947; }
+        .darkness .box.selected:nth-child(5) { background-color: #E53E3C; }
+        .darkness .box.selected:nth-child(6) { background-color: #D03431; }
+        .darkness .box.selected:nth-child(7) { background-color: #BB2926; }
+
+        .minimized.slices .box.selected {
+            background-color: var(--minimized-gray);
+        }
+
+        .minimized.darkness .box.selected:nth-child(1),
+        .minimized.darkness .box.selected:nth-child(2),
+        .minimized.darkness .box.selected:nth-child(3),
+        .minimized.darkness .box.selected:nth-child(4),
+        .minimized.darkness .box.selected:nth-child(5),
+        .minimized.darkness .box.selected:nth-child(6),
+        .minimized.darkness .box.selected:nth-child(7) {
+            background-color: var(--minimized-gray);
+        }
+
+        .active {
+            opacity: 1;
+        }
+
+        .inactive {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <div class="component slices active" id="slicesComponent">
+        <div class="header">
+            <div class="title">Slices</div>
+            <div class="count" id="slicesCount">02</div>
+        </div>
+        <div class="boxes" id="slicesBoxes">
+            <div class="box selected"></div>
+            <div class="box selected"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+        </div>
+    </div>
+
+    <div class="component darkness minimized inactive" id="darknessComponent">
+        <div class="header">
+            <div class="title">Darkness</div>
+            <div class="count" id="darknessCount">03</div>
+        </div>
+        <div class="boxes" id="darknessBoxes">
+            <div class="box selected"></div>
+            <div class="box selected"></div>
+            <div class="box selected"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+        </div>
+    </div>
+
+    <script>
+        class ComponentManager {
+            constructor() {
+                this.activeComponent = 'slices';
+                this.slices = {
+                    selected: 2,
+                    max: 9,
+                    expanded: true
+                };
+                this.darkness = {
+                    selected: 3,
+                    max: 7,
+                    expanded: false
+                };
+                
+                this.init();
+            }
+
+            init() {
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+                this.updateDisplay();
+            }
+
+            handleKeyPress(e) {
+                const key = e.key.toLowerCase();
+                
+                switch(key) {
+                    case 'p':
+                        this.incrementSelection();
+                        break;
+                    case 'o':
+                        this.decrementSelection();
+                        break;
+                    case 'q':
+                        this.switchComponent();
+                        break;
+                }
+            }
+
+            incrementSelection() {
+                const current = this[this.activeComponent];
+                if (current.selected < current.max) {
+                    current.selected++;
+                    this.updateDisplay();
+                }
+            }
+
+            decrementSelection() {
+                const current = this[this.activeComponent];
+                if (current.selected > 1) {
+                    current.selected--;
+                    this.updateDisplay();
+                }
+            }
+
+            switchComponent() {
+                this[this.activeComponent].expanded = false;
+                this.activeComponent = this.activeComponent === 'slices' ? 'darkness' : 'slices';
+                this[this.activeComponent].expanded = true;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.updateComponent('slices');
+                this.updateComponent('darkness');
+            }
+
+            updateComponent(type) {
+                const component = document.getElementById(`${type}Component`);
+                const count = document.getElementById(`${type}Count`);
+                const boxes = document.getElementById(`${type}Boxes`).children;
+                
+                const data = this[type];
+                const isActive = this.activeComponent === type;
+                
+                component.classList.toggle('active', isActive);
+                component.classList.toggle('inactive', !isActive);
+                component.classList.toggle('minimized', !data.expanded);
+                
+                count.textContent = data.selected.toString().padStart(2, '0');
+                
+                for (let i = 0; i < boxes.length; i++) {
+                    boxes[i].classList.toggle('selected', i < data.selected);
+                }
+            }
+        }
+
+        new ComponentManager();
+    </script>
+</body>
+</html>
