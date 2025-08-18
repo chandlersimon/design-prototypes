@@ -9,9 +9,17 @@
             --selected-red: #FA4947;
             --unselected-gray: #3D3D3D;
             --minimized-gray: #B6B6B6;
-            --background-dark: #1a1a1a;
+            --background-dark: #000;
             --text-tertiary: #979797;
             --text-primary: #fff;
+            
+            /* Animation variables */
+            --transition-duration: 250ms;
+            --switch-speed: 250ms;
+            --height-easing: ease;
+            --color-easing: ease;
+            --minimized-height: 13px;
+            --normal-height: 51px;
         }
 
         body {
@@ -47,14 +55,15 @@
         }
 
         .component {
-            margin-bottom: 60px;
+            margin-bottom: 24px;
         }
 
         .header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            gap: 4px;
         }
 
         .title {
@@ -63,8 +72,7 @@
 
         .count {
             color: var(--text-primary);
-            min-width: 80px;
-            text-align: right;
+            text-align: left;
         }
 
         .minimized .title,
@@ -75,20 +83,20 @@
         .boxes {
             display: flex;
             gap: 2px;
-            margin-top: 20px;
             width: 100%;
         }
 
         .box {
             flex: 1;
-            height: 51px;
+            height: var(--normal-height);
             border-radius: 3px;
             background-color: var(--unselected-gray);
-            transition: background-color 0.3s ease, height 0.3s ease;
+            transition: background-color var(--transition-duration) var(--color-easing), 
+                       height var(--transition-duration) var(--height-easing);
         }
 
         .minimized .box {
-            height: 13px;
+            height: var(--minimized-height);
         }
 
         .box.selected {
@@ -124,14 +132,94 @@
         .inactive {
             opacity: 0.6;
         }
+
+        .instructions {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .debug-panel {
+            position: absolute;
+            top: 20px;
+            right: -260px;
+            background: rgba(40, 40, 40, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.8em;
+            width: 220px;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .debug-panel.open {
+            right: 20px;
+        }
+
+        .debug-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            z-index: 1001;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .debug-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+
+        .debug-control {
+            margin: 8px 0;
+        }
+
+        .debug-control label {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.9em;
+        }
+
+        .debug-control input[type="range"] {
+            width: 100%;
+            margin: 2px 0;
+        }
+
+        .debug-control select {
+            width: 100%;
+            padding: 4px;
+            background: #555;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .debug-value {
+            color: #ccc;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
     <div class="component slices active" id="slicesComponent">
         <div class="header">
-            <div class="title">Slices</div>
-            <div class="count" id="slicesCount">02</div>
+            <div class="title text-sm-lv2">Slices</div>
+            <div class="count text-base-lv3" id="slicesCount">02</div>
         </div>
         <div class="boxes" id="slicesBoxes">
             <div class="box selected"></div>
@@ -148,8 +236,8 @@
 
     <div class="component darkness minimized inactive" id="darknessComponent">
         <div class="header">
-            <div class="title">Darkness</div>
-            <div class="count" id="darknessCount">03</div>
+            <div class="title text-sm-lv2">Darkness</div>
+            <div class="count text-base-lv3" id="darknessCount">03</div>
         </div>
         <div class="boxes" id="darknessBoxes">
             <div class="box selected"></div>
@@ -160,6 +248,62 @@
             <div class="box"></div>
             <div class="box"></div>
         </div>
+    </div>
+
+    <button class="debug-toggle" onclick="toggleDebug()" id="debugToggle">Open animation controls</button>
+    
+    <div class="debug-panel" id="debugPanel">
+        <h3>Animation Controls</h3>
+        
+        <div class="debug-control">
+            <label>Box Transition Duration:</label>
+            <input type="range" id="transitionDuration" min="100" max="1000" step="50" value="250">
+            <div class="debug-value" id="transitionDurationValue">250ms</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Component Switch Speed:</label>
+            <input type="range" id="switchSpeed" min="100" max="800" step="50" value="250">
+            <div class="debug-value" id="switchSpeedValue">250ms</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Box Height Animation:</label>
+            <select id="heightEasing">
+                <option value="ease">Ease</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out">Ease Out</option>
+                <option value="ease-in-out">Ease In Out</option>
+                <option value="linear">Linear</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Background Color Animation:</label>
+            <select id="colorEasing">
+                <option value="ease">Ease</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out">Ease Out</option>
+                <option value="ease-in-out">Ease In Out</option>
+                <option value="linear">Linear</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Minimized Box Height:</label>
+            <input type="range" id="minimizedHeight" min="8" max="20" step="1" value="13">
+            <div class="debug-value" id="minimizedHeightValue">13px</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Normal Box Height:</label>
+            <input type="range" id="normalHeight" min="40" max="70" step="1" value="51">
+            <div class="debug-value" id="normalHeightValue">51px</div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        Press <strong>P</strong> to increase • Press <strong>O</strong> to decrease • Press <strong>R</strong> to restart • Press <strong>Q</strong> to switch
     </div>
 
     <script>
@@ -198,6 +342,12 @@
                     case 'q':
                         this.switchComponent();
                         break;
+                    case 'r':
+                        this.restart();
+                        break;
+                    case '1':
+                        this.startProcess();
+                        break;
                 }
             }
 
@@ -229,6 +379,22 @@
                 this.updateComponent('darkness');
             }
 
+            restart() {
+                this.slices.selected = 2;
+                this.darkness.selected = 3;
+                this.activeComponent = 'slices';
+                this.slices.expanded = true;
+                this.darkness.expanded = false;
+                this.updateDisplay();
+            }
+
+            startProcess() {
+                console.log('Starting process with:', {
+                    slices: this.slices.selected,
+                    darkness: this.darkness.selected
+                });
+            }
+
             updateComponent(type) {
                 const component = document.getElementById(`${type}Component`);
                 const count = document.getElementById(`${type}Count`);
@@ -249,7 +415,69 @@
             }
         }
 
-        new ComponentManager();
+        const manager = new ComponentManager();
+
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            const toggleBtn = document.getElementById('debugToggle');
+            
+            panel.classList.toggle('open');
+            toggleBtn.textContent = panel.classList.contains('open') ? 'Close' : 'Open animation controls';
+        }
+
+        function setupDebugControls() {
+            const root = document.documentElement;
+            
+            // Transition Duration
+            const transitionDuration = document.getElementById('transitionDuration');
+            const transitionDurationValue = document.getElementById('transitionDurationValue');
+            transitionDuration.addEventListener('input', (e) => {
+                const value = e.target.value + 'ms';
+                transitionDurationValue.textContent = value;
+                root.style.setProperty('--transition-duration', value);
+            });
+            
+            // Switch Speed
+            const switchSpeed = document.getElementById('switchSpeed');
+            const switchSpeedValue = document.getElementById('switchSpeedValue');
+            switchSpeed.addEventListener('input', (e) => {
+                const value = e.target.value + 'ms';
+                switchSpeedValue.textContent = value;
+                root.style.setProperty('--switch-speed', value);
+            });
+            
+            // Height Easing
+            const heightEasing = document.getElementById('heightEasing');
+            heightEasing.addEventListener('change', (e) => {
+                root.style.setProperty('--height-easing', e.target.value);
+            });
+            
+            // Color Easing
+            const colorEasing = document.getElementById('colorEasing');
+            colorEasing.addEventListener('change', (e) => {
+                root.style.setProperty('--color-easing', e.target.value);
+            });
+            
+            // Minimized Height
+            const minimizedHeight = document.getElementById('minimizedHeight');
+            const minimizedHeightValue = document.getElementById('minimizedHeightValue');
+            minimizedHeight.addEventListener('input', (e) => {
+                const value = e.target.value + 'px';
+                minimizedHeightValue.textContent = value;
+                root.style.setProperty('--minimized-height', value);
+            });
+            
+            // Normal Height
+            const normalHeight = document.getElementById('normalHeight');
+            const normalHeightValue = document.getElementById('normalHeightValue');
+            normalHeight.addEventListener('input', (e) => {
+                const value = e.target.value + 'px';
+                normalHeightValue.textContent = value;
+                root.style.setProperty('--normal-height', value);
+            });
+        }
+
+        setupDebugControls();
     </script>
 </body>
 </html>
