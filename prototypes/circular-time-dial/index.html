@@ -448,6 +448,14 @@
             </select>
         </div>
         
+        <div class="debug-control">
+            <label>Temperature Tick Count:</label>
+            <select id="tempTickCountSelect">
+                <option value="36">36 ticks (5°F steps)</option>
+                <option value="72" selected>72 ticks (2.5°F steps)</option>
+            </select>
+        </div>
+        
     </div>
     
     <div class="instructions">
@@ -520,7 +528,8 @@
                     autoReset: true,
                     resetDelay: 0.5,
                     gapAngle: 20, // Gap angle in degrees
-                    preheatEnabled: true
+                    preheatEnabled: true,
+                    tempTickCount: 72 // Number of temperature ticks
                 };
                 
                 this.setupEventListeners();
@@ -649,6 +658,13 @@
                     resetDelayValue.textContent = `${this.debugSettings.resetDelay}s`;
                 });
                 
+                // Temperature Tick Count Control
+                const tempTickCountSelect = document.getElementById('tempTickCountSelect');
+                tempTickCountSelect.addEventListener('change', (e) => {
+                    this.debugSettings.tempTickCount = parseInt(e.target.value);
+                    this.render();
+                });
+                
                 // Initialize scaling controls visibility
                 this.toggleScalingControls();
             }
@@ -676,6 +692,7 @@
                     }
                     this.scalingActive = true;
                     
+                    // Always increment by 5°F regardless of tick count
                     this.temperature = Math.min(this.temperature + 5, this.maxTemp);
                 } else {
                     this.increaseTime();
@@ -695,6 +712,7 @@
                     }
                     this.scalingActive = true;
                     
+                    // Always decrement by 5°F regardless of tick count
                     this.temperature = Math.max(this.temperature - 5, this.minTemp);
                 } else {
                     this.decreaseTime();
@@ -921,10 +939,11 @@
             }
             
             renderTemperatureMode() {
-                // Calculate temperature progress and current tick
+                // Calculate temperature progress and current tick based on configurable tick count
                 const tempRange = this.maxTemp - this.minTemp; // 180 degrees
-                const totalTempTicks = (tempRange / 5) + 1; // 37 ticks (300-480 in 5° increments, plus one more)
-                const currentTempTick = (this.temperature - this.minTemp) / 5; // 0-35
+                const totalTempTicks = this.debugSettings.tempTickCount + 1; // Add 1 for endpoint
+                const tempIncrement = tempRange / this.debugSettings.tempTickCount; // Calculate dynamic increment
+                const currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement); // Round to nearest tick
                 const filledTempTicks = currentTempTick + 1; // Include current tick in filled count
                 
                 for (let i = 0; i < totalTempTicks; i++) {
