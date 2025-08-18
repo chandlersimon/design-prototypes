@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0a0a0a;
             color: #ffffff;
             line-height: 1.6;
@@ -33,10 +33,7 @@
             font-size: 2.5rem;
             font-weight: 300;
             margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #ffffff;
         }
 
         .header p {
@@ -69,8 +66,8 @@
 
         .prototype-preview {
             width: 100%;
-            height: 200px;
-            background: #222;
+            aspect-ratio: 1;
+            background: #000;
             border-radius: 8px;
             margin-bottom: 1rem;
             display: flex;
@@ -78,7 +75,9 @@
             justify-content: center;
             color: #666;
             font-size: 0.9rem;
-            border: 2px dashed #333;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .prototype-info h3 {
@@ -156,10 +155,8 @@
 
         <div class="prototypes-grid" id="prototypesGrid">
             <!-- Circular Time Dial -->
-            <a href="prototypes/circular-time-dial/" class="prototype-card">
-                <div class="prototype-preview">
-                    Preview Image
-                    <br><small>(Add screenshot here)</small>
+            <a href="prototypes/circular-time-dial/" class="prototype-card" target="_blank">
+                <div class="prototype-preview" style="background-image: url('assets/dial.png'); background-size: cover; background-position: center;">
                 </div>
                 <div class="prototype-info">
                     <h3>Circular Time Dial</h3>
@@ -176,10 +173,8 @@
             </a>
 
             <!-- Segment Picker -->
-            <a href="prototypes/segment-picker/" class="prototype-card">
-                <div class="prototype-preview">
-                    Preview Image
-                    <br><small>(Add screenshot here)</small>
+            <a href="prototypes/segment-picker/" class="prototype-card" target="_blank">
+                <div class="prototype-preview" style="background-image: url('assets/segmented.png'); background-size: cover; background-position: center;">
                 </div>
                 <div class="prototype-info">
                     <h3>Segment Picker</h3>
@@ -203,9 +198,6 @@
             </div>
         </div>
 
-        <div class="footer">
-            <p>Built with ❤️ for rapid prototyping • Last updated: <span id="lastUpdated"></span></p>
-        </div>
     </div>
 
     <script>
