@@ -57,6 +57,28 @@
             height: 100vh;
             overflow: hidden;
         }
+
+        .outer-container {
+            width: 400px;
+            height: 600px;
+            background: transparent;
+            border: 1px solid #444;
+            border-top-right-radius: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prototype-container {
+            width: 272px;
+            height: 480px;
+            background: transparent;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
         
         .container {
             position: relative;
@@ -319,19 +341,21 @@
             font-size: 0.8em;
         }
         .instructions {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            font-size: 0.9em;
             color: #888;
+            font-size: 0.9em;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="outer-container">
+        <div class="prototype-container">
+            <div class="container">
         <div class="cooking-status" id="cookingStatus"></div>
         <canvas id="dial" width="320" height="320"></canvas>
         <div class="center-display">
@@ -352,6 +376,8 @@
         <div class="completion-buttons" id="completionButtons">
             <button class="completion-btn active" id="bitMoreBtn">A bit more</button>
             <button class="completion-btn" id="keepWarmBtn">Keep warm</button>
+        </div>
+            </div>
         </div>
     </div>
     
@@ -462,7 +488,7 @@
     </div>
     
     <div class="instructions">
-        Press <strong>P</strong> to increase • Press <strong>O</strong> to decrease • Press <strong>R</strong> to restart • Press <strong>Q</strong> to switch temp/time • Press <strong>1</strong> to start cooking
+        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>1</strong> to start • <strong>R</strong> to restart
     </div>
 
     <script>

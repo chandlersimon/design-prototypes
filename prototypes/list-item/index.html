@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Item Prototype</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .outer-container {
+            width: 400px;
+            height: 600px;
+            background: transparent;
+            border: 1px solid #444;
+            border-top-right-radius: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prototype-container {
+            width: 272px;
+            height: 480px;
+            background: transparent;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            text-align: center;
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <div class="prototype-container">
+            <div class="content">
+                <h2>List Item Prototype</h2>
+                <p>Placeholder content</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+    </div>
+</body>
+</html>
