@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Item Prototype</title>
+    <script src="https://kit.fontawesome.com/8dfe425c81.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 300px);
+            gap: 20px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff69b4;
+            margin-bottom: 8px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            color: #ff69b4;
+            margin: 16px 0 8px 0;
+            text-align: left;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            background: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 6px;
+            font-size: 22px;
+            font-weight: 500;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 28px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .list-item.focused {
+            background: #FFFFFF;
+            color: black;
+            border: 1px solid #333;
+        }
+
+        .list-item.disabled {
+            background: transparent;
+            color: #979797;
+            cursor: not-allowed;
+            border: none;
+        }
+
+        .list-item.reordered {
+            background: #FFFFFF;
+            color: black;
+            border: 1px solid #333;
+            position: relative;
+        }
+
+        .list-item.reordered::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #ff6b6b;
+        }
+
+        .list-item.reordered::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #ff6b6b;
+        }
+
+        .list-item-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .leading-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+
+        .list-item.disabled .leading-icon {
+            color: #979797;
+        }
+
+
+        .trailing-element {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .arrow-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        .lock-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        .list-item.disabled .close-icon,
+        .list-item.disabled .arrow-icon,
+        .list-item.disabled .lock-icon {
+            color: #979797;
+        }
+
+        .list-item.disabled .option-text {
+            color: #979797;
+        }
+
+        .list-item.focused .close-icon,
+        .list-item.focused .arrow-icon,
+        .list-item.focused .lock-icon,
+        .list-item.reordered .close-icon,
+        .list-item.reordered .arrow-icon,
+        .list-item.reordered .lock-icon {
+            color: black;
+        }
+
+        .option-text {
+            color: #888;
+            margin-right: 8px;
+            font-size: 18px;
+            line-height: 23px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+        }
+
+        .toggle {
+            width: 45px;
+            height: 28px;
+            background: #333;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle.active {
+            background: #2BB671;
+        }
+
+        .toggle.disabled {
+            background: #979797;
+            cursor: not-allowed;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(21px);
+        }
+
+        .radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .radio.selected {
+            border-color: #2BB671;
+            background: #2BB671;
+        }
+
+        .radio.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+        }
+
+        .list-item.disabled .radio {
+            border-color: #979797;
+        }
+
+        .list-item.disabled .radio.selected {
+            border-color: #979797;
+            background: #979797;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-grid">
+        <!-- Default Column -->
+        <div class="column">
+            <div class="column-header">Default</div>
+            
+            <div class="section-label">Trailing icon</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Loading + trailing icon</div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Trailing icon (x2)</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="lock-icon"><i class="fa-kit fa-lock"></i></div>
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Selected option</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <span class="option-text">Option #1</span>
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle + leading icon</div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio + leading icon</div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Leading icon</div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+            </div>
+            
+            <div class="section-label">No icon</div>
+            <div class="list-item">
+                <div class="list-item-content">List item</div>
+            </div>
+        </div>
+
+        <!-- Focused Column -->
+        <div class="column">
+            <div class="column-header">Focused</div>
+            
+            <div class="section-label">Trailing icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Loading + trailing icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Trailing icon (x2)</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="lock-icon"><i class="fa-kit fa-lock"></i></div>
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Selected option</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <span class="option-text">Option #1</span>
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle + leading icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio + leading icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Leading icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+            </div>
+            
+            <div class="section-label">No icon</div>
+            <div class="list-item focused">
+                <div class="list-item-content">List item</div>
+            </div>
+        </div>
+
+        <!-- Disabled Column -->
+        <div class="column">
+            <div class="column-header">Disabled</div>
+            
+            <div class="section-label">Trailing icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Loading + trailing icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Trailing icon (x2)</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="lock-icon"><i class="fa-kit fa-lock"></i></div>
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Selected option</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <span class="option-text">Option #1</span>
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="toggle disabled"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle + leading icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="toggle disabled"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio + leading icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Leading icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+            </div>
+            
+            <div class="section-label">No icon</div>
+            <div class="list-item disabled">
+                <div class="list-item-content">List item</div>
+            </div>
+        </div>
+
+        <!-- Reordered Column -->
+        <div class="column">
+            <div class="column-header">Reordered</div>
+            
+            <div class="section-label">Trailing icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Loading + trailing icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Trailing icon (x2)</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="lock-icon"><i class="fa-kit fa-lock"></i></div>
+                    <div class="close-icon"><i class="fa-kit fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Selected option</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <span class="option-text">Option #1</span>
+                    <div class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Toggle + leading icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="toggle active"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Radio + leading icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+                <div class="trailing-element">
+                    <div class="radio selected"></div>
+                </div>
+            </div>
+            
+            <div class="section-label">Leading icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">
+                    <div class="leading-icon"><i class="fa-kit fa-atom-simple"></i></div>
+                    List item
+                </div>
+            </div>
+            
+            <div class="section-label">No icon</div>
+            <div class="list-item reordered">
+                <div class="list-item-content">List item</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for toggles
+            document.querySelectorAll('.toggle:not(.disabled)').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+
+            // Add click handlers for radio buttons
+            document.querySelectorAll('.radio').forEach(radio => {
+                radio.addEventListener('click', function() {
+                    // Find all radio buttons in the same column and deselect them
+                    const column = this.closest('.column');
+                    column.querySelectorAll('.radio').forEach(r => r.classList.remove('selected'));
+                    // Select the clicked one
+                    this.classList.add('selected');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
