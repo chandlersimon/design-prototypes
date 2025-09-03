@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Time Dial</title>
+    <style>
+        @font-face {
+            font-family: 'JaffleNeue';
+            src: url('../../fonts/JaffleNeue-SemiBoldSemiCondensed.otf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        :root {
+            /* Color Variables */
+            --text-primary: #fff;
+            --text-tertiary: #979797;
+            --accent: #FA4947;
+            
+            /* Text Variables */
+            --number-5xl-lv2: 84px;
+            --number-5xl-lv2-line-height: 0.8;
+            --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
+            --number-5xl-lv2-weight: 600;
+            --number-5xl-lv2-spacing: 0;
+            
+            --number-2xl-lv2: 43px;
+            --number-2xl-lv2-line-height: 0.8;
+            --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
+            --number-2xl-lv2-weight: 600;
+            --number-2xl-lv2-spacing: 0;
+            
+            --label-sm-lv2: 18px;
+            --label-sm-lv2-line-height: 23px;
+            --label-sm-lv2-font: 'Inter', sans-serif;
+            --label-sm-lv2-weight: 500;
+            --label-sm-lv2-spacing: 0.08em;
+            --label-sm-lv2-features: "ss01" 1, "ss02" 1;
+            
+            --label-xs-lv2: 14px;
+            --label-xs-lv2-line-height: 18px;
+            --label-xs-lv2-font: 'Inter', sans-serif;
+            --label-xs-lv2-weight: 500;
+            --label-xs-lv2-spacing: 0.08em;
+            --label-xs-lv2-features: "ss01" 1, "ss02" 1;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            color: white;
+            font-family: 'JaffleNeue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .outer-container {
+            width: 720px;
+            height: 360px;
+            background: transparent;
+            border: 1px solid #444;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .prototype-container {
+            width: 272px;
+            height: 480px;
+            background: transparent;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+        
+        .bar-number-label {
+            position: absolute;
+            font-size: 18px;
+            font-family: 'JaffleNeue', Arial, sans-serif;
+            font-weight: 600;
+            color: #444444;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: font-size 200ms ease, color 200ms ease, opacity 200ms ease;
+        }
+        
+        
+        .center-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            width: 340px;
+            height: 340px;
+        }
+        
+        .start-button {
+            pointer-events: auto;
+        }
+        
+        .temp-display, .time-display-main {
+            transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1), 
+                       color 300ms ease,
+                       opacity 300ms ease;
+            font-weight: bold;
+            line-height: 0.8;
+        }
+        
+        .temp-display {
+            font-size: 1.8em;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 2px;
+        }
+        
+        .time-display-main {
+            font-size: 3.2em;
+            margin: 0;
+        }
+        
+        .temp-display.active {
+            font-size: var(--number-5xl-lv2);
+            line-height: var(--number-5xl-lv2-line-height);
+            font-family: var(--number-5xl-lv2-font);
+            font-weight: var(--number-5xl-lv2-weight);
+            letter-spacing: var(--number-5xl-lv2-spacing);
+            color: var(--text-primary);
+            opacity: 1;
+        }
+        
+        .temp-display.inactive {
+            font-size: var(--number-2xl-lv2);
+            line-height: var(--number-2xl-lv2-line-height);
+            font-family: var(--number-2xl-lv2-font);
+            font-weight: var(--number-2xl-lv2-weight);
+            letter-spacing: var(--number-2xl-lv2-spacing);
+            color: var(--text-tertiary);
+            opacity: 1;
+        }
+        
+        .time-display-main.active {
+            font-size: var(--number-5xl-lv2);
+            line-height: var(--number-5xl-lv2-line-height);
+            font-family: var(--number-5xl-lv2-font);
+            font-weight: var(--number-5xl-lv2-weight);
+            letter-spacing: var(--number-5xl-lv2-spacing);
+            color: var(--text-primary);
+            opacity: 1;
+        }
+        
+        .time-display-main.inactive {
+            font-size: var(--number-2xl-lv2);
+            line-height: var(--number-2xl-lv2-line-height);
+            font-family: var(--number-2xl-lv2-font);
+            font-weight: var(--number-2xl-lv2-weight);
+            letter-spacing: var(--number-2xl-lv2-spacing);
+            color: var(--text-tertiary);
+            opacity: 1;
+        }
+        
+        .mode-label {
+            font-size: var(--label-sm-lv2);
+            line-height: var(--label-sm-lv2-line-height);
+            font-family: var(--label-sm-lv2-font);
+            font-weight: var(--label-sm-lv2-weight);
+            font-feature-settings: var(--label-sm-lv2-features);
+            letter-spacing: var(--label-sm-lv2-spacing);
+            margin: 0;
+            color: var(--text-tertiary);
+            transition: opacity 300ms ease;
+        }
+        
+        .start-button {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 75px;
+            height: 75px;
+            background: #151716;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            color: white;
+            z-index: 1000;
+        }
+        
+        .start-button:active {
+            transform: translateX(-50%) scale(0.95);
+            background: #252825;
+        }
+        
+        .start-button svg {
+            margin-left: 2px;
+        }
+        
+        .start-button.running {
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(164, 1, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(164, 1, 0, 0.5);
+            }
+        }
+        
+        
+        .control-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            background: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+        
+        .control-btn:hover {
+            background: #444;
+            border-color: #666;
+        }
+        
+        .temp-unit {
+            font-size: 24px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-feature-settings: "ss01" 1, "ss02" 1;
+            letter-spacing: 0.08em;
+            padding-top: 3%;
+            transition: padding-top 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .temp-display.inactive .temp-unit {
+            padding-top: 0.5%;
+        }
+        
+        .cooking-status {
+            position: absolute;
+            top: -75px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--label-sm-lv2);
+            line-height: var(--label-sm-lv2-line-height);
+            font-family: var(--label-sm-lv2-font);
+            font-weight: var(--label-sm-lv2-weight);
+            font-feature-settings: var(--label-sm-lv2-features);
+            letter-spacing: var(--label-sm-lv2-spacing);
+            color: #ccc;
+            text-align: center;
+            display: none;
+        }
+        
+        
+        .debug-panel {
+            position: absolute;
+            top: 20px;
+            right: -240px;
+            background: rgba(40, 40, 40, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.8em;
+            width: 200px;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .debug-panel.open {
+            right: 20px;
+        }
+        
+        .debug-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            z-index: 1001;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .debug-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        
+        .debug-control {
+            margin: 8px 0;
+        }
+        
+        .debug-control label {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.9em;
+        }
+        
+        .debug-control input[type="range"] {
+            width: 100%;
+            margin: 2px 0;
+        }
+        
+        .debug-control select {
+            width: 100%;
+            padding: 4px;
+            background: #555;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .scaling-control {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .scaling-control.hidden {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+        
+        .debug-value {
+            color: #ccc;
+            font-size: 0.8em;
+        }
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .pressure-graph {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 130px;
+            height: 60px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            border-bottom-right-radius: 16px;
+        }
+        
+        .pressure-graph canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <div class="pressure-graph">
+            <canvas id="pressureGraph" width="130" height="60"></canvas>
+        </div>
+        <div class="prototype-container">
+            <div class="container">
+        <div class="cooking-status" id="cookingStatus"></div>
+        <canvas id="dial" width="500" height="500" style="pointer-events: none;"></canvas>
+        <div class="center-display">
+            <div class="temp-display" id="tempDisplay">
+                <div class="temp-number">0.00</div>
+            </div>
+            <div class="time-display-main" id="timeDisplayMain">10:00</div>
+            <div class="mode-label" id="modeLabel">MIN - SEC</div>
+            <div class="start-button" onclick="dial.handleButtonClick()" id="startButton">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="buttonIcon">
+                    <path d="M8 5v14l11-7z" id="iconPath"/>
+                </svg>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="debug-toggle" onclick="toggleDebug()" id="debugToggle">Open animation controls</button>
+    
+    <div class="debug-panel" id="debugPanel">
+        <h3>Debug Controls</h3>
+        
+        
+        
+        
+        <div class="debug-control">
+            <label>Ring Gap (degrees):</label>
+            <input type="range" id="gapAngle" min="0" max="70" step="1" value="60">
+            <div class="debug-value" id="gapAngleValue">60°</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Enable Tick Scaling:</label>
+            <select id="enableScalingSelect">
+                <option value="false">Disabled</option>
+                <option value="true" selected>Enabled</option>
+            </select>
+        </div>
+        
+        <div class="debug-control scaling-control">
+            <label>Current Tick Length:</label>
+            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="2.7">
+            <div class="debug-value" id="currentLengthValue">2.7x</div>
+        </div>
+        
+        <div class="debug-control scaling-control">
+            <label>Adjacent Falloff %:</label>
+            <input type="range" id="adjacentFalloff" min="10" max="50" step="5" value="40">
+            <div class="debug-value" id="adjacentFalloffValue">40%</div>
+        </div>
+        
+        <div class="debug-control scaling-control">
+            <label>Affected Radius %:</label>
+            <input type="range" id="radiusPercent" min="5" max="20" step="1" value="8">
+            <div class="debug-value" id="radiusPercentValue">8%</div>
+        </div>
+        
+        
+        <div class="debug-control scaling-control">
+            <label>Tick Alignment:</label>
+            <select id="alignmentSelect">
+                <option value="center">Centered</option>
+                <option value="inward">Inward</option>
+                <option value="outward" selected>Outward</option>
+            </select>
+        </div>
+        
+        <div class="debug-control scaling-control">
+            <label>Falloff Curve:</label>
+            <select id="curveSelect">
+                <option value="easeIn">Ease In</option>
+                <option value="linear">Linear</option>
+                <option value="easeOut">Ease Out</option>
+                <option value="sine">Sine Wave</option>
+                <option value="exponential" selected>Exponential</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Red Dial:</label>
+            <select id="redDialSelect">
+                <option value="false" selected>Off</option>
+                <option value="true">On</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Number Display:</label>
+            <select id="numberDisplaySelect">
+                <option value="off">Off</option>
+                <option value="1-13" selected>1-13</option>
+                <option value="1-13-odd">1-13 odd</option>
+                <option value="active-only">Active Only</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Number Position:</label>
+            <select id="numberPositionSelect">
+                <option value="outside">Outside</option>
+                <option value="inside" selected>Inside</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Mode:</label>
+            <select id="modeSelect">
+                <option value="time" selected>Time Mode</option>
+                <option value="scale">Scale Mode</option>
+            </select>
+        </div>
+        
+        
+        <div class="debug-control">
+            <label>Double Tick Density:</label>
+            <select id="doubleTicksSelect">
+                <option value="false">Normal (5 per bar)</option>
+                <option value="true" selected>Double (10 per bar)</option>
+            </select>
+        </div>
+        
+    </div>
+    
+    <div class="instructions">
+        Instructions: <strong>Space</strong> to pause/play • <strong>R</strong> to restart • 35-second pressure curve
+    </div>
+
+    <script>
+        class CircularTimeDial {
+            constructor() {
+                this.canvas = document.getElementById('dial');
+                this.ctx = this.canvas.getContext('2d');
+                this.tempDisplay = document.getElementById('tempDisplay');
+                this.timeDisplayMain = document.getElementById('timeDisplayMain');
+                this.modeLabel = document.getElementById('modeLabel');
+                this.cookingStatus = document.getElementById('cookingStatus');
+                
+                // Pressure graph setup
+                this.pressureGraphCanvas = document.getElementById('pressureGraph');
+                this.pressureGraphCtx = this.pressureGraphCanvas.getContext('2d');
+                this.pressureHistory = []; // Store pressure history for graph
+                this.lastRenderedPoint = -1; // Track last rendered point to avoid redrawing entire curve
+                
+                this.pressure = 0.0; // Start with 0 bar  
+                this.targetPressure = 0.0; // Target pressure for smooth interpolation
+                this.minPressure = 1.0;
+                this.maxPressure = 13.0;
+                this.smoothingFactor = 0.15; // Damping factor (lower = more damped)
+                
+                this.time = 0.00; // Start with 0.00 seconds
+                this.minTime = 0.00;
+                this.maxTime = 35.00; // Back to 35 seconds
+                this.timeStarted = Date.now(); // Track when time started
+                this.isPlaying = false; // Start paused
+                this.hasStarted = false; // Track if process has started
+                
+                this.centerX = 250;
+                this.centerY = 250;
+                this.radius = 140; // Sized for ~350px content area
+                
+                // Timer for scaling reset
+                this.lastActionTime = Date.now();
+                this.scalingActive = false;
+                
+                // Animation properties
+                this.animationDuration = 800; // ms (longer for smoother animation)
+                this.animationStartTime = null;
+                this.animatingToState = null; // 'active' or 'inactive'
+                this.previousMultipliers = new Map(); // Store previous multipliers for smooth transitions
+                
+                
+                
+                
+                // Debug settings
+                this.debugSettings = {
+                    scalingEnabled: true, // Enabled for scaling
+                    gradientColorMode: true, // Always use white-to-grey gradient
+                    currentLength: 2.7,
+                    adjacentFalloff: 40, // Percentage falloff from current
+                    radiusPercent: 8,
+                    alignment: 'outward',
+                    curve: 'exponential',
+                    autoReset: false, // Disabled by default
+                    gapAngle: 60, // 60 degree gap at bottom (default)
+                    pressureTickCount: 60, // Number of pressure ticks (5 per bar × 12 bars = 60, +5 for 13th bar = 65 total)
+                    doubleTicks: true, // Toggle for double tick density - DEFAULT ON
+                    redDial: false, // Red dial toggle - DEFAULT OFF
+                    numberDisplay: '1-13', // Number display option - DEFAULT ALL
+                    numberPosition: 'inside', // Number position - DEFAULT INSIDE
+                    mode: 'time' // Mode: 'time' or 'scale' - DEFAULT TIME
+                };
+                
+                this.setupEventListeners();
+                this.setupDebugControls();
+                this.createBarNumbers(); // Initialize bar numbers
+                this.startUpdateLoop();
+                this.render();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    const key = e.key.toLowerCase();
+                    if (key === 'r') {
+                        this.restart();
+                    } else if (key === ' ') {
+                        e.preventDefault();
+                        this.togglePlayPause();
+                    }
+                });
+            }
+            
+            setupDebugControls() {
+                // Enable Scaling Control
+                const enableScalingSelect = document.getElementById('enableScalingSelect');
+                enableScalingSelect.addEventListener('change', (e) => {
+                    this.debugSettings.scalingEnabled = e.target.value === 'true';
+                    this.toggleScalingControls();
+                    this.render();
+                });
+                
+                
+                // Current Length
+                const currentLengthSlider = document.getElementById('currentLength');
+                const currentLengthValue = document.getElementById('currentLengthValue');
+                currentLengthSlider.addEventListener('input', (e) => {
+                    this.debugSettings.currentLength = parseFloat(e.target.value);
+                    currentLengthValue.textContent = `${this.debugSettings.currentLength}x`;
+                    this.render();
+                });
+                
+                // Adjacent Falloff
+                const adjacentFalloffSlider = document.getElementById('adjacentFalloff');
+                const adjacentFalloffValue = document.getElementById('adjacentFalloffValue');
+                adjacentFalloffSlider.addEventListener('input', (e) => {
+                    this.debugSettings.adjacentFalloff = parseInt(e.target.value);
+                    adjacentFalloffValue.textContent = `${this.debugSettings.adjacentFalloff}%`;
+                    this.render();
+                });
+                
+                // Radius Percent
+                const radiusPercentSlider = document.getElementById('radiusPercent');
+                const radiusPercentValue = document.getElementById('radiusPercentValue');
+                radiusPercentSlider.addEventListener('input', (e) => {
+                    this.debugSettings.radiusPercent = parseInt(e.target.value);
+                    radiusPercentValue.textContent = `${this.debugSettings.radiusPercent}%`;
+                    this.render();
+                });
+                
+                // Alignment Dropdown
+                const alignmentSelect = document.getElementById('alignmentSelect');
+                alignmentSelect.addEventListener('change', (e) => {
+                    this.debugSettings.alignment = e.target.value;
+                    this.render();
+                });
+                
+                // Curve Dropdown
+                const curveSelect = document.getElementById('curveSelect');
+                curveSelect.addEventListener('change', (e) => {
+                    this.debugSettings.curve = e.target.value;
+                    this.render();
+                });
+                
+                
+                // Gap Angle Control
+                const gapAngleSlider = document.getElementById('gapAngle');
+                const gapAngleValue = document.getElementById('gapAngleValue');
+                gapAngleSlider.addEventListener('input', (e) => {
+                    this.debugSettings.gapAngle = parseInt(e.target.value);
+                    gapAngleValue.textContent = `${this.debugSettings.gapAngle}°`;
+                    this.createBarNumbers(); // Recreate bar numbers with new gap
+                    this.render();
+                });
+                
+                
+                // Red Dial Control
+                const redDialSelect = document.getElementById('redDialSelect');
+                redDialSelect.addEventListener('change', (e) => {
+                    this.debugSettings.redDial = e.target.value === 'true';
+                    this.render();
+                });
+                
+                // Number Display Control
+                const numberDisplaySelect = document.getElementById('numberDisplaySelect');
+                numberDisplaySelect.addEventListener('change', (e) => {
+                    this.debugSettings.numberDisplay = e.target.value;
+                    this.createBarNumbers(); // Recreate bar numbers with new display option
+                    this.render();
+                });
+                
+                // Number Position Control
+                const numberPositionSelect = document.getElementById('numberPositionSelect');
+                numberPositionSelect.addEventListener('change', (e) => {
+                    this.debugSettings.numberPosition = e.target.value;
+                    this.createBarNumbers(); // Recreate bar numbers with new position
+                    this.render();
+                });
+                
+                // Mode Control
+                const modeSelect = document.getElementById('modeSelect');
+                modeSelect.addEventListener('change', (e) => {
+                    this.debugSettings.mode = e.target.value;
+                    this.toggleScaleModeControls();
+                    this.createBarNumbers(); // Recreate numbers for new mode
+                    this.render();
+                });
+                
+                
+                // Double Ticks Control
+                const doubleTicksSelect = document.getElementById('doubleTicksSelect');
+                doubleTicksSelect.addEventListener('change', (e) => {
+                    this.debugSettings.doubleTicks = e.target.value === 'true';
+                    this.render();
+                    this.createBarNumbers(); // Recreate bar numbers with new spacing
+                });
+                
+                // Initialize scaling controls visibility
+                this.toggleScalingControls();
+                
+                // Initialize scale mode controls visibility
+                this.toggleScaleModeControls();
+            }
+            
+            toggleScalingControls() {
+                const scalingControls = document.querySelectorAll('.scaling-control');
+                scalingControls.forEach(control => {
+                    if (this.debugSettings.scalingEnabled) {
+                        control.classList.remove('hidden');
+                    } else {
+                        control.classList.add('hidden');
+                    }
+                });
+            }
+            
+            toggleScaleModeControls() {
+                // No scale-specific controls anymore, but keeping method for consistency
+            }
+            
+            
+            
+            
+            startScalingAnimation(toActive) {
+                this.animationStartTime = Date.now();
+                this.animatingToState = toActive ? 'active' : 'inactive';
+                this.animateTransition();
+            }
+            
+            animateTransition() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.animationStartTime;
+                const progress = Math.min(elapsed / this.animationDuration, 1);
+                
+                // Smoother ease function (ease-in-out cubic with extra smoothing)
+                const easeProgress = progress < 0.5 
+                    ? 4 * progress * progress * progress 
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                
+                this.animationProgress = easeProgress;
+                this.render();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => this.animateTransition());
+                } else {
+                    this.animationStartTime = null;
+                    this.animatingToState = null;
+                    this.animationProgress = null;
+                }
+            }
+            
+            startUpdateLoop() {
+                setInterval(() => {
+                    if (!this.debugSettings.autoReset) return;
+                    
+                    const timeSinceLastAction = Date.now() - this.lastActionTime;
+                    const wasScalingActive = this.scalingActive;
+                    
+                    if (timeSinceLastAction > (this.debugSettings.resetDelay * 1000)) {
+                        if (this.scalingActive) {
+                            this.startScalingAnimation(false);
+                        }
+                        this.scalingActive = false;
+                    }
+                }, 50); // Check every 50ms for smoother updates
+                
+                // Independent time counter and pressure curve - updates every 10ms for smooth animation
+                setInterval(() => {
+                    if (!this.isPlaying) return; // Don't update if paused
+                    
+                    const elapsed = (Date.now() - this.timeStarted) / 1000; // Convert to seconds
+                    
+                    // Don't loop - stop at maxTime
+                    if (elapsed >= this.maxTime) {
+                        this.time = this.maxTime;
+                        this.targetPressure = this.calculatePressureCurve(this.maxTime); // Set final target pressure
+                        // Let pressure smoothly reach final value
+                        const finalDiff = this.targetPressure - this.pressure;
+                        if (Math.abs(finalDiff) < 0.01) {
+                            this.pressure = this.targetPressure; // Snap to final value when close
+                            this.isPlaying = false; // Stop when finished
+                            this.scalingActive = false; // Stop scaling at end
+                            this.updateButtonIcon('play'); // Change back to play icon when finished
+                        } else {
+                            this.pressure += finalDiff * this.smoothingFactor;
+                        }
+                    } else {
+                        this.time = elapsed;
+                        
+                        // Calculate target pressure based on espresso shot curve over 35 seconds
+                        this.targetPressure = this.calculatePressureCurve(this.time);
+                        
+                        // Smooth interpolation towards target pressure (damped movement)
+                        const pressureDiff = this.targetPressure - this.pressure;
+                        if (Math.abs(pressureDiff) > 0.001) { // Very small threshold for smoothness
+                            this.pressure += pressureDiff * this.smoothingFactor;
+                            this.lastActionTime = Date.now();
+                            if (!this.scalingActive) {
+                                this.startScalingAnimation(true);
+                            }
+                            this.scalingActive = true;
+                        }
+                    }
+                    
+                    // Add to pressure history for graph (only if playing)
+                    if (this.isPlaying) {
+                        // Only add a point if we don't have one for this time already (avoid duplicates)
+                        const lastPoint = this.pressureHistory[this.pressureHistory.length - 1];
+                        if (!lastPoint || Math.abs(lastPoint.time - this.time) > 0.05) {
+                            this.pressureHistory.push({
+                                time: this.time,
+                                pressure: this.pressure
+                            });
+                            
+                            // Never remove points during brewing - keep complete history
+                            console.log('Added point:', this.pressureHistory.length, 'Time:', this.time.toFixed(2), 'Pressure:', this.pressure.toFixed(2));
+                        }
+                    }
+                    
+                    this.render();
+                }, 8); // Update every 8ms for extra smooth animation
+            }
+            
+            
+            render() {
+                // Clear canvas with transparent background
+                this.ctx.clearRect(0, 0, 500, 500);
+                
+                this.renderPressureMode();
+                this.updateSetupDisplay();
+                this.updateNumberColors();
+                this.renderPressureGraph();
+            }
+            
+            updateSetupDisplay() {
+                // Hide cooking status during setup
+                this.cookingStatus.style.display = 'none';
+                
+                if (this.debugSettings.mode === 'scale') {
+                    // Scale mode: simulate realistic weight based on time/pressure curve
+                    const simulatedWeight = this.calculateWeightFromTime(this.time);
+                    this.tempDisplay.querySelector('.temp-number').textContent = simulatedWeight.toFixed(1);
+                    this.modeLabel.textContent = 'G';
+                    
+                    // Hide ratio display in scale mode - just show weight
+                    this.timeDisplayMain.style.display = 'none';
+                } else {
+                    // Time mode display (original behavior)
+                    const wholeSeconds = Math.floor(this.time);
+                    this.tempDisplay.querySelector('.temp-number').textContent = wholeSeconds.toString();
+                    this.modeLabel.textContent = 'SEC';
+                    this.timeDisplayMain.style.display = 'none';
+                }
+                
+                this.tempDisplay.className = 'temp-display active';
+                this.modeLabel.style.color = 'var(--text-primary)';
+                this.modeLabel.style.opacity = 1.0;
+                
+                // Update gap bar display
+                const gapDisplay = document.querySelector('.gap-bar-number');
+                if (gapDisplay) {
+                    gapDisplay.textContent = this.pressure.toFixed(1);
+                }
+            }
+            
+            updateNumberColors() {
+                // Update number colors in real-time based on current pressure
+                const numberLabels = document.querySelectorAll('.bar-number-label');
+                
+                if (this.debugSettings.numberDisplay === 'active-only') {
+                    // Only show number if pressure is close to a bar value (within 0.5)
+                    let activeBar = null;
+                    
+                    numberLabels.forEach(label => {
+                        const barNum = parseInt(label.getAttribute('data-bar-number'));
+                        if (barNum && Math.abs(this.pressure - barNum) <= 0.5) {
+                            activeBar = barNum;
+                        }
+                    });
+                    
+                    // Show only the active number, hide all others
+                    numberLabels.forEach(label => {
+                        const barNum = parseInt(label.getAttribute('data-bar-number'));
+                        if (barNum) {
+                            if (barNum === activeBar) {
+                                label.style.opacity = '1';
+                                if (this.hasStarted) {
+                                    // Playing - white and larger
+                                    label.style.color = '#ffffff';
+                                    label.style.fontSize = '24px';
+                                } else {
+                                    // Not playing - gray and normal size
+                                    label.style.color = '#444444';
+                                    label.style.fontSize = '18px';
+                                }
+                            } else {
+                                label.style.opacity = '0';
+                            }
+                        }
+                    });
+                } else {
+                    // Normal modes - show all numbers with different states
+                    numberLabels.forEach(label => {
+                        const barNum = parseInt(label.getAttribute('data-bar-number'));
+                        if (barNum) {
+                            const isActive = this.hasStarted && this.pressure >= barNum - 0.5 && this.pressure < barNum + 0.5;
+                            
+                            label.style.opacity = '1';
+                            if (isActive) {
+                                // Current pressure range - highlight in white and larger
+                                label.style.color = '#ffffff';
+                                label.style.fontSize = '24px';
+                            } else {
+                                // All other states - same gray color and smaller
+                                label.style.color = '#444444';
+                                label.style.fontSize = '18px';
+                            }
+                        }
+                    });
+                }
+            }
+            
+            renderPressureMode() {
+                // Calculate pressure progress and current tick (always pressure-based)
+                const pressureRange = this.maxPressure - this.minPressure; // 12 bars
+                const baseTicks = 65; // 5 ticks per bar × 13 bars
+                const totalTicks = this.debugSettings.doubleTicks ? baseTicks * 2 : baseTicks; // Double if enabled
+                const pressureIncrement = pressureRange / (totalTicks - 1);
+                const currentTick = Math.round((this.pressure - this.minPressure) / pressureIncrement);
+                const filledTicks = currentTick + 1;
+                
+                // Calculate the gap at the bottom
+                const gapAngleRadians = (this.debugSettings.gapAngle * Math.PI) / 180;
+                const availableAngle = 2 * Math.PI - gapAngleRadians;
+                
+                // Start from bottom right of gap (90 degrees + half gap)
+                const startAngle = Math.PI / 2 + gapAngleRadians / 2;
+                
+                // Draw background circle for tick marks
+                this.drawBackgroundCircle();
+                
+                // Draw gradient sweep arc trailing behind current tick
+                this.drawGradientSweepArc(startAngle, availableAngle, currentTick, totalTicks);
+                
+                // Draw ticks with proper scaling logic
+                for (let i = 0; i < totalTicks; i++) {
+                    // Distribute ticks across available angle, going clockwise from start
+                    const angle = startAngle + (i * availableAngle / (totalTicks - 1));
+                    const isFilled = i < filledTicks;
+                    const isCurrent = this.hasStarted && i === currentTick; // Only show current tick if started
+                    
+                    // Check if tick is in the gap area (bottom area) - disable scaling there
+                    const normalizedAngle = ((angle * 180 / Math.PI) + 360) % 360;
+                    const isInGapArea = normalizedAngle > (90 - 30) && normalizedAngle < (90 + 30); // ±30° from bottom
+                    
+                    // Only apply scaling if:
+                    // 1. Not in gap area
+                    // 2. Current tick is valid (>= 0 and < totalPressureTicks)
+                    // 3. There's actual pressure progress
+                    // 4. Not at the very end (time >= maxTime)
+                    // 5. Process has started
+                    let lengthMultiplier = 1.0;
+                    if (!isInGapArea && 
+                        this.hasStarted &&
+                        currentTick >= 0 && 
+                        currentTick < totalTicks && 
+                        this.pressure > this.minPressure &&
+                        this.time < this.maxTime) {
+                        lengthMultiplier = this.getTickLengthMultiplier(i, currentTick, totalTicks);
+                    }
+                    
+                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier);
+                }
+                
+                // Draw floating bar readout that follows the current tick
+                this.drawFloatingBarReadout(startAngle, availableAngle, currentTick, totalTicks);
+                
+                // Draw connecting dashes from ticks to numbers
+                this.drawNumberConnectors(startAngle, availableAngle);
+            }
+            
+            drawNumberConnectors(startAngle, availableAngle) {
+                // Only draw connectors if numbers are displayed and positioned inside
+                if (this.debugSettings.numberDisplay === 'off' || this.debugSettings.numberPosition !== 'inside') {
+                    return;
+                }
+                
+                // Always draw 13 connector dashes regardless of number display mode
+                const totalConnectors = 13;
+                
+                this.ctx.save();
+                
+                // Draw connecting dashes for all 13 positions
+                for (let i = 0; i < totalConnectors; i++) {
+                    // Calculate angle: evenly distribute all 13 positions across available angle
+                    const angle = startAngle + (i * availableAngle / (totalConnectors - 1));
+                    
+                    // Define the connector line positions
+                    const backgroundCircleRadius = this.radius;
+                    const backgroundCircleThickness = 45; // Updated thickness
+                    const innerEdgeOfTicks = backgroundCircleRadius - (backgroundCircleThickness / 2);
+                    const numberRadius = this.radius - 45; // Same as inside number position
+                    
+                    // Start with proper gap from ticks and make shorter
+                    const startRadius = innerEdgeOfTicks - 6; // 6px gap from ticks
+                    // End further from numbers to make overall shorter
+                    const endRadius = numberRadius + 12; // Make connectors 2px longer
+                    
+                    const x1 = this.centerX + Math.cos(angle) * startRadius;
+                    const y1 = this.centerY + Math.sin(angle) * startRadius;
+                    const x2 = this.centerX + Math.cos(angle) * endRadius;
+                    const y2 = this.centerY + Math.sin(angle) * endRadius;
+                    
+                    // Determine connector color based on pressure range (same as numbers)
+                    // Each connector represents a bar number (1-13)
+                    const barNum = i + 1; // Connector 0 = bar 1, connector 1 = bar 2, etc.
+                    let connectorColor;
+                    if (this.hasStarted && this.pressure >= barNum - 0.5 && this.pressure < barNum + 0.5) {
+                        // Current pressure range - highlight in white
+                        connectorColor = '#ffffff';
+                    } else {
+                        // All other states - same gray color
+                        connectorColor = '#444444';
+                    }
+                    
+                    // Draw the connector line
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x1, y1);
+                    this.ctx.lineTo(x2, y2);
+                    this.ctx.strokeStyle = connectorColor;
+                    this.ctx.lineWidth = 3.3; // Match tick thickness
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawFloatingBarReadout(startAngle, availableAngle, currentTick, totalTicks) {
+                if (!this.debugSettings.redDial || !this.hasStarted || currentTick < 0) return; // Only show when enabled, started and valid tick
+                
+                // Calculate the angle for the current tick position
+                const currentTickAngle = startAngle + (currentTick * availableAngle / (totalTicks - 1));
+                
+                // Position the readout outside the gauge
+                const readoutRadius = this.radius + 65; // Position outside the tick marks
+                const textX = this.centerX + Math.cos(currentTickAngle) * readoutRadius;
+                const textY = this.centerY + Math.sin(currentTickAngle) * readoutRadius;
+                
+                this.ctx.save();
+                
+                // Create curved badge following circle curvature
+                const badgeRadius = this.radius + 45; // Closer to the gauge
+                const arcWidth = 0.35; // Arc width in radians (about 20 degrees)
+                const arcHeight = 25; // How far the arc extends outward
+                
+                // Draw curved background shape
+                this.ctx.beginPath();
+                
+                // Outer arc
+                this.ctx.arc(this.centerX, this.centerY, badgeRadius + arcHeight, 
+                    currentTickAngle - arcWidth/2, currentTickAngle + arcWidth/2);
+                
+                // Right side connector
+                this.ctx.lineTo(
+                    this.centerX + Math.cos(currentTickAngle + arcWidth/2) * badgeRadius,
+                    this.centerY + Math.sin(currentTickAngle + arcWidth/2) * badgeRadius
+                );
+                
+                // Inner arc (reverse direction)
+                this.ctx.arc(this.centerX, this.centerY, badgeRadius, 
+                    currentTickAngle + arcWidth/2, currentTickAngle - arcWidth/2, true);
+                
+                // Left side connector back to start
+                this.ctx.closePath();
+                
+                // Fill with gradient red color
+                this.ctx.fillStyle = '#A40100'; // Same red as gradient
+                this.ctx.fill();
+                
+                // Optional subtle border
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+                
+                // Draw pressure value text (same size as main bar text)
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '600 28px JaffleNeue, Arial, sans-serif'; // Slightly smaller to fit curved shape
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(this.pressure.toFixed(1), textX, textY);
+                
+                this.ctx.restore();
+            }
+            
+            restart() {
+                // Reset all values to initial defaults
+                this.pressure = 0.0; // Start with 0 bar
+                this.targetPressure = 0.0; // Reset target pressure
+                this.time = 0.00; // Reset time to 0.00 seconds
+                this.timeStarted = Date.now(); // Reset time counter
+                this.isPlaying = false; // Start paused
+                this.hasStarted = false; // Reset started flag
+                
+                // Reset timer and scaling properties
+                this.lastActionTime = Date.now();
+                this.scalingActive = false;
+                
+                // Clear pressure history
+                this.pressureHistory = [];
+                this.lastRenderedPoint = -1;
+                
+                // Reset animation properties
+                this.animationStartTime = null;
+                this.animatingToState = null;
+                this.animationProgress = null;
+                this.previousMultipliers = new Map();
+                
+                this.render();
+            }
+            
+            togglePlayPause() {
+                this.isPlaying = !this.isPlaying;
+                if (this.isPlaying) {
+                    this.hasStarted = true; // Mark as started
+                    // Resume: adjust start time to account for paused duration
+                    this.timeStarted = Date.now() - (this.time * 1000);
+                }
+            }
+            
+            handleButtonClick() {
+                if (!this.isPlaying && !this.hasStarted) {
+                    // First click - start playing and change to stop icon
+                    this.togglePlayPause();
+                    this.updateButtonIcon('stop');
+                } else {
+                    // If playing or has started - restart and change back to play icon
+                    this.restart();
+                    this.updateButtonIcon('play');
+                }
+            }
+            
+            updateButtonIcon(iconType) {
+                const iconPath = document.getElementById('iconPath');
+                const startButton = document.getElementById('startButton');
+                
+                if (iconType === 'stop') {
+                    // Stop/square icon
+                    iconPath.setAttribute('d', 'M6 6h12v12H6z');
+                    // Add pulsing glow when running
+                    startButton.classList.add('running');
+                } else {
+                    // Play/triangle icon
+                    iconPath.setAttribute('d', 'M8 5v14l11-7z');
+                    // Remove pulsing glow when stopped
+                    startButton.classList.remove('running');
+                }
+            }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            applyCurve(normalizedDistance) {
+                // normalizedDistance is 0-1, where 0 is current tick, 1 is edge of affected radius
+                switch (this.debugSettings.curve) {
+                    case 'linear':
+                        return 1 - normalizedDistance;
+                    case 'easeOut':
+                        return 1 - (normalizedDistance * normalizedDistance);
+                    case 'easeIn':
+                        return 1 - Math.sqrt(normalizedDistance);
+                    case 'sine':
+                        return Math.cos(normalizedDistance * Math.PI / 2);
+                    case 'exponential':
+                        return Math.pow(1 - normalizedDistance, 3);
+                    default:
+                        return 1 - normalizedDistance;
+                }
+            }
+            
+            getTickLengthMultiplier(tickIndex, currentTickIndex, totalTicks) {
+                // If scaling is disabled, always return 1.0
+                if (!this.debugSettings.scalingEnabled) return 1.0;
+                
+                if (currentTickIndex === -1 || currentTickIndex < 0 || currentTickIndex >= totalTicks) return 1.0; // Invalid current tick
+                
+                // Calculate base multipliers for active state
+                const affectedRadius = Math.max(1, Math.floor(totalTicks * (this.debugSettings.radiusPercent / 100)));
+                let distance = Math.abs(tickIndex - currentTickIndex);
+                
+                // Don't use wrap-around distance - only use linear distance to prevent scaling across the gap
+                // This prevents scaling from jumping from low pressure (0-1) to high pressure (12-13)
+                
+                let activeMultiplier = 1.0;
+                if (distance === 0) {
+                    activeMultiplier = this.debugSettings.currentLength;
+                } else if (distance <= affectedRadius) {
+                    const falloffAmount = (this.debugSettings.currentLength - 1.0) * (this.debugSettings.adjacentFalloff / 100);
+                    const adjacentLength = this.debugSettings.currentLength - falloffAmount;
+                    const normalizedDistance = (distance - 1) / (affectedRadius - 1);
+                    const curveValue = this.applyCurve(normalizedDistance);
+                    const falloffRange = adjacentLength - 1.0;
+                    activeMultiplier = 1.0 + (falloffRange * curveValue);
+                }
+                
+                // Handle auto reset and animation states
+                if (!this.debugSettings.autoReset) {
+                    // No auto reset - use active multiplier if scaling is active, otherwise 1.0
+                    return this.scalingActive ? activeMultiplier : 1.0;
+                }
+                
+                // Auto reset is enabled
+                if (!this.scalingActive && this.animationStartTime === null) {
+                    return 1.0; // Inactive and not animating
+                }
+                
+                if (this.scalingActive && this.animationStartTime === null) {
+                    return activeMultiplier; // Active and not animating
+                }
+                
+                // Currently animating
+                if (this.animationStartTime !== null && this.animationProgress !== null) {
+                    if (this.animatingToState === 'active') {
+                        // Animating from 1.0 to activeMultiplier
+                        return 1.0 + (activeMultiplier - 1.0) * this.animationProgress;
+                    } else {
+                        // Animating from activeMultiplier to 1.0
+                        return activeMultiplier + (1.0 - activeMultiplier) * this.animationProgress;
+                    }
+                }
+                
+                return activeMultiplier;
+            }
+            
+            
+            drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0) {
+                // Base tick dimensions (sized for 350px content)
+                const baseLength = 16; // Base tick length (sized for 350px)
+                const actualLength = baseLength * lengthMultiplier;
+                
+                let innerRadius, outerRadius;
+                
+                // Set line width (sized for 350px)
+                const lineWidth = 3.3; // Sized for 350px content
+                
+                // Calculate positions based on alignment - positioned to touch the background circle rings
+                const backgroundCircleRadius = this.radius; // Background circle is at this.radius
+                const backgroundCircleThickness = 45; // Background circle thickness
+                const outerEdge = backgroundCircleRadius + (backgroundCircleThickness / 2); // Outer edge of background circle
+                const innerEdge = backgroundCircleRadius - (backgroundCircleThickness / 2); // Inner edge of background circle
+                
+                switch (this.debugSettings.alignment) {
+                    case 'inward':
+                        // Grows inward from outer edge of background circle
+                        outerRadius = outerEdge; // Touch outer edge
+                        innerRadius = outerRadius - actualLength;
+                        break;
+                    case 'outward':
+                        // Grows outward from inner edge of background circle
+                        innerRadius = innerEdge; // Start at inner edge
+                        outerRadius = innerRadius + actualLength;
+                        break;
+                    case 'center':
+                        // Grows from center of background circle
+                        const centerPoint = backgroundCircleRadius;
+                        const halfLength = actualLength / 2;
+                        innerRadius = centerPoint - halfLength;
+                        outerRadius = centerPoint + halfLength;
+                        break;
+                }
+                
+                // Calculate positions
+                const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                const y2 = this.centerY + Math.sin(angle) * outerRadius;
+                
+                // Determine color
+                let strokeColor;
+                
+                if (this.debugSettings.gradientColorMode) {
+                    // Calculate tick index for gradient
+                    const baseTicks = 65;
+                    const totalTicks = this.debugSettings.doubleTicks ? baseTicks * 2 : baseTicks;
+                    const pressureRange = this.maxPressure - this.minPressure;
+                    const pressureIncrement = pressureRange / (totalTicks - 1);
+                    const currentTickIndex = Math.round((this.pressure - this.minPressure) / pressureIncrement);
+                    
+                    // Calculate the gap at the bottom
+                    const gapAngleRadians = (this.debugSettings.gapAngle * Math.PI) / 180;
+                    const availableAngle = 2 * Math.PI - gapAngleRadians;
+                    const startAngle = Math.PI / 2 + gapAngleRadians / 2;
+                    
+                    // Find which tick index this angle corresponds to
+                    let tickIndex = -1;
+                    for (let j = 0; j < totalTicks; j++) {
+                        const tickAngle = startAngle + (j * availableAngle / (totalTicks - 1));
+                        if (Math.abs(tickAngle - angle) < 0.01) { // Small tolerance for floating point
+                            tickIndex = j;
+                            break;
+                        }
+                    }
+                    
+                    if (isFilled && this.hasStarted) {
+                        if (isCurrent) {
+                            strokeColor = '#FA4947'; // Current tick is red
+                        } else if (tickIndex >= 0 && currentTickIndex >= 0) {
+                            // Create conic gradient from first tick (#151716) to tick before current (#fff)
+                            const progressToCurrentTick = tickIndex / Math.max(1, currentTickIndex - 1);
+                            const clampedProgress = Math.max(0, Math.min(1, progressToCurrentTick));
+                            
+                            // Interpolate from dark grey to white
+                            const r = Math.floor(21 + (255 - 21) * clampedProgress);   // 21 is hex 15 in decimal
+                            const g = Math.floor(23 + (255 - 23) * clampedProgress);   // 23 is hex 17 in decimal  
+                            const b = Math.floor(22 + (255 - 22) * clampedProgress);   // 22 is hex 16 in decimal
+                            strokeColor = `rgb(${r}, ${g}, ${b})`;
+                        } else {
+                            strokeColor = '#151716'; // Default to dark grey
+                        }
+                    } else {
+                        strokeColor = '#444444'; // Unfilled ticks remain gray
+                    }
+                } else {
+                    // Standard color mode
+                    if (isFilled) {
+                        if (isCurrent) {
+                            strokeColor = '#ffffff'; // Current tick is white
+                        } else {
+                            strokeColor = '#888888'; // Other filled ticks are gray
+                        }
+                    } else {
+                        strokeColor = '#444444'; // Unfilled ticks are dark gray
+                    }
+                }
+                
+                // Draw the tick with smooth transition
+                this.ctx.save();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+            
+            drawBackgroundCircle() {
+                // Draw background circle with gradient that fades to black in gap area
+                this.ctx.save();
+                
+                // Calculate gap parameters (same as used in render)
+                const gapAngleRadians = (this.debugSettings.gapAngle * Math.PI) / 180;
+                const gapStartAngle = Math.PI / 2 - gapAngleRadians / 2; // Start of gap (bottom left)
+                const gapEndAngle = Math.PI / 2 + gapAngleRadians / 2; // End of gap (bottom right)
+                
+                // Create conic gradient
+                const gradient = this.ctx.createConicGradient(0, this.centerX, this.centerY);
+                
+                // Calculate positions for gradient stops
+                const totalAngle = 2 * Math.PI;
+                const gapStartNormalized = gapStartAngle / totalAngle;
+                const gapEndNormalized = gapEndAngle / totalAngle;
+                
+                // Add gradient stops
+                gradient.addColorStop(0, '#151716'); // Start with grey
+                gradient.addColorStop(gapStartNormalized - 0.05, '#151716'); // Grey before gap
+                gradient.addColorStop(gapStartNormalized, 'black'); // Fade to black at gap start
+                gradient.addColorStop(gapEndNormalized, 'black'); // Black through gap
+                gradient.addColorStop(gapEndNormalized + 0.05, '#151716'); // Fade back to grey after gap
+                gradient.addColorStop(1, '#151716'); // End with grey
+                
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 45; // Updated thickness
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+            
+            drawGradientSweepArc(startAngle, availableAngle, currentTick, totalTicks) {
+                if (!this.hasStarted || currentTick <= 0) return; // No sweep if not started or at start
+                
+                // Calculate the angle for the current tick position
+                const currentTickAngle = startAngle + (currentTick * availableAngle / (totalTicks - 1));
+                
+                // Create conic gradient that fades from grey at first tick to red at current tick
+                const gradient = this.ctx.createConicGradient(startAngle, this.centerX, this.centerY);
+                
+                // Calculate the arc length from start to current position
+                const sweepAngle = currentTickAngle - startAngle;
+                const totalAvailableAngle = availableAngle; // The full available angle (excluding gap)
+                const progressRatio = sweepAngle / totalAvailableAngle; // 0 to 1 progress
+                
+                if (progressRatio > 0) {
+                    // Start with transparent red at the first tick position (startAngle)
+                    gradient.addColorStop(0, 'rgba(164, 1, 0, 0)');
+                    
+                    // Fade to red at the current tick position
+                    const currentStopPosition = progressRatio;
+                    gradient.addColorStop(currentStopPosition, '#A40100');
+                    
+                    // Fill the rest with transparent red
+                    if (currentStopPosition < 1.0) {
+                        gradient.addColorStop(1, 'rgba(164, 1, 0, 0)');
+                    }
+                }
+                
+                // Draw only the active portion of the arc (from startAngle to currentTickAngle)
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, currentTickAngle);
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 45; // Same as background circle thickness
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+            
+            calculatePressureCurve(timeInSeconds) {
+                // Professional espresso pressure curve over 35 seconds with natural variance
+                const t = timeInSeconds;
+                
+                // Natural variance components
+                const microVariance = (Math.sin(t * 12.3) + Math.cos(t * 8.7)) * 0.08; // High frequency micro-tremors
+                const slowVariance = Math.sin(t * 0.8) * 0.12; // Slower pressure wave
+                const randomNoise = (Math.random() - 0.5) * 0.06; // Small random fluctuations
+                const totalVariance = microVariance + slowVariance + randomNoise;
+                
+                let basePressure;
+                
+                if (t <= 0) {
+                    basePressure = 0.0; // Start at 0 bar
+                } else if (t <= 8) {
+                    // 0–8s Pre-Infusion: 2–3 bars slowly
+                    const progress = t / 8.0;
+                    basePressure = 0.0 + progress * 3.0; // Rise from 0 to 3 bars
+                } else if (t <= 25) {
+                    // 8–25s Infusion/Ramp-Up: gradually to 9 bars
+                    const progress = (t - 8) / 17.0;
+                    // Quick initial ramp, then stabilize around 9
+                    if (progress < 0.3) {
+                        // Quick ramp from 3 to 9 bars in first 30% of this phase
+                        basePressure = 3.0 + (progress / 0.3) * 6.0;
+                    } else {
+                        // Hold steady around 9 bars with more variation
+                        basePressure = 9.0 + Math.sin((t - 8) * 0.4) * 0.15;
+                    }
+                } else if (t <= 30) {
+                    // 25–30s Taper: drops to 6–8 bars
+                    const progress = (t - 25) / 5.0;
+                    basePressure = 9.0 - progress * 2.0; // Drop from 9 to 7 bars
+                } else if (t <= 32.41) {
+                    // 30–32.41s Continue taper to ~6 bars
+                    const progress = (t - 30) / 2.41;
+                    basePressure = 7.0 - progress * 1.0; // Drop from 7 to 6 bars
+                } else {
+                    // After 32.41s: Quick drop to 0
+                    const dropProgress = Math.min((t - 32.41) / 0.3, 1.0); // 0.3 second drop
+                    basePressure = 6.0 * (1 - dropProgress); // Rapid fall to 0
+                }
+                
+                // Apply variance and ensure reasonable bounds
+                const finalPressure = basePressure + totalVariance;
+                return Math.max(0, Math.min(finalPressure, 13.0));
+            }
+            
+            calculateWeightFromTime(timeInSeconds) {
+                // Simulate realistic espresso extraction weight over time
+                const t = timeInSeconds;
+                
+                // No extraction before starting
+                if (t <= 0) return 0;
+                
+                let baseWeight;
+                
+                if (t <= 5) {
+                    // 0-5s: Pre-infusion, minimal flow (0-2g)
+                    baseWeight = (t / 5) * 2;
+                } else if (t <= 10) {
+                    // 5-10s: Initial flow ramp up (2-8g)
+                    const progress = (t - 5) / 5;
+                    baseWeight = 2 + progress * 6;
+                } else if (t <= 25) {
+                    // 10-25s: Main extraction phase (8-32g)
+                    const progress = (t - 10) / 15;
+                    // Faster initial flow, then slower
+                    const curvedProgress = 1 - Math.pow(1 - progress, 1.5);
+                    baseWeight = 8 + curvedProgress * 24;
+                } else if (t <= 30) {
+                    // 25-30s: Final extraction (32-36g)
+                    const progress = (t - 25) / 5;
+                    baseWeight = 32 + progress * 4;
+                } else {
+                    // After 30s: minimal additional flow
+                    const extraTime = t - 30;
+                    baseWeight = 36 + Math.min(extraTime * 0.2, 2); // Max 38g total
+                }
+                
+                // Add small realistic variations
+                const microVariance = Math.sin(t * 8) * 0.1;
+                const finalWeight = baseWeight + microVariance;
+                
+                return Math.max(0, finalWeight);
+            }
+            
+            createBarNumbers() {
+                // Remove existing bar number labels
+                const existingLabels = document.querySelectorAll('.bar-number-label');
+                existingLabels.forEach(label => label.remove());
+                
+                // Check if number display is off
+                if (this.debugSettings.numberDisplay === 'off') {
+                    return;
+                }
+                
+                const gapAngleRadians = (this.debugSettings.gapAngle * Math.PI) / 180;
+                const availableAngle = 2 * Math.PI - gapAngleRadians;
+                const startAngle = Math.PI / 2 + gapAngleRadians / 2;
+                
+                // Always show pressure labels (1-13 bar) regardless of mode
+                let numbersToShow = [];
+                if (this.debugSettings.numberDisplay === '1-13') {
+                    numbersToShow = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+                } else if (this.debugSettings.numberDisplay === '1-13-odd') {
+                    numbersToShow = [1, 3, 5, 7, 9, 11, 13];
+                } else if (this.debugSettings.numberDisplay === 'active-only') {
+                    // Create all numbers for active-only mode, visibility will be controlled by updateNumberColors()
+                    numbersToShow = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+                }
+                
+                // Evenly distribute the numbers around the available angle
+                for (let i = 0; i < numbersToShow.length; i++) {
+                    const barNum = numbersToShow[i];
+                    
+                    // Calculate angle: evenly distribute across available angle
+                    const angle = startAngle + (i * availableAngle / (numbersToShow.length - 1));
+                    
+                    // Position numbers based on position setting
+                    let numberRadius;
+                    if (this.debugSettings.numberPosition === 'inside') {
+                        numberRadius = this.radius - 45; // Inside the gauge, less padding (was -65)
+                    } else {
+                        numberRadius = this.radius + 45; // Outside the gauge (default)
+                    }
+                    
+                    const x = this.centerX + Math.cos(angle) * numberRadius;
+                    const y = this.centerY + Math.sin(angle) * numberRadius;
+                    
+                    // Create HTML element for the number
+                    const label = document.createElement('div');
+                    label.className = 'bar-number-label';
+                    label.textContent = barNum.toString();
+                    label.style.left = x + 'px';
+                    label.style.top = y + 'px';
+                    
+                    // Store the bar number as a data attribute for real-time color updates
+                    label.setAttribute('data-bar-number', barNum);
+                    
+                    // Add to container
+                    document.querySelector('.container').appendChild(label);
+                }
+            }
+            
+            renderPressureGraph() {
+                const canvasWidth = 130;
+                const canvasHeight = 60;
+                
+                // Always clear and redraw to prevent issues
+                this.pressureGraphCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Draw background
+                this.pressureGraphCtx.fillStyle = '#1a1a1a';
+                this.pressureGraphCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Debug: log current state
+                if (this.pressureHistory.length > 0) {
+                    console.log('Rendering graph with', this.pressureHistory.length, 'points, current time:', this.time.toFixed(2));
+                }
+                
+                // Draw the complete pressure curve from ALL history points
+                if (this.pressureHistory.length >= 2) {
+                    // First draw the filled area under the curve
+                    this.pressureGraphCtx.save();
+                    
+                    // Create gradient for the fill
+                    const gradient = this.pressureGraphCtx.createLinearGradient(0, 0, 0, canvasHeight);
+                    gradient.addColorStop(0, 'rgba(164, 1, 0, 0.3)'); // Red at top
+                    gradient.addColorStop(1, 'rgba(164, 1, 0, 0)');   // Transparent at bottom
+                    
+                    this.pressureGraphCtx.fillStyle = gradient;
+                    this.pressureGraphCtx.beginPath();
+                    
+                    // Start from bottom-left of first point
+                    const firstPoint = this.pressureHistory[0];
+                    const firstX = Math.max(0, Math.min(canvasWidth, (firstPoint.time / this.maxTime) * canvasWidth));
+                    const firstY = Math.max(0, Math.min(canvasHeight, canvasHeight - ((firstPoint.pressure / this.maxPressure) * canvasHeight)));
+                    
+                    this.pressureGraphCtx.moveTo(firstX, canvasHeight); // Start at bottom
+                    this.pressureGraphCtx.lineTo(firstX, firstY); // Go up to curve
+                    
+                    // Draw curve path
+                    for (let i = 1; i < this.pressureHistory.length; i++) {
+                        const point = this.pressureHistory[i];
+                        const x = (point.time / this.maxTime) * canvasWidth;
+                        const y = canvasHeight - ((point.pressure / this.maxPressure) * canvasHeight);
+                        
+                        // Clamp to canvas bounds
+                        const clampedX = Math.max(0, Math.min(canvasWidth, x));
+                        const clampedY = Math.max(0, Math.min(canvasHeight, y));
+                        
+                        this.pressureGraphCtx.lineTo(clampedX, clampedY);
+                    }
+                    
+                    // Close the path at bottom-right
+                    const lastPoint = this.pressureHistory[this.pressureHistory.length - 1];
+                    const lastX = Math.max(0, Math.min(canvasWidth, (lastPoint.time / this.maxTime) * canvasWidth));
+                    this.pressureGraphCtx.lineTo(lastX, canvasHeight); // Go down to bottom
+                    this.pressureGraphCtx.closePath();
+                    this.pressureGraphCtx.fill();
+                    
+                    this.pressureGraphCtx.restore();
+                    
+                    // Now draw the red line on top
+                    this.pressureGraphCtx.save();
+                    this.pressureGraphCtx.strokeStyle = '#A40100';
+                    this.pressureGraphCtx.lineWidth = 3; // Same thickness as white line
+                    this.pressureGraphCtx.lineCap = 'round';
+                    this.pressureGraphCtx.lineJoin = 'round';
+                    
+                    this.pressureGraphCtx.beginPath();
+                    
+                    let hasStartedPath = false;
+                    
+                    // Draw all points in history
+                    for (let i = 0; i < this.pressureHistory.length; i++) {
+                        const point = this.pressureHistory[i];
+                        const x = (point.time / this.maxTime) * canvasWidth;
+                        const y = canvasHeight - ((point.pressure / this.maxPressure) * canvasHeight);
+                        
+                        // Clamp to canvas bounds
+                        const clampedX = Math.max(0, Math.min(canvasWidth, x));
+                        const clampedY = Math.max(0, Math.min(canvasHeight, y));
+                        
+                        if (!hasStartedPath) {
+                            this.pressureGraphCtx.moveTo(clampedX, clampedY);
+                            hasStartedPath = true;
+                        } else {
+                            this.pressureGraphCtx.lineTo(clampedX, clampedY);
+                        }
+                    }
+                    
+                    this.pressureGraphCtx.stroke();
+                    this.pressureGraphCtx.restore();
+                }
+                
+                // Draw ideal pressure curve preview (dotted line before starting)
+                if (!this.hasStarted) {
+                    this.pressureGraphCtx.save();
+                    this.pressureGraphCtx.strokeStyle = 'rgba(164, 1, 0, 0.5)'; // Semi-transparent red
+                    this.pressureGraphCtx.lineWidth = 2;
+                    this.pressureGraphCtx.lineCap = 'round';
+                    this.pressureGraphCtx.lineJoin = 'round';
+                    this.pressureGraphCtx.setLineDash([4, 4]); // Dotted line
+                    
+                    this.pressureGraphCtx.beginPath();
+                    
+                    // Draw complete ideal curve from 0 to maxTime
+                    const timeStep = 0.5; // Sample every 0.5 seconds
+                    let hasStartedIdealPath = false;
+                    
+                    for (let t = 0; t <= this.maxTime; t += timeStep) {
+                        const idealPressure = this.calculatePressureCurve(t);
+                        const x = (t / this.maxTime) * canvasWidth;
+                        const y = canvasHeight - ((idealPressure / this.maxPressure) * canvasHeight);
+                        
+                        // Clamp to canvas bounds
+                        const clampedX = Math.max(0, Math.min(canvasWidth, x));
+                        const clampedY = Math.max(0, Math.min(canvasHeight, y));
+                        
+                        if (!hasStartedIdealPath) {
+                            this.pressureGraphCtx.moveTo(clampedX, clampedY);
+                            hasStartedIdealPath = true;
+                        } else {
+                            this.pressureGraphCtx.lineTo(clampedX, clampedY);
+                        }
+                    }
+                    
+                    this.pressureGraphCtx.stroke();
+                    this.pressureGraphCtx.restore();
+                }
+                
+                // Draw current time indicator line (3x thicker)
+                if (this.hasStarted && this.time >= 0) {
+                    const currentTimeX = Math.max(0, Math.min(canvasWidth, (this.time / this.maxTime) * canvasWidth));
+                    this.pressureGraphCtx.save();
+                    this.pressureGraphCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    this.pressureGraphCtx.lineWidth = 3; // 3x thicker
+                    this.pressureGraphCtx.beginPath();
+                    this.pressureGraphCtx.moveTo(currentTimeX, 0);
+                    this.pressureGraphCtx.lineTo(currentTimeX, canvasHeight);
+                    this.pressureGraphCtx.stroke();
+                    this.pressureGraphCtx.restore();
+                }
+            }
+            
+        }
+        
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            const toggleBtn = document.getElementById('debugToggle');
+            
+            panel.classList.toggle('open');
+            toggleBtn.textContent = panel.classList.contains('open') ? 'Close' : 'Open animation controls';
+        }
+        
+        // Initialize the dial
+        const dial = new CircularTimeDial();
+        
+        // Update play button text based on state
+        setInterval(() => {
+            const playBtn = document.getElementById('playBtn');
+            if (playBtn) {
+                if (dial.time >= dial.maxTime && !dial.isPlaying) {
+                    playBtn.textContent = '✓ Complete';
+                } else {
+                    playBtn.textContent = dial.isPlaying ? '⏸ Pause' : '▶ Start';
+                }
+            }
+        }, 100);
+    </script>
+</body>
+</html>
