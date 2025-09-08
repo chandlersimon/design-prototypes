@@ -406,8 +406,9 @@
         <div class="debug-control">
             <label>Gradient Color Mode:</label>
             <select id="gradientColorSelect">
-                <option value="true">White-to-Gray Gradient</option>
-                <option value="false">Standard Colors</option>
+                <option value="standard">Standard Colors</option>
+                <option value="gradient">White-to-Gray Gradient</option>
+                <option value="seamless" selected>Seamless Gradient (20% trail)</option>
             </select>
         </div>
         
@@ -485,6 +486,18 @@
             </select>
         </div>
         
+        <div class="debug-control">
+            <label>Flash Duration (ms):</label>
+            <input type="number" id="flashDuration" min="50" max="500" step="25" value="150" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="flashDurationValue">150ms</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Flash Count:</label>
+            <input type="number" id="flashCount" min="1" max="10" step="1" value="3" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="flashCountValue">3 flashes</div>
+        </div>
+        
     </div>
     
     <div class="instructions">
@@ -492,6 +505,8 @@
     </div>
 
     <script>
+        const BASE_GRAY = '#434343';
+        
         class CircularTimeDial {
             constructor() {
                 this.canvas = document.getElementById('dial');
@@ -544,10 +559,17 @@
                 this.cookingComplete = false;
                 this.selectedButton = 0; // 0 = "A bit more", 1 = "Keep warm"
                 
+                // Flash animation properties
+                this.isFlashing = false;
+                this.flashStartTime = null;
+                this.flashCount = 0;
+                this.flashVisible = true;
+                this.hasFlashedAtBoundary = false;
+                
                 // Debug settings
                 this.debugSettings = {
                     scalingEnabled: false,
-                    gradientColorMode: true,
+                    gradientColorMode: 'seamless', // 'standard', 'gradient', 'seamless'
                     currentLength: 3.0,
                     adjacentFalloff: 25, // Percentage falloff from current
                     radiusPercent: 10,
@@ -558,7 +580,9 @@
                     resetDelay: 0.5,
                     gapAngle: 20, // Gap angle in degrees
                     preheatEnabled: true,
-                    tempTickCount: 72 // Number of temperature ticks
+                    tempTickCount: 72, // Number of temperature ticks
+                    flashDuration: 150, // Flash duration in ms
+                    flashCount: 3 // Number of flashes
                 };
                 
                 this.setupEventListeners();
@@ -604,7 +628,7 @@
                 // Gradient Color Mode Control
                 const gradientColorSelect = document.getElementById('gradientColorSelect');
                 gradientColorSelect.addEventListener('change', (e) => {
-                    this.debugSettings.gradientColorMode = e.target.value === 'true';
+                    this.debugSettings.gradientColorMode = e.target.value;
                     this.render();
                 });
                 
@@ -694,6 +718,22 @@
                     this.render();
                 });
                 
+                // Flash Duration Control
+                const flashDurationInput = document.getElementById('flashDuration');
+                const flashDurationValue = document.getElementById('flashDurationValue');
+                flashDurationInput.addEventListener('input', (e) => {
+                    this.debugSettings.flashDuration = parseInt(e.target.value);
+                    flashDurationValue.textContent = `${this.debugSettings.flashDuration}ms`;
+                });
+                
+                // Flash Count Control
+                const flashCountInput = document.getElementById('flashCount');
+                const flashCountValue = document.getElementById('flashCountValue');
+                flashCountInput.addEventListener('input', (e) => {
+                    this.debugSettings.flashCount = parseInt(e.target.value);
+                    flashCountValue.textContent = `${this.debugSettings.flashCount} flashes`;
+                });
+                
                 // Initialize scaling controls visibility
                 this.toggleScalingControls();
             }
@@ -713,7 +753,17 @@
                 if (this.countdownMode) return;
                 
                 if (this.tempMode) {
-                    if (this.temperature >= this.maxTemp) return;
+                    if (this.temperature >= this.maxTemp) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Reset flash boundary flag when moving away from boundary
+                    this.hasFlashedAtBoundary = false;
                     
                     this.lastActionTime = Date.now();
                     if (!this.scalingActive) {
@@ -733,7 +783,17 @@
                 if (this.countdownMode) return;
                 
                 if (this.tempMode) {
-                    if (this.temperature <= this.minTemp) return;
+                    if (this.temperature <= this.minTemp) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Reset flash boundary flag when moving away from boundary
+                    this.hasFlashedAtBoundary = false;
                     
                     this.lastActionTime = Date.now();
                     if (!this.scalingActive) {
@@ -764,6 +824,40 @@
                 this.animationStartTime = Date.now();
                 this.animatingToState = toActive ? 'active' : 'inactive';
                 this.animateTransition();
+            }
+            
+            startFlashAnimation() {
+                this.isFlashing = true;
+                this.flashStartTime = Date.now();
+                this.flashCount = 0;
+                this.flashVisible = true;
+                this.animateFlash();
+            }
+            
+            animateFlash() {
+                if (!this.isFlashing) return;
+                
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.flashStartTime;
+                const flashDuration = this.debugSettings.flashDuration; // ms per flash (on/off cycle)
+                const totalFlashes = this.debugSettings.flashCount;
+                
+                // Calculate current flash cycle
+                const flashCycle = Math.floor(elapsed / flashDuration);
+                
+                if (flashCycle >= totalFlashes * 2) {
+                    // Animation complete
+                    this.isFlashing = false;
+                    this.flashVisible = true;
+                    this.render();
+                    return;
+                }
+                
+                // Toggle visibility every flash duration
+                this.flashVisible = (flashCycle % 2 === 0);
+                this.render();
+                
+                requestAnimationFrame(() => this.animateFlash());
             }
             
             animateTransition() {
@@ -876,6 +970,9 @@
                     // Temperature mode: temperature is active, time is inactive
                     this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                     this.tempDisplay.className = 'temp-display active';
+                    // Apply flash visibility to temperature display
+                    this.tempDisplay.style.opacity = (this.isFlashing && !this.flashVisible) ? '0' : '1';
+                    
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main inactive';
                     this.modeLabel.textContent = labelText;
@@ -887,6 +984,9 @@
                     this.tempDisplay.className = 'temp-display inactive';
                     this.timeDisplayMain.textContent = this.formatTime();
                     this.timeDisplayMain.className = 'time-display-main active';
+                    // Apply flash visibility to time display
+                    this.timeDisplayMain.style.opacity = (this.isFlashing && !this.flashVisible) ? '0' : '1';
+                    
                     this.modeLabel.textContent = labelText;
                     this.modeLabel.style.color = 'var(--text-primary)';
                     this.modeLabel.style.opacity = 1.0;
@@ -983,7 +1083,7 @@
                     // Calculate proximity to current tick for gradual sizing
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTempTick, totalTempTicks);
                     
-                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0);
+                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0, i, currentTempTick, totalTempTicks);
                 }
             }
             
@@ -1215,7 +1315,7 @@
                     // Calculate proximity to current tick for gradual sizing
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     
-                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0);
+                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0, i, currentTickIndex, totalTicks);
                 }
             }
             
@@ -1242,7 +1342,7 @@
                     
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     
-                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, false, 0);
+                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, false, 0, i, currentTickIndex, totalTicks);
                 }
             }
             
@@ -1265,7 +1365,7 @@
                     const showAsGray = currentLap > 0 && i >= ticksInCurrentLap;
                     const isCurrent = i === currentTickIndex;
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
-                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray);
+                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray, i, currentTickIndex, totalTicks);
                 }
             }
             
@@ -1287,7 +1387,7 @@
                     
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     
-                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, isNext, hourProgress);
+                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, isNext, hourProgress, i, currentTickIndex, totalTicks);
                 }
             }
             
@@ -1322,6 +1422,13 @@
                 // Reset completion state
                 this.cookingComplete = false;
                 this.selectedButton = 0;
+                
+                // Reset flash animation
+                this.isFlashing = false;
+                this.flashStartTime = null;
+                this.flashCount = 0;
+                this.flashVisible = true;
+                this.hasFlashedAtBoundary = false;
                 
                 this.render();
             }
@@ -1369,7 +1476,17 @@
             }
             
             increaseTime() {
-                if (this.totalMinutes >= this.maxMinutes) return;
+                if (this.totalMinutes >= this.maxMinutes) {
+                    // Only trigger flash once per boundary hit
+                    if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                        this.startFlashAnimation();
+                        this.hasFlashedAtBoundary = true;
+                    }
+                    return;
+                }
+                
+                // Reset flash boundary flag when moving away from boundary
+                this.hasFlashedAtBoundary = false;
                 
                 this.lastActionTime = Date.now();
                 if (!this.scalingActive) {
@@ -1387,7 +1504,17 @@
             }
             
             decreaseTime() {
-                if (this.totalMinutes <= 1) return; // Minimum 1 minute
+                if (this.totalMinutes <= 1) {
+                    // Only trigger flash once per boundary hit
+                    if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                        this.startFlashAnimation();
+                        this.hasFlashedAtBoundary = true;
+                    }
+                    return;
+                }
+                
+                // Reset flash boundary flag when moving away from boundary
+                this.hasFlashedAtBoundary = false;
                 
                 this.lastActionTime = Date.now();
                 if (!this.scalingActive) {
@@ -1548,7 +1675,7 @@
                 return activeMultiplier;
             }
             
-            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0, showAsGray = false) {
+            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0, showAsGray = false, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
                 // Base tick dimensions
                 const baseLength = 15;
                 const actualLength = baseLength * lengthMultiplier;
@@ -1583,43 +1710,22 @@
                 // Use standard coloring system
                 let strokeColor;
                 
-                if (showAsGray) {
-                    strokeColor = '#444444';
-                } else if (this.debugSettings.gradientColorMode) {
-                    // Gradient color mode: current = red, others fade from white to gray based on distance
-                    if (isFilled) {
-                        if (isCurrent) {
-                            strokeColor = '#FA4947'; // Current tick is red
-                        } else {
-                            // Calculate distance from current tick for gradient
-                            const totalTicks = 72;
-                            const minutesInPhaseB = this.totalMinutes - 60;
-                            const incrementsCompleted = Math.floor(minutesInPhaseB / 15);
-                            const ticksInCurrentLap = incrementsCompleted % 72;
-                            const currentTickIndex = ticksInCurrentLap > 0 ? ticksInCurrentLap - 1 : -1;
-                            if (currentTickIndex >= 0) {
-                                const angleStep = 360 / totalTicks;
-                                const tickIndex = Math.round((angle * 180 / Math.PI + 90) / angleStep) % totalTicks;
-                                let distance = Math.abs(tickIndex - currentTickIndex);
-                                const wrapDistance = totalTicks - distance;
-                                distance = Math.min(distance, wrapDistance);
-                                const maxDistance = Math.floor(totalTicks / 4);
-                                const normalizedDistance = Math.min(distance / maxDistance, 1);
-                                const grayValue = Math.floor(255 - (255 - 120) * normalizedDistance);
-                                strokeColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
-                            } else {
-                                strokeColor = '#ffffff';
-                            }
-                        }
-                    } else {
-                        strokeColor = '#444444';
-                    }
-                } else {
-                    if (isFilled) {
+                if (this.debugSettings.gradientColorMode === 'seamless') {
+                    // Seamless mode: apply gradient regardless of fill status or showAsGray
+                    if (isCurrent) {
                         strokeColor = '#FA4947';
                     } else {
-                        strokeColor = '#444444';
+                        strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
                     }
+                } else if (showAsGray) {
+                    strokeColor = BASE_GRAY;
+                } else if (this.debugSettings.gradientColorMode === 'standard') {
+                    strokeColor = isFilled ? '#FA4947' : BASE_GRAY;
+                } else {
+                    // Regular gradient mode: only apply to filled ticks
+                    strokeColor = isFilled
+                        ? (isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode))
+                        : BASE_GRAY;
                 }
                 
                 // Draw the tick
@@ -1636,7 +1742,90 @@
                 this.ctx.restore();
             }
             
-            drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0, isNext = false, progress = 0) {
+            getConicGradientColor(angle, currentTickIndex, totalTicks, mode = 'gradient') {
+                // If we don't have a valid current tick, fall back to plain white for that tick only
+                if (currentTickIndex < 0 || totalTicks <= 0) return 'rgb(255,255,255)';
+
+                // Normalize: 12 o'clock = 0, increases clockwise [0, 2π)
+                let normalizedAngle = (angle + Math.PI / 2) % (2 * Math.PI);
+                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+
+                // Current tick position in radians, 12 o'clock = 0, clockwise
+                const currentTickAngle = (currentTickIndex * 2 * Math.PI) / totalTicks;
+
+                if (mode === 'seamless') {
+                    // Seamless mode: 20% gradient trail that follows the current position
+                    const trailLength = 2 * Math.PI * 0.2; // 20% of full circle
+                    
+                    // Calculate the start of the gradient trail (20% before current position)
+                    let trailStartAngle = currentTickAngle - trailLength;
+                    if (trailStartAngle < 0) trailStartAngle += 2 * Math.PI;
+                    
+                    
+                    // Check if this tick is within the 20% trail
+                    let isInTrail = false;
+                    let trailProgress = 0;
+                    
+                    const tolerance = 0.001; // Small tolerance for floating point comparisons
+                    
+                    if (trailStartAngle <= currentTickAngle + tolerance) {
+                        // Normal case: trail doesn't wrap around
+                        isInTrail = normalizedAngle >= trailStartAngle - tolerance && normalizedAngle <= currentTickAngle + tolerance;
+                        if (isInTrail) {
+                            trailProgress = Math.max(0, Math.min(1, (normalizedAngle - trailStartAngle) / trailLength));
+                        }
+                    } else {
+                        // Wrap case: trail wraps around 0/2π boundary
+                        isInTrail = normalizedAngle >= trailStartAngle - tolerance || normalizedAngle <= currentTickAngle + tolerance;
+                        if (isInTrail) {
+                            if (normalizedAngle >= trailStartAngle - tolerance) {
+                                trailProgress = Math.max(0, Math.min(1, (normalizedAngle - trailStartAngle) / trailLength));
+                            } else {
+                                trailProgress = Math.max(0, Math.min(1, (normalizedAngle + 2 * Math.PI - trailStartAngle) / trailLength));
+                            }
+                        }
+                    }
+                    
+                    if (isInTrail) {
+                        // Interpolate from BASE_GRAY to white within the trail
+                        const start = 67;  // BASE_GRAY channel value
+                        const end = 255;   // white
+                        const r = Math.round(start + (end - start) * trailProgress);
+                        const g = r;
+                        const b = r;
+                        return `rgb(${r}, ${g}, ${b})`;
+                    } else {
+                        // Outside the trail: unaffected gray
+                        return BASE_GRAY;
+                    }
+                } else {
+                    // Original gradient mode logic
+                    // If current is exactly 12 o'clock, only that tick should be white; others unaffected gray.
+                    if (currentTickAngle === 0) {
+                        // Only the tick at 12 o'clock should be white (current position).
+                        return normalizedAngle === 0 ? 'rgb(255,255,255)' : BASE_GRAY;
+                    }
+
+                    // If the tick's angle lies within the sweep [0, currentTickAngle] (clockwise),
+                    // map it from BASE_GRAY (start at 12 o'clock) → white (end at current). Outside: unaffected BASE_GRAY.
+                    if (normalizedAngle <= currentTickAngle) {
+                        const progress = normalizedAngle / currentTickAngle; // 0 → 1
+
+                        // Interpolate from BASE_GRAY (#434343 → 67) to white (255)
+                        const start = 67;           // #434343 channel value
+                        const end = 255;            // white
+                        const r = Math.round(start + (end - start) * progress);
+                        const g = r;
+                        const b = r;
+                        return `rgb(${r}, ${g}, ${b})`;
+                    }
+
+                    // Outside the sweep (i.e., after the current tick): unaffected gray
+                    return BASE_GRAY;
+                }
+            }
+            
+            drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0, isNext = false, progress = 0, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
                 // Base tick dimensions
                 const baseLength = 15; // Base tick length
                 const actualLength = baseLength * lengthMultiplier;
@@ -1681,61 +1870,7 @@
                 // Determine color
                 let strokeColor;
                 
-                if (this.debugSettings.gradientColorMode) {
-                    // Gradient color mode: current = red, others fade from white to gray based on distance
-                    if (isFilled) {
-                        if (isCurrent) {
-                            strokeColor = '#FA4947'; // Current tick is red
-                        } else {
-                            // Calculate distance from current tick for gradient
-                            const totalTicks = this.totalMinutes < 60 ? 60 : (this.debugSettings.tickMode === 'hourly' ? 72 : 285);
-                            const currentTickIndex = this.totalMinutes < 60 ? 
-                                (this.totalMinutes > 0 ? this.totalMinutes - 1 : -1) :
-                                (this.debugSettings.tickMode === 'hourly' ? 
-                                    Math.floor((this.totalMinutes - 60) / 60) : 
-                                    Math.floor((this.totalMinutes - 60) / 15));
-                            
-                            if (currentTickIndex >= 0) {
-                                // Find the tick index for this specific tick
-                                let tickIndex;
-                                if (this.totalMinutes < 60) {
-                                    // Phase A - find which minute tick this is
-                                    for (let i = 0; i < this.totalMinutes; i++) {
-                                        const tickAngle = (i * 6 - 90) * Math.PI / 180;
-                                        if (Math.abs(tickAngle - angle) < 0.1) {
-                                            tickIndex = i;
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    // Phase B - calculate based on mode
-                                    const angleStep = 360 / totalTicks;
-                                    tickIndex = Math.round((angle * 180 / Math.PI + 90) / angleStep) % totalTicks;
-                                }
-                                
-                                if (tickIndex !== undefined) {
-                                    let distance = Math.abs(tickIndex - currentTickIndex);
-                                    const wrapDistance = totalTicks - distance;
-                                    distance = Math.min(distance, wrapDistance);
-                                    
-                                    // Calculate gradient: closer = whiter, farther = grayer
-                                    const maxDistance = Math.floor(totalTicks / 4); // Use quarter circle as max
-                                    const normalizedDistance = Math.min(distance / maxDistance, 1);
-                                    
-                                    // Interpolate from white (255) to gray (120)
-                                    const grayValue = Math.floor(255 - (255 - 120) * normalizedDistance);
-                                    strokeColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
-                                } else {
-                                    strokeColor = '#ffffff'; // Default to white if calculation fails
-                                }
-                            } else {
-                                strokeColor = '#ffffff'; // No current tick, default to white
-                            }
-                        }
-                    } else {
-                        strokeColor = '#444444'; // Unfilled ticks remain gray
-                    }
-                } else {
+                if (this.debugSettings.gradientColorMode === 'standard') {
                     // Standard color mode
                     if (isFilled) {
                         strokeColor = '#FA4947'; // Filled ticks are red
@@ -1743,7 +1878,7 @@
                         // Next tick in hourly mode cycles through opacity based on progress
                         // Starts grey, then progressively becomes red
                         if (progress === 0) {
-                            strokeColor = '#444444'; // Grey when exactly on the hour
+                            strokeColor = BASE_GRAY; // Grey when exactly on the hour
                         } else {
                             // Map progress to 25%, 50%, 75%, 100% opacity at quarter intervals
                             let opacity;
@@ -1764,7 +1899,24 @@
                             strokeColor = `rgba(${red}, ${green}, ${blue}, ${opacity})`;
                         }
                     } else {
-                        strokeColor = '#444444'; // Unfilled ticks are gray
+                        strokeColor = BASE_GRAY; // Unfilled ticks are gray
+                    }
+                } else {
+                    // Gradient color modes: current = red, others use conic gradient
+                    if (this.debugSettings.gradientColorMode === 'seamless') {
+                        // Seamless mode: apply gradient regardless of fill status
+                        if (isCurrent) {
+                            strokeColor = '#FA4947';
+                        } else {
+                            strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                        }
+                    } else {
+                        // Regular gradient mode: only apply to filled ticks
+                        if (isFilled) {
+                            strokeColor = isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                        } else {
+                            strokeColor = BASE_GRAY;
+                        }
                     }
                 }
                 
