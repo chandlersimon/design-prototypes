@@ -498,6 +498,15 @@
             <div class="debug-value" id="flashCountValue">3 flashes</div>
         </div>
         
+        <div class="debug-control">
+            <label>Global Tick Mode:</label>
+            <select id="globalTickModeSelect">
+                <option value="default">Default (Original tick counts)</option>
+                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
+                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
+            </select>
+        </div>
+        
     </div>
     
     <div class="instructions">
@@ -582,7 +591,8 @@
                     preheatEnabled: true,
                     tempTickCount: 72, // Number of temperature ticks
                     flashDuration: 150, // Flash duration in ms
-                    flashCount: 3 // Number of flashes
+                    flashCount: 3, // Number of flashes
+                    globalTickMode: '72-continuous' // 'default', '72-ticks', or '72-continuous'
                 };
                 
                 this.setupEventListeners();
@@ -732,6 +742,13 @@
                 flashCountInput.addEventListener('input', (e) => {
                     this.debugSettings.flashCount = parseInt(e.target.value);
                     flashCountValue.textContent = `${this.debugSettings.flashCount} flashes`;
+                });
+                
+                // Global Tick Mode Control
+                const globalTickModeSelect = document.getElementById('globalTickModeSelect');
+                globalTickModeSelect.addEventListener('change', (e) => {
+                    this.debugSettings.globalTickMode = e.target.value;
+                    this.render();
                 });
                 
                 // Initialize scaling controls visibility
@@ -1068,12 +1085,24 @@
             }
             
             renderTemperatureMode() {
-                // Calculate temperature progress and current tick based on configurable tick count
+                // Calculate temperature progress and current tick based on global tick mode
+                const totalTempTicks = this.getTickCountForMode('tempMode');
                 const tempRange = this.maxTemp - this.minTemp; // 180 degrees
-                const totalTempTicks = this.debugSettings.tempTickCount + 1; // Add 1 for endpoint
-                const tempIncrement = tempRange / this.debugSettings.tempTickCount; // Calculate dynamic increment
-                const currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement); // Round to nearest tick
-                const filledTempTicks = currentTempTick + 1; // Include current tick in filled count
+                
+                let currentTempTick, filledTempTicks, tempIncrement;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks' || this.debugSettings.globalTickMode === '72-continuous') {
+                    // In both 72-ticks and 72-continuous modes, we loop through the temperature range
+                    tempIncrement = tempRange / 72;
+                    const tempProgress = (this.temperature - this.minTemp) % tempRange;
+                    currentTempTick = Math.round(tempProgress / tempIncrement);
+                    filledTempTicks = Math.floor((this.temperature - this.minTemp) / tempIncrement) + 1;
+                } else {
+                    // Default mode
+                    tempIncrement = tempRange / this.debugSettings.tempTickCount;
+                    currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement);
+                    filledTempTicks = currentTempTick + 1;
+                }
                 
                 for (let i = 0; i < totalTempTicks; i++) {
                     const angle = (i * (360 / totalTempTicks) - 90) * Math.PI / 180;
@@ -1303,9 +1332,25 @@
             }
             
             renderPhaseA() {
-                const totalTicks = 59; // 59 ticks for minutes 1-59
-                const filledTicks = Math.max(1, Math.min(this.totalMinutes, 59)); // Always at least 1 tick filled
-                const currentTickIndex = filledTicks - 1;
+                const totalTicks = this.getTickCountForMode('phaseA');
+                
+                let filledTicks, currentTickIndex;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    // In 72-ticks mode, map 1-59 minutes to 72 ticks with looping
+                    const minuteProgress = Math.max(1, Math.min(this.totalMinutes, 59));
+                    filledTicks = Math.ceil(minuteProgress * 72 / 59);
+                    currentTickIndex = filledTicks - 1;
+                } else if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, use first 59 ticks for minutes 1-59 (1:1 mapping)
+                    const minuteProgress = Math.max(1, Math.min(this.totalMinutes, 59));
+                    filledTicks = minuteProgress;
+                    currentTickIndex = filledTicks - 1;
+                } else {
+                    // Default mode - 59 ticks for minutes 1-59
+                    filledTicks = Math.max(1, Math.min(this.totalMinutes, 59)); 
+                    currentTickIndex = filledTicks - 1;
+                }
                 
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
@@ -1330,7 +1375,7 @@
             }
             
             renderPhaseB15Min() {
-                const totalTicks = 285; // 71 hours * 4 + 1 for 1:00
+                const totalTicks = this.getTickCountForMode('phaseB15Min');
                 const minutesInPhaseB = this.totalMinutes - 60;
                 const ticksInPhaseB = Math.max(1, Math.floor(minutesInPhaseB / 15) + 1); // +1 for 1:00 tick, always at least 1
                 const currentTickIndex = ticksInPhaseB - 1;
@@ -1347,22 +1392,60 @@
             }
             
             renderPhaseBWrap() {
-                const totalTicks = 72; // 72 ticks around the circle
+                const totalTicks = this.getTickCountForMode('phaseBWrap');
                 const minutesInPhaseB = this.totalMinutes - 60;
-                // Each increment is 15 minutes
-                // At 60 min (1:00), we want the first tick filled
-                // At 75 min (1:15), we want the second tick filled, etc.
-                const incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 tick at 1:00
-                const currentLap = Math.floor((incrementsCompleted - 1) / 72); // Adjust for the +1
-                const ticksInCurrentLap = ((incrementsCompleted - 1) % 72) + 1; // Always 1-72
-                const currentTickIndex = ticksInCurrentLap - 1;
+                
+                let currentLap, ticksInCurrentLap, currentTickIndex, incrementsCompleted;
+                
+                if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, continue from tick 59, then wrap after tick 72
+                    incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 increment at 1:00
+                    const maxContinuousSlots = 13; // Ticks 60-72 = 13 slots for 15-minute increments
+                    
+                    if (incrementsCompleted <= maxContinuousSlots) {
+                        // First 13 increments: continue from minutes to ticks 60-72
+                        currentLap = 0; // Still on the "continuous" progression
+                        currentTickIndex = 59 + (incrementsCompleted - 1); // 1st increment -> index 59 (tick 60)
+                        ticksInCurrentLap = 59 + incrementsCompleted; // Fill minute ticks + increment ticks
+                    } else {
+                        // After 13 increments, start wrapping from tick 0
+                        const wrappedIncrements = incrementsCompleted - maxContinuousSlots;
+                        currentLap = Math.floor((wrappedIncrements - 1) / totalTicks) + 1; // Start lap counting from 1
+                        ticksInCurrentLap = ((wrappedIncrements - 1) % totalTicks) + 1; // 1-72
+                        currentTickIndex = ticksInCurrentLap - 1; // 0-71
+                    }
+                } else {
+                    // Default wrap mode logic
+                    // Each increment is 15 minutes
+                    // At 60 min (1:00), we want the first tick filled
+                    // At 75 min (1:15), we want the second tick filled, etc.
+                    incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 tick at 1:00
+                    currentLap = Math.floor((incrementsCompleted - 1) / totalTicks); // Adjust for the +1
+                    ticksInCurrentLap = ((incrementsCompleted - 1) % totalTicks) + 1; // Always 1-72
+                    currentTickIndex = ticksInCurrentLap - 1;
+                }
 
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
-                    // Show filled ticks for current lap progress
-                    const isFilled = i < ticksInCurrentLap;
-                    // Show gray for completed laps
-                    const showAsGray = currentLap > 0 && i >= ticksInCurrentLap;
+                    
+                    let isFilled, showAsGray;
+                    
+                    if (this.debugSettings.globalTickMode === '72-continuous') {
+                        if (currentLap === 0) {
+                            // Still in continuous mode: show filled up to current position
+                            isFilled = i < ticksInCurrentLap;
+                            showAsGray = false; // No gray ticks in continuous mode
+                        } else {
+                            // In wrap mode after continuous: normal wrap behavior
+                            isFilled = i < ticksInCurrentLap;
+                            showAsGray = currentLap > 1 && i >= ticksInCurrentLap; // Show gray for previous laps
+                        }
+                    } else {
+                        // Default wrap mode logic
+                        isFilled = i < ticksInCurrentLap;
+                        showAsGray = currentLap > 0 && i >= ticksInCurrentLap;
+                    }
+                    
                     const isCurrent = i === currentTickIndex;
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray, i, currentTickIndex, totalTicks);
@@ -1370,10 +1453,42 @@
             }
             
             renderPhaseBHourly() {
-                const totalTicks = 72; // One tick per hour
+                const totalTicks = this.getTickCountForMode('phaseBHourly');
                 const minutesInPhaseB = this.totalMinutes - 60;
-                const hoursCompleted = Math.max(1, Math.floor(minutesInPhaseB / 60) + 1); // +1 for the 1:00 hour, always at least 1
-                const currentTickIndex = hoursCompleted - 1;
+                
+                let hoursCompleted, currentTickIndex, filledTicks;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    // In 72-ticks mode, loop through the max time range
+                    const maxHours = 72; // Maximum hours in Phase B
+                    const hourProgress = Math.floor(minutesInPhaseB / 60) % maxHours;
+                    hoursCompleted = Math.max(1, hourProgress + 1);
+                    currentTickIndex = (hoursCompleted - 1) % 72;
+                    filledTicks = hoursCompleted;
+                } else if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, continue seamlessly from minutes to hours
+                    // At 1:00 (totalMinutes = 60), we want to be at tick 60 (index 59)
+                    // At 2:00 (totalMinutes = 120), we want to be at tick 61 (index 60), etc.
+                    
+                    const hoursFromStart = Math.floor(this.totalMinutes / 60); // 1, 2, 3, etc.
+                    const maxAvailableHours = 13; // Ticks 60-72 = 13 slots
+                    
+                    if (hoursFromStart > maxAvailableHours) {
+                        // Loop when exceeding available slots
+                        const loopedHour = ((hoursFromStart - 1) % maxAvailableHours) + 1;
+                        currentTickIndex = 58 + loopedHour; // 58 + 1 = 59 (tick 60)
+                        filledTicks = 72; // Show all ticks filled when looping
+                    } else {
+                        // Direct mapping: 1:00 -> tick 60 (index 59), 2:00 -> tick 61 (index 60), etc.
+                        currentTickIndex = 59 + (hoursFromStart - 1); // 59 + 0 = 59 (tick 60)
+                        filledTicks = 59 + hoursFromStart; // All minute ticks + hour ticks
+                    }
+                } else {
+                    // Default mode
+                    hoursCompleted = Math.max(1, Math.floor(minutesInPhaseB / 60) + 1); 
+                    currentTickIndex = hoursCompleted - 1;
+                    filledTicks = hoursCompleted;
+                }
                 
                 // Calculate progress within current hour for next tick animation
                 const minutesInCurrentHour = minutesInPhaseB % 60;
@@ -1381,13 +1496,43 @@
                 
                 for (let i = 0; i < totalTicks; i++) {
                     const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
-                    const isFilled = i < hoursCompleted;
+                    
+                    let isFilled;
+                    if (this.debugSettings.globalTickMode === '72-continuous') {
+                        // In continuous mode: fill first 59 ticks (minutes) + hour ticks
+                        isFilled = i < filledTicks;
+                    } else {
+                        isFilled = i < hoursCompleted;
+                    }
+                    
                     const isCurrent = i === currentTickIndex;
                     const isNext = i === currentTickIndex + 1 && currentTickIndex + 1 < totalTicks;
                     
                     const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
                     
                     this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, isNext, hourProgress, i, currentTickIndex, totalTicks);
+                }
+            }
+            
+            // Helper methods to get tick counts based on global tick mode setting
+            getTickCountForMode(mode) {
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    return 72; // All modes use 72 ticks
+                }
+                
+                if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // 72-continuous mode uses 72 ticks for all modes but with different logic
+                    return 72;
+                }
+                
+                // Default mode - use original tick counts
+                switch(mode) {
+                    case 'phaseA': return 59; // Minute mode (1-59 minutes)
+                    case 'tempMode': return this.debugSettings.tempTickCount + 1; // Temperature + 1 for endpoint
+                    case 'phaseBHourly': return 72; // Hourly mode
+                    case 'phaseBWrap': return 72; // Wrap mode  
+                    case 'phaseB15Min': return 285; // 15-minute mode (71 hours * 4 + 1)
+                    default: return 72;
                 }
             }
             
