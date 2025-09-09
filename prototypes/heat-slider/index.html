@@ -1,302 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oven Heat Distribution Prototype</title>
-    <style>
-        :root{
-            --bg: #0B0B0B;
-            --cool: #3D3D3D;
-            --hot-r: 255;
-            --hot-g: 95;
-            --hot-b: 66;
-            --hot: rgb(var(--hot-r), var(--hot-g), var(--hot-b));
-            --p: 75; /* peak position 0-100 (Top %) */
-            --w: 22; /* half-width of hot band */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oven Heat Distribution (Cleaned & Clamped)</title>
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --cool: #3d3d3d;
+      --hot-r: 255;
+      --hot-g: 95;
+      --hot-b: 66;
+      --hot: rgb(var(--hot-r), var(--hot-g), var(--hot-b));
+      --p: 50; /* peak position 0-100 (Top %) */
+      --w: 40; /* half-width of hot band */
+      --intensity: 0.85; /* editable by debug UI */
+      --anim-ms: 80ms; /* editable by debug UI */
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: var(--bg);
-            color: #EEE;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+    * { box-sizing: border-box; }
 
-        .outer-container {
-            width: 400px;
-            height: 600px;
-            background: transparent;
-            border: 1px solid #444;
-            border-top-right-radius: 75px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #eee;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
 
-        .prototype-container {
-            width: 272px;
-            height: 480px;
-            background: transparent;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+    .outer-container {
+      width: 400px;
+      height: 600px;
+      background: transparent;
+      border: 1px solid #444;
+      border-top-right-radius: 75px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
 
-        .row{
-            display: grid;
-            grid-template-columns: 26px 1fr 26px;
-            gap: 0;
-            align-items: center;
-            width: 100%;
-        }
+    .prototype-container {
+      width: 272px;
+      height: 480px;
+      background: transparent;
+      border-radius: 12px;
+      display: grid;
+      align-content: center;
+      justify-items: stretch;
+      gap: 24px;
+    }
 
-        .heatbar{
-            position: relative;
-            height: 32px;
-            border-radius: 999px;
-            background: var(--cool);
-            overflow: hidden;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-        }
+    .row {
+      display: grid;
+      grid-template-columns: 26px 1fr 26px;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+    }
 
-        /* Hot overlay as gradient with soft edges; over a gray base for broad browser support */
-        .heatbar .overlay{
-            position:absolute; inset:0;
-            border-radius: inherit;
-            /* Use transparent-hot overlay so edges feather out smoothly */
-            background: linear-gradient(
-                to right,
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p)*1% - calc(var(--w)*1.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.85) calc(var(--p)*1% - calc(var(--w)*0.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p)*1%),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.85) calc(var(--p)*1% + calc(var(--w)*0.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p)*1% + calc(var(--w)*1.25%))
-            );
-            transition: background-position 80ms linear, background 80ms linear;
-        }
+    .heatbar {
+      position: relative;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--cool);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      width: 100%;
+      min-width: 0;
+    }
 
-        /* Split indicator */
-        .heatbar::after{
-            content:"";
-            position:absolute;
-            left: calc(var(--p)*1%);
-            top: -6px;
-            bottom: -6px;
-            width: 4px;
-            transform: translateX(-50%);
-            background: #FFFFFF;
-            border-radius: 2px;
-            opacity: 0.9;
-            pointer-events: none;
-        }
+    /* Hot overlay as gradient with soft edges */
+    .heatbar .overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        to right,
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% - calc(var(--w) * 1.5%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% - calc(var(--w) * 1.2%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% - calc(var(--w) * 0.8%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% - calc(var(--w) * 0.4%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% - calc(var(--w) * 0.1%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p) * 1%),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% + calc(var(--w) * 0.1%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% + calc(var(--w) * 0.4%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% + calc(var(--w) * 0.8%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% + calc(var(--w) * 1.2%)),
+        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% + calc(var(--w) * 1.5%))
+      );
+      transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
+    }
 
-        .icon{
-            display: grid;
-            place-items: center;
-        }
+    /* Split indicator — clamped to stay within bounds */
+    .heatbar::after {
+      content: "";
+      position: absolute;
+      /* Keep the indicator inside the pill even at 0% or 100% */
+      left: calc(clamp(0%, var(--p) * 1%, 100%) - 2px);
+      top: 2px;
+      bottom: 2px;
+      width: 4px;
+      background: #fff;
+      border-radius: 2px;
+      opacity: 0.9;
+      pointer-events: none;
+    }
 
-        svg{
-            width: 26px;
-            height: 26px;
-        }
+    .icon { display: grid; place-items: center; }
+    svg { width: 26px; height: 26px; }
+    .icon .outline { stroke: #ffffff; fill: none; }
+    .icon.off .outline { stroke: var(--cool); }
 
-        .icon .outline{
-            stroke: #FFFFFF;
-        }
+    .distribution-label {
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+      color: #eee;
+      margin-top: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+    .distribution-label.hidden { display: none; }
 
-        .icon.off .outline{
-            stroke: var(--cool);
-        }
+    .instructions {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #888;
+      font-size: 0.9em;
+    }
 
-        .distribution-label {
-            text-align: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-weight: 600;
-            font-size: 16px;
-            color: #EEE;
-            margin-top: 32px;
-            font-variant-numeric: tabular-nums;
-        }
+    .debug-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #333;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+      z-index: 1001;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-        .distribution-label.hidden {
-            display: none;
-        }
+    .debug-panel {
+      position: fixed;
+      top: 20px;
+      right: -220px;
+      background: rgba(40, 40, 40, 0.95);
+      padding: 15px;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.8em;
+      width: 200px;
+      transition: right 0.3s ease;
+      z-index: 1000;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .debug-panel.open { right: 20px; }
+    .debug-panel h3 { margin: 0 0 10px 0; font-size: 1em; }
+    .debug-control { margin: 8px 0; }
+    .debug-control label { display: block; margin-bottom: 4px; }
+    .debug-control input[type="range"], .debug-control select { width: 100%; }
+    .debug-value { color: #ccc; font-size: 0.85em; }
 
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: #888;
-            font-size: 0.9em;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        .debug-panel {
-            position: absolute;
-            top: 20px;
-            right: -260px;
-            background: rgba(40, 40, 40, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.8em;
-            width: 220px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        .debug-panel.open {
-            right: 20px;
-        }
-
-        .debug-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #333;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            z-index: 1001;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        .debug-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 1em;
-        }
-
-        .debug-control {
-            margin: 8px 0;
-        }
-
-        .debug-control label {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 0.9em;
-        }
-
-        .debug-control input[type="range"] {
-            width: 100%;
-            margin: 2px 0;
-        }
-
-        .debug-control select {
-            width: 100%;
-            padding: 4px;
-            background: #555;
-            color: white;
-            border: 1px solid #666;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-
-        .debug-value {
-            color: #ccc;
-            font-size: 0.8em;
-        }
-    </style>
+    @media (prefers-reduced-motion: reduce) {
+      :root { --anim-ms: 0ms; }
+    }
+  </style>
 </head>
 <body>
-    <div class="outer-container">
-        <div class="prototype-container">
-            <div class="row">
-                <div class="icon" id="icon-bottom" aria-label="Bottom element" role="img">
-                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                        <rect x="14" y="14" width="72" height="72" rx="16" ry="16" fill="none" stroke-width="7" class="outline"/>
-                        <!-- bottom element bar -->
-                        <rect x="28" y="70" width="44" height="8" rx="4" fill="none" stroke-width="7" class="outline"/>
-                    </svg>
-                </div>
-
-                <div class="heatbar" id="heatbar" aria-hidden="true">
-                    <div class="overlay"></div>
-                </div>
-
-                <div class="icon" id="icon-top" aria-label="Top element" role="img">
-                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                        <rect x="14" y="14" width="72" height="72" rx="16" ry="16" fill="none" stroke-width="7" class="outline"/>
-                        <!-- top element bar -->
-                        <rect x="28" y="22" width="44" height="8" rx="4" fill="none" stroke-width="7" class="outline"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="distribution-label" id="distributionLabel">25% Bottom / 75% Top</div>
+  <div class="outer-container">
+    <div class="prototype-container">
+      <div class="row" aria-label="Heat distribution" role="group">
+        <div class="icon" id="icon-bottom" aria-label="Bottom element" role="img">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
+            <rect x="28" y="70" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+          </svg>
         </div>
+
+        <div class="heatbar" id="heatbar" aria-hidden="true">
+          <div class="overlay"></div>
+        </div>
+
+        <div class="icon" id="icon-top" aria-label="Top element" role="img">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
+            <rect x="28" y="22" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="distribution-label hidden" id="distributionLabel" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <button class="debug-toggle" id="debugToggle" type="button" aria-expanded="false" aria-controls="debugPanel">Open controls</button>
+
+  <div class="debug-panel" id="debugPanel" role="region" aria-label="Heat controls">
+    <h3>Heat Controls</h3>
+
+    <div class="debug-control">
+      <label for="animationSpeed">Heat Distribution Speed:</label>
+      <input type="range" id="animationSpeed" min="0" max="200" step="10" value="80" />
+      <div class="debug-value" id="animationSpeedValue">80ms</div>
     </div>
 
-    <button class="debug-toggle" onclick="toggleDebug()" id="debugToggle">Open controls</button>
-    
-    <div class="debug-panel" id="debugPanel">
-        <h3>Heat Controls</h3>
-        
-        <div class="debug-control">
-            <label>Heat Distribution Speed:</label>
-            <input type="range" id="animationSpeed" min="10" max="200" step="10" value="80">
-            <div class="debug-value" id="animationSpeedValue">80ms</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Heat Band Width:</label>
-            <input type="range" id="bandWidth" min="10" max="40" step="2" value="22">
-            <div class="debug-value" id="bandWidthValue">22</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Heat Intensity:</label>
-            <select id="heatIntensity">
-                <option value="0.85">High (85%)</option>
-                <option value="0.7">Medium (70%)</option>
-                <option value="0.5">Low (50%)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Step Size (%):</label>
-            <input type="range" id="stepSize" min="1" max="25" step="1" value="1">
-            <div class="debug-value" id="stepSizeValue">1%</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Show Distribution Label:</label>
-            <select id="showLabel">
-                <option value="true">Show</option>
-                <option value="false">Hide</option>
-            </select>
-        </div>
+    <div class="debug-control">
+      <label for="bandWidth">Heat Band Width:</label>
+      <input type="range" id="bandWidth" min="10" max="40" step="2" value="22" />
+      <div class="debug-value" id="bandWidthValue">22</div>
     </div>
 
-    <div class="instructions">
-        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+    <div class="debug-control">
+      <label for="heatIntensity">Heat Intensity:</label>
+      <select id="heatIntensity">
+        <option value="0.85" selected>High (85%)</option>
+        <option value="0.7">Medium (70%)</option>
+        <option value="0.5">Low (50%)</option>
+      </select>
     </div>
 
-<script>
-(() => {
-    const root = document.documentElement;
-    const bar = document.getElementById('heatbar');
-    const iconTop = document.getElementById('icon-top');
-    const iconBottom = document.getElementById('icon-bottom');
-    const distributionLabel = document.getElementById('distributionLabel');
+    <div class="debug-control">
+      <label for="stepSize">Step Mode:</label>
+      <select id="stepSize">
+        <option value="1">1% increments</option>
+        <option value="5">5% increments</option>
+        <option value="20">20% increments</option>
+        <option value="preset" selected>Preset positions (100:0, 75:25, 50:50, 25:75, 0:100)</option>
+      </select>
+    </div>
 
-    function setTopPct(v){
-        let topPct = Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+    <div class="debug-control">
+      <label for="showLabel">Show Distribution Label:</label>
+      <select id="showLabel">
+        <option value="true">Show</option>
+        <option value="false" selected>Hide</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="instructions">
+    Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const iconTop = document.getElementById('icon-top');
+      const iconBottom = document.getElementById('icon-bottom');
+      const distributionLabel = document.getElementById('distributionLabel');
+
+      const clamp01 = (v) => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+      const getP = () => {
+        // Read current CSS var; fallback to 75 if not set
+        const raw = root.style.getPropertyValue('--p');
+        return raw ? clamp01(raw) : 50;
+      };
+
+      function setTopPct(v) {
+        const topPct = clamp01(v);
         const bottomPct = 100 - topPct;
-        console.log(`setTopPct: input=${v}, topPct=${topPct}, bottomPct=${bottomPct}`);
 
         // Update CSS variable for peak position
         root.style.setProperty('--p', String(topPct));
@@ -304,99 +277,103 @@
         // Update distribution label
         distributionLabel.textContent = `${bottomPct}% Bottom / ${topPct}% Top`;
 
-        // Update icons' on/off (gray when contribution is 0%)
+        // Toggle icon states
         iconTop.classList.toggle('off', topPct === 0);
         iconBottom.classList.toggle('off', bottomPct === 0);
-    }
+      }
 
-    // Remove slider interaction since we removed the slider
-
-    // Keyboard shortcuts: O (left), P (right)
-    document.addEventListener('keydown', (e) => {
+      // Keyboard shortcuts: O (left), P (right), R (reset)
+      document.addEventListener('keydown', (e) => {
         const k = e.key.toLowerCase();
         if (k === 'o' || k === 'p') {
-            e.preventDefault();
-            const currentValue = parseInt(root.style.getPropertyValue('--p')) || 75;
-            const stepSize = parseInt(document.getElementById('stepSize').value) || 1;
-            const delta = (k === 'o') ? -stepSize : stepSize;
-            const newValue = Math.max(0, Math.min(100, currentValue + delta));
-            console.log(`Key: ${k}, Current: ${currentValue}, Step: ${stepSize}, Delta: ${delta}, NewValue: ${newValue}`);
-            setTopPct(newValue);
+          e.preventDefault();
+          const current = getP();
+          const stepMode = document.getElementById('stepSize').value;
+          
+          if (stepMode === 'preset') {
+            const presets = [0, 25, 50, 75, 100];
+            const currentIndex = presets.findIndex(preset => Math.abs(preset - current) <= 2);
+            let newIndex;
+            
+            if (currentIndex === -1) {
+              // Not on a preset, find closest
+              newIndex = k === 'o' 
+                ? presets.findIndex(preset => preset >= current) - 1
+                : presets.findIndex(preset => preset > current);
+            } else {
+              newIndex = currentIndex + (k === 'o' ? -1 : 1);
+            }
+            
+            if (newIndex >= 0 && newIndex < presets.length) {
+              setTopPct(presets[newIndex]);
+            }
+          } else {
+            const stepSize = parseInt(stepMode) || 1;
+            const delta = k === 'o' ? -stepSize : stepSize;
+            setTopPct(current + delta);
+          }
         } else if (k === 'r') {
-            e.preventDefault();
-            setTopPct(75); // Reset to default
+          e.preventDefault();
+          setTopPct(50);
         }
-    });
+      });
 
-    // Initialize
-    setTopPct(75);
+      // Initialize
+      setTopPct(getP());
 
-    // Debug panel functionality
-    function toggleDebug() {
+      // Debug panel functionality
+      function toggleDebug() {
         const panel = document.getElementById('debugPanel');
         const toggleBtn = document.getElementById('debugToggle');
-        
         panel.classList.toggle('open');
-        toggleBtn.textContent = panel.classList.contains('open') ? 'Close' : 'Open controls';
-    }
+        const isOpen = panel.classList.contains('open');
+        toggleBtn.textContent = isOpen ? 'Close' : 'Open controls';
+        toggleBtn.setAttribute('aria-expanded', String(isOpen));
+      }
+      window.toggleDebug = toggleDebug; // expose for button
+      document.getElementById('debugToggle').addEventListener('click', toggleDebug);
 
-    // Debug controls
-    function setupDebugControls() {
+      // Debug controls
+      (function setupDebugControls() {
+        const overlay = document.querySelector('.heatbar .overlay');
+
         // Animation speed
         const animationSpeed = document.getElementById('animationSpeed');
         const animationSpeedValue = document.getElementById('animationSpeedValue');
         animationSpeed.addEventListener('input', (e) => {
-            const value = e.target.value + 'ms';
-            animationSpeedValue.textContent = value;
-            const overlay = document.querySelector('.heatbar .overlay');
-            overlay.style.transition = `background-position ${value} linear, background ${value} linear`;
+          const ms = Math.max(0, Number(e.target.value) || 0);
+          animationSpeedValue.textContent = `${ms}ms`;
+          root.style.setProperty('--anim-ms', `${ms}ms`);
         });
 
         // Band width
         const bandWidth = document.getElementById('bandWidth');
         const bandWidthValue = document.getElementById('bandWidthValue');
         bandWidth.addEventListener('input', (e) => {
-            const value = e.target.value;
-            bandWidthValue.textContent = value;
-            root.style.setProperty('--w', value);
+          const value = clamp01(e.target.value);
+          bandWidthValue.textContent = String(value);
+          root.style.setProperty('--w', String(value));
         });
 
         // Heat intensity
         const heatIntensity = document.getElementById('heatIntensity');
         heatIntensity.addEventListener('change', (e) => {
-            const intensity = e.target.value;
-            const overlay = document.querySelector('.heatbar .overlay');
-            overlay.style.background = `linear-gradient(
-                to right,
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p)*1% - calc(var(--w)*1.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), ${intensity}) calc(var(--p)*1% - calc(var(--w)*0.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p)*1%),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), ${intensity}) calc(var(--p)*1% + calc(var(--w)*0.25%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p)*1% + calc(var(--w)*1.25%))
-            )`;
+          const intensity = String(e.target.value);
+          root.style.setProperty('--intensity', intensity);
+          // Force recompute by toggling background value (not strictly necessary with CSS var)
+          overlay.style.background = getComputedStyle(overlay).background;
         });
 
-        // Step size
-        const stepSize = document.getElementById('stepSize');
-        const stepSizeValue = document.getElementById('stepSizeValue');
-        stepSize.addEventListener('input', (e) => {
-            const value = e.target.value + '%';
-            stepSizeValue.textContent = value;
-        });
+        // Step mode (no additional handling needed since it's a select)
 
         // Show/hide distribution label
         const showLabel = document.getElementById('showLabel');
         showLabel.addEventListener('change', (e) => {
-            const shouldShow = e.target.value === 'true';
-            distributionLabel.classList.toggle('hidden', !shouldShow);
+          const shouldShow = e.target.value === 'true';
+          distributionLabel.classList.toggle('hidden', !shouldShow);
         });
-    }
-
-    setupDebugControls();
-
-    // Make toggleDebug available globally
-    window.toggleDebug = toggleDebug;
-})();
-</script>
+      })();
+    })();
+  </script>
 </body>
 </html>

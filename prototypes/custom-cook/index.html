@@ -44,6 +44,18 @@
             --label-xs-lv2-weight: 500;
             --label-xs-lv2-spacing: 0.08em;
             --label-xs-lv2-features: "ss01" 1, "ss02" 1;
+            
+            /* Heat Slider Variables */
+            --bg: #0b0b0b;
+            --cool: #3d3d3d;
+            --hot-r: 255;
+            --hot-g: 95;
+            --hot-b: 66;
+            --hot: rgb(var(--hot-r), var(--hot-g), var(--hot-b));
+            --p: 50; /* peak position 0-100 (Top %) */
+            --w: 40; /* half-width of hot band */
+            --intensity: 0.85; /* editable by debug UI */
+            --anim-ms: 80ms; /* editable by debug UI */
         }
         body {
             margin: 0;
@@ -75,6 +87,7 @@
             background: transparent;
             border-radius: 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
@@ -350,6 +363,119 @@
             font-size: 0.9em;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
+        
+        /* Heat Slider Styles */
+        .heat-slider-container {
+            width: 100%;
+            margin-top: 24px;
+            transition: filter 300ms ease, opacity 300ms ease;
+        }
+        
+        .heat-slider-container.grayscale {
+            filter: grayscale(1) opacity(0.5);
+        }
+        
+        .heat-row {
+            display: grid;
+            grid-template-columns: 26px 1fr 26px;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+        }
+        
+        .heatbar {
+            position: relative;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--cool);
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            width: 100%;
+            min-width: 0;
+        }
+        
+        /* Hot overlay as gradient with soft edges */
+        .heatbar .overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(
+                to right,
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% - calc(var(--w) * 1.5%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% - calc(var(--w) * 1.2%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% - calc(var(--w) * 0.8%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% - calc(var(--w) * 0.4%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% - calc(var(--w) * 0.1%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p) * 1%),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% + calc(var(--w) * 0.1%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% + calc(var(--w) * 0.4%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% + calc(var(--w) * 0.8%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% + calc(var(--w) * 1.2%)),
+                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% + calc(var(--w) * 1.5%))
+            );
+            transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
+        }
+        
+        /* Split indicator — clamped to stay within bounds */
+        .heatbar::after {
+            content: "";
+            position: absolute;
+            /* Keep the indicator inside the pill even at 0% or 100% */
+            left: calc(clamp(0%, var(--p) * 1%, 100%) - 2px);
+            top: 2px;
+            bottom: 2px;
+            width: 4px;
+            background: #fff;
+            border-radius: 2px;
+            opacity: 0.9;
+            pointer-events: none;
+        }
+        
+        .heat-icon { 
+            display: grid; 
+            place-items: center; 
+        }
+        
+        .heat-icon svg { 
+            width: 26px; 
+            height: 26px; 
+        }
+        
+        .heat-icon .outline { 
+            stroke: #ffffff; 
+            fill: none; 
+        }
+        
+        .heat-icon.off .outline { 
+            stroke: var(--cool); 
+        }
+        
+        /* Dial container modifications for custom-cook mode */
+        .container {
+            transition: transform 300ms ease, filter 300ms ease;
+        }
+        
+        .container.custom-cook-mode {
+            filter: grayscale(1) opacity(0.5);
+            transition: transform 300ms ease;
+        }
+        
+        .container.custom-cook-mode.scale-none {
+            transform: scale(1.0);
+        }
+        
+        .container.custom-cook-mode.scale-0-8 {
+            transform: scale(0.8);
+        }
+        
+        .container.custom-cook-mode.scale-0-7 {
+            transform: scale(0.7);
+        }
+        
+        .container.custom-cook-mode.scale-0-6 {
+            transform: scale(0.6);
+        }
     </style>
 </head>
 <body>
@@ -378,6 +504,29 @@
             <button class="completion-btn" id="keepWarmBtn">Keep warm</button>
         </div>
             </div>
+            
+            <!-- Heat Slider -->
+            <div class="heat-slider-container grayscale" id="heatSliderContainer">
+                <div class="heat-row" aria-label="Heat distribution" role="group">
+                    <div class="heat-icon" id="iconBottom" aria-label="Bottom element" role="img">
+                        <svg viewBox="0 0 100 100" aria-hidden="true">
+                            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
+                            <rect x="28" y="70" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+                        </svg>
+                    </div>
+
+                    <div class="heatbar" id="heatbar" aria-hidden="true">
+                        <div class="overlay"></div>
+                    </div>
+
+                    <div class="heat-icon" id="iconTop" aria-label="Top element" role="img">
+                        <svg viewBox="0 0 100 100" aria-hidden="true">
+                            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
+                            <rect x="28" y="22" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -387,49 +536,19 @@
         <h3>Debug Controls</h3>
         
         <div class="debug-control">
-            <label>Phase B Tick Mode:</label>
-            <select id="tickModeSelect">
-                <option value="wrap">Wrap mode (72 ticks, 4 laps)</option>
-                <option value="15min">15-min ticks (285 total)</option>
-                <option value="hourly">Hourly ticks (72 total)</option>
+            <label>Custom-Cook Scale Mode:</label>
+            <select id="customCookScaleSelect">
+                <option value="none" selected>None (no scaling)</option>
+                <option value="0.8">0.8x Scale</option>
+                <option value="0.7">0.7x Scale</option>
+                <option value="0.6">0.6x Scale</option>
             </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Enable Preheat:</label>
-            <select id="preheatSelect">
-                <option value="true">Enabled</option>
-                <option value="false">Disabled</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Gradient Color Mode:</label>
-            <select id="gradientColorSelect">
-                <option value="standard">Standard Colors</option>
-                <option value="gradient">White-to-Gray Gradient</option>
-                <option value="seamless" selected>Seamless Gradient (20% trail)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Trail Mode (P/O keys):</label>
-            <select id="trailModeSelect">
-                <option value="stay">P: Normal, O: Trail on opposite side</option>
-                <option value="normal" selected>P/O: Normal increase/decrease</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Ring Gap (degrees):</label>
-            <input type="range" id="gapAngle" min="0" max="30" step="1" value="20">
-            <div class="debug-value" id="gapAngleValue">20°</div>
         </div>
         
         <div class="debug-control">
             <label>Enable Tick Scaling:</label>
             <select id="enableScalingSelect">
-                <option value="false">Disabled</option>
+                <option value="false" selected>Disabled</option>
                 <option value="true">Enabled</option>
             </select>
         </div>
@@ -486,39 +605,11 @@
             </select>
         </div>
         
-        <div class="debug-control">
-            <label>Temperature Tick Count:</label>
-            <select id="tempTickCountSelect">
-                <option value="36">36 ticks (5°F steps)</option>
-                <option value="72" selected>72 ticks (2.5°F steps)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
-            <label>Flash Duration (ms):</label>
-            <input type="number" id="flashDuration" min="50" max="500" step="25" value="150" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
-            <div class="debug-value" id="flashDurationValue">150ms</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Flash Count:</label>
-            <input type="number" id="flashCount" min="1" max="10" step="1" value="3" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
-            <div class="debug-value" id="flashCountValue">3 flashes</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Global Tick Mode:</label>
-            <select id="globalTickModeSelect">
-                <option value="default">Default (Original tick counts)</option>
-                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
-                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
-            </select>
-        </div>
         
     </div>
     
     <div class="instructions">
-        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>1</strong> to start • <strong>R</strong> to restart
+        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to cycle modes • <strong>1</strong> to start • <strong>R</strong> to restart
     </div>
 
     <script>
@@ -536,6 +627,12 @@
                 this.bitMoreBtn = document.getElementById('bitMoreBtn');
                 this.keepWarmBtn = document.getElementById('keepWarmBtn');
                 
+                // Heat slider elements
+                this.heatSliderContainer = document.getElementById('heatSliderContainer');
+                this.iconTop = document.getElementById('iconTop');
+                this.iconBottom = document.getElementById('iconBottom');
+                this.container = document.querySelector('.container');
+                
                 this.totalMinutes = 10; // Start with 10 minutes
                 this.maxMinutes = 72 * 60;
                 
@@ -543,7 +640,11 @@
                 this.minTemp = 300;
                 this.maxTemp = 480;
                 
-                this.tempMode = true; // Start in temperature mode
+                // 3-mode system: 0 = temperature, 1 = time, 2 = custom-cook
+                this.currentMode = 0;
+                
+                // Heat slider settings
+                this.heatDistribution = 50; // 0-100, where 50 is center
                 
                 this.centerX = 160;
                 this.centerY = 160;
@@ -601,7 +702,8 @@
                     flashDuration: 150, // Flash duration in ms
                     flashCount: 3, // Number of flashes
                     globalTickMode: '72-continuous', // 'default', '72-ticks', or '72-continuous'
-                    trailMode: 'normal' // 'normal' or 'stay'
+                    trailMode: 'normal', // 'normal' or 'stay'
+                    customCookScaleMode: 'none' // 'none', '0.8', '0.7', '0.6'
                 };
                 
                 // Trail direction state (for 'stay' mode)
@@ -613,7 +715,58 @@
                 this.setupEventListeners();
                 this.setupDebugControls();
                 this.startUpdateLoop();
+                
+                // Initialize heat slider and modes
+                this.setHeatDistribution(50); // Start at center
+                this.updateModeVisuals(); // Set initial visual mode
+                
                 this.render();
+            }
+            
+            // Heat slider functionality
+            clamp01(v) {
+                return Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+            }
+            
+            getHeatDistribution() {
+                // Read current CSS var; fallback to 50 if not set
+                const raw = document.documentElement.style.getPropertyValue('--p');
+                return raw ? this.clamp01(raw) : 50;
+            }
+            
+            setHeatDistribution(v) {
+                const topPct = this.clamp01(v);
+                const bottomPct = 100 - topPct;
+                
+                // Update CSS variable for peak position
+                document.documentElement.style.setProperty('--p', String(topPct));
+                this.heatDistribution = topPct;
+                
+                // Toggle icon states
+                this.iconTop.classList.toggle('off', topPct === 0);
+                this.iconBottom.classList.toggle('off', bottomPct === 0);
+            }
+            
+            adjustHeatDistribution(delta) {
+                if (this.currentMode !== 2) return; // Only work in custom-cook mode
+                
+                const current = this.getHeatDistribution();
+                const presets = [0, 25, 50, 75, 100];
+                const currentIndex = presets.findIndex(preset => Math.abs(preset - current) <= 2);
+                
+                let newIndex;
+                if (currentIndex === -1) {
+                    // Not on a preset, find closest
+                    newIndex = delta < 0 
+                        ? presets.findIndex(preset => preset >= current) - 1
+                        : presets.findIndex(preset => preset > current);
+                } else {
+                    newIndex = currentIndex + (delta < 0 ? -1 : 1);
+                }
+                
+                if (newIndex >= 0 && newIndex < presets.length) {
+                    this.setHeatDistribution(presets[newIndex]);
+                }
             }
             
             setupEventListeners() {
@@ -623,19 +776,31 @@
                         if (this.cookingComplete) {
                             this.navigateButtons(1); // Next button
                         } else {
-                            if (this.debugSettings.trailMode === 'stay') {
-                                this.startTrailDirectionAnimation('normal'); // P sets trail to normal direction
+                            if (this.currentMode === 2) {
+                                // Custom-cook mode: adjust heat distribution
+                                this.adjustHeatDistribution(1);
+                            } else {
+                                // Temperature/Time modes: existing functionality
+                                if (this.debugSettings.trailMode === 'stay') {
+                                    this.startTrailDirectionAnimation('normal');
+                                }
+                                this.increaseValue();
                             }
-                            this.increaseValue();
                         }
                     } else if (key === 'o') {
                         if (this.cookingComplete) {
                             this.navigateButtons(-1); // Previous button
                         } else {
-                            if (this.debugSettings.trailMode === 'stay') {
-                                this.startTrailDirectionAnimation('opposite'); // O sets trail to opposite direction
+                            if (this.currentMode === 2) {
+                                // Custom-cook mode: adjust heat distribution
+                                this.adjustHeatDistribution(-1);
+                            } else {
+                                // Temperature/Time modes: existing functionality
+                                if (this.debugSettings.trailMode === 'stay') {
+                                    this.startTrailDirectionAnimation('opposite');
+                                }
+                                this.decreaseValue();
                             }
-                            this.decreaseValue();
                         }
                     } else if (key === 'r') {
                         this.restart();
@@ -648,6 +813,13 @@
             }
             
             setupDebugControls() {
+                // Custom Cook Scale Mode Control
+                const customCookScaleSelect = document.getElementById('customCookScaleSelect');
+                customCookScaleSelect.addEventListener('change', (e) => {
+                    this.debugSettings.customCookScaleMode = e.target.value;
+                    this.updateModeVisuals();
+                });
+                
                 // Enable Scaling Control
                 const enableScalingSelect = document.getElementById('enableScalingSelect');
                 enableScalingSelect.addEventListener('change', (e) => {
@@ -656,23 +828,6 @@
                     this.render();
                 });
                 
-                // Gradient Color Mode Control
-                const gradientColorSelect = document.getElementById('gradientColorSelect');
-                gradientColorSelect.addEventListener('change', (e) => {
-                    this.debugSettings.gradientColorMode = e.target.value;
-                    this.render();
-                });
-                
-                // Trail Mode Control
-                const trailModeSelect = document.getElementById('trailModeSelect');
-                trailModeSelect.addEventListener('change', (e) => {
-                    this.debugSettings.trailMode = e.target.value;
-                    // Reset trail direction when mode changes
-                    this.trailDirection = 'normal';
-                    this.trailDirectionTarget = 'normal';
-                    this.trailDirectionAnimationStart = null;
-                    this.render();
-                });
                 
                 // Current Length
                 const currentLengthSlider = document.getElementById('currentLength');
@@ -715,28 +870,6 @@
                     this.render();
                 });
                 
-                // Tick Mode Dropdown
-                const tickModeSelect = document.getElementById('tickModeSelect');
-                tickModeSelect.addEventListener('change', (e) => {
-                    this.debugSettings.tickMode = e.target.value;
-                    this.render();
-                });
-                
-                // Gap Angle Control
-                const gapAngleSlider = document.getElementById('gapAngle');
-                const gapAngleValue = document.getElementById('gapAngleValue');
-                gapAngleSlider.addEventListener('input', (e) => {
-                    this.debugSettings.gapAngle = parseInt(e.target.value);
-                    gapAngleValue.textContent = `${this.debugSettings.gapAngle}°`;
-                    this.render();
-                });
-                
-                // Preheat Control
-                const preheatSelect = document.getElementById('preheatSelect');
-                preheatSelect.addEventListener('change', (e) => {
-                    this.debugSettings.preheatEnabled = e.target.value === 'true';
-                    this.render();
-                });
                 
                 // Auto Reset Dropdown
                 const autoResetSelect = document.getElementById('autoResetSelect');
@@ -753,35 +886,6 @@
                     resetDelayValue.textContent = `${this.debugSettings.resetDelay}s`;
                 });
                 
-                // Temperature Tick Count Control
-                const tempTickCountSelect = document.getElementById('tempTickCountSelect');
-                tempTickCountSelect.addEventListener('change', (e) => {
-                    this.debugSettings.tempTickCount = parseInt(e.target.value);
-                    this.render();
-                });
-                
-                // Flash Duration Control
-                const flashDurationInput = document.getElementById('flashDuration');
-                const flashDurationValue = document.getElementById('flashDurationValue');
-                flashDurationInput.addEventListener('input', (e) => {
-                    this.debugSettings.flashDuration = parseInt(e.target.value);
-                    flashDurationValue.textContent = `${this.debugSettings.flashDuration}ms`;
-                });
-                
-                // Flash Count Control
-                const flashCountInput = document.getElementById('flashCount');
-                const flashCountValue = document.getElementById('flashCountValue');
-                flashCountInput.addEventListener('input', (e) => {
-                    this.debugSettings.flashCount = parseInt(e.target.value);
-                    flashCountValue.textContent = `${this.debugSettings.flashCount} flashes`;
-                });
-                
-                // Global Tick Mode Control
-                const globalTickModeSelect = document.getElementById('globalTickModeSelect');
-                globalTickModeSelect.addEventListener('change', (e) => {
-                    this.debugSettings.globalTickMode = e.target.value;
-                    this.render();
-                });
                 
                 // Initialize scaling controls visibility
                 this.toggleScalingControls();
@@ -861,8 +965,42 @@
             
             toggleMode() {
                 if (this.countdownMode) return;
-                this.tempMode = !this.tempMode;
+                
+                // Cycle through 3 modes: 0 = temperature, 1 = time, 2 = custom-cook
+                this.currentMode = (this.currentMode + 1) % 3;
+                
+                // Update visual states based on mode
+                this.updateModeVisuals();
                 this.render();
+            }
+            
+            updateModeVisuals() {
+                // Remove all mode classes first
+                this.container.classList.remove('custom-cook-mode', 'scale-none', 'scale-0-8', 'scale-0-7', 'scale-0-6');
+                this.heatSliderContainer.classList.remove('grayscale');
+                
+                if (this.currentMode === 2) {
+                    // Custom-cook mode: dial grayscale/scaled, heat-slider active
+                    this.container.classList.add('custom-cook-mode');
+                    
+                    // Apply scale based on debug setting
+                    const scaleMode = this.debugSettings.customCookScaleMode;
+                    if (scaleMode === 'none') {
+                        this.container.classList.add('scale-none');
+                    } else if (scaleMode === '0.8') {
+                        this.container.classList.add('scale-0-8');
+                    } else if (scaleMode === '0.7') {
+                        this.container.classList.add('scale-0-7');
+                    } else if (scaleMode === '0.6') {
+                        this.container.classList.add('scale-0-6');
+                    }
+                } else {
+                    // Temperature or time mode: heat-slider grayscale
+                    this.heatSliderContainer.classList.add('grayscale');
+                }
+                
+                // Update tempMode for backwards compatibility with existing render logic
+                this.tempMode = (this.currentMode === 0);
             }
             
             startCooking() {
