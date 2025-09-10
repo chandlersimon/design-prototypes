@@ -7,7 +7,7 @@
   <style>
     :root {
       --bg: #0b0b0b;
-      --cool: #3d3d3d;
+      --cool: #490307;
       --hot-r: 255;
       --hot-g: 95;
       --hot-b: 66;
@@ -66,12 +66,13 @@
     .heatbar {
       position: relative;
       height: 32px;
-      border-radius: 6px;
+      border-radius: 16px;
       background: var(--cool);
       overflow: hidden;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
       width: 100%;
       min-width: 0;
+      transition: height 0.3s ease;
     }
 
     /* Hot overlay as gradient with soft edges */
@@ -96,12 +97,12 @@
       transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
     }
 
-    /* Split indicator — clamped to stay within bounds */
+    /* Split indicator — clamped to stay within bounds with padding */
     .heatbar::after {
       content: "";
       position: absolute;
-      /* Keep the indicator inside the pill even at 0% or 100% */
-      left: calc(clamp(0%, var(--p) * 1%, 100%) - 2px);
+      /* Keep the indicator inside the pill with 24px padding from edges */
+      left: calc(24px + (var(--p) * 1% * (100% - 48px) / 100%) - 2px);
       top: 2px;
       bottom: 2px;
       width: 4px;
@@ -111,10 +112,23 @@
       pointer-events: none;
     }
 
+    /* Off state - greyscale only the background and overlay */
+    body.off .heatbar {
+      background: #33333342;
+      height: 24px;
+      transition: height 0.3s ease;
+    }
+    
+    body.off .heatbar .overlay {
+      filter: grayscale(100%);
+    }
+    
+    body.off .heatbar::after {
+      background: #fa4947;
+    }
+
     .icon { display: grid; place-items: center; }
-    svg { width: 26px; height: 26px; }
-    .icon .outline { stroke: #ffffff; fill: none; }
-    .icon.off .outline { stroke: var(--cool); }
+    .icon svg { width: 25px; height: 24px; }
 
     .distribution-label {
       text-align: center;
@@ -182,9 +196,8 @@
     <div class="prototype-container">
       <div class="row" aria-label="Heat distribution" role="group">
         <div class="icon" id="icon-bottom" aria-label="Bottom element" role="img">
-          <svg viewBox="0 0 100 100" aria-hidden="true">
-            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
-            <rect x="28" y="70" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+          <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(180deg);">
+            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
           </svg>
         </div>
 
@@ -193,9 +206,8 @@
         </div>
 
         <div class="icon" id="icon-top" aria-label="Top element" role="img">
-          <svg viewBox="0 0 100 100" aria-hidden="true">
-            <rect x="14" y="14" width="72" height="72" rx="16" ry="16" stroke-width="7" class="outline" />
-            <rect x="28" y="22" width="44" height="8" rx="4" stroke-width="7" class="outline" />
+          <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
           </svg>
         </div>
       </div>
@@ -216,9 +228,14 @@
     </div>
 
     <div class="debug-control">
-      <label for="bandWidth">Heat Band Width:</label>
-      <input type="range" id="bandWidth" min="10" max="40" step="2" value="22" />
-      <div class="debug-value" id="bandWidthValue">22</div>
+      <label>Heat Band Width:</label>
+      <div class="debug-value" id="bandWidthValue">Auto (25-50)</div>
+    </div>
+
+    <div class="debug-control">
+      <label for="coolColor">Cool Color:</label>
+      <input type="color" id="coolColor" value="#490307" />
+      <div class="debug-value" id="coolColorValue">#490307</div>
     </div>
 
     <div class="debug-control">
@@ -274,18 +291,66 @@
         // Update CSS variable for peak position
         root.style.setProperty('--p', String(topPct));
 
+        // Calculate dynamic heat band width: 50 at edges, 25 in middle
+        // Distance from center (50) normalized to 0-1
+        const distanceFromCenter = Math.abs(topPct - 50) / 50;
+        const dynamicWidth = 25 + (distanceFromCenter * 25); // interpolate between 25 and 50
+        root.style.setProperty('--w', String(dynamicWidth));
+
+        // Update band width display if debug panel exists
+        const bandWidthDisplay = document.getElementById('bandWidthValue');
+        if (bandWidthDisplay) {
+          bandWidthDisplay.textContent = `${Math.round(dynamicWidth)}`;
+        }
+
+        // Calculate dynamic icon opacity based on position
+        // At 50% (middle): both icons at 50% opacity
+        // At 0% (full left): left icon 100%, right icon 10%
+        // At 25% (quarter left): left icon 75%, right icon 25%
+        // At 75% (quarter right): left icon 25%, right icon 75%
+        // At 100% (full right): left icon 10%, right icon 100%
+        
+        let leftOpacity, rightOpacity;
+        
+        if (topPct <= 50) {
+          // Moving from center to left
+          const progress = (50 - topPct) / 50; // 0 at center, 1 at full left
+          leftOpacity = 0.5 + (progress * 0.5); // 50% to 100%
+          rightOpacity = 0.5 - (progress * 0.4); // 50% to 10%
+        } else {
+          // Moving from center to right
+          const progress = (topPct - 50) / 50; // 0 at center, 1 at full right
+          leftOpacity = 0.5 - (progress * 0.4); // 50% to 10%
+          rightOpacity = 0.5 + (progress * 0.5); // 50% to 100%
+        }
+
+        // Apply opacity to icons
+        iconBottom.style.opacity = leftOpacity.toFixed(2);
+        iconTop.style.opacity = rightOpacity.toFixed(2);
+
         // Update distribution label
         distributionLabel.textContent = `${bottomPct}% Bottom / ${topPct}% Top`;
 
-        // Toggle icon states
-        iconTop.classList.toggle('off', topPct === 0);
-        iconBottom.classList.toggle('off', bottomPct === 0);
+        // Remove the old toggle logic since we're using opacity now
+        // iconTop.classList.toggle('off', topPct === 0);
+        // iconBottom.classList.toggle('off', bottomPct === 0);
       }
 
-      // Keyboard shortcuts: O (left), P (right), R (reset)
+      // On/off state
+      let isOn = true;
+      
+      function toggleOnOff() {
+        isOn = !isOn;
+        document.body.classList.toggle('off', !isOn);
+      }
+
+      // Keyboard shortcuts: O (left), P (right), R (reset), Q (toggle on/off)
       document.addEventListener('keydown', (e) => {
         const k = e.key.toLowerCase();
-        if (k === 'o' || k === 'p') {
+        if (k === 'q') {
+          e.preventDefault();
+          toggleOnOff();
+        } else if ((k === 'o' || k === 'p') && isOn) {
           e.preventDefault();
           const current = getP();
           const stepMode = document.getElementById('stepSize').value;
@@ -346,13 +411,16 @@
           root.style.setProperty('--anim-ms', `${ms}ms`);
         });
 
-        // Band width
-        const bandWidth = document.getElementById('bandWidth');
+        // Band width display (now auto-calculated)
         const bandWidthValue = document.getElementById('bandWidthValue');
-        bandWidth.addEventListener('input', (e) => {
-          const value = clamp01(e.target.value);
-          bandWidthValue.textContent = String(value);
-          root.style.setProperty('--w', String(value));
+
+        // Cool color picker
+        const coolColor = document.getElementById('coolColor');
+        const coolColorValue = document.getElementById('coolColorValue');
+        coolColor.addEventListener('input', (e) => {
+          const color = e.target.value;
+          coolColorValue.textContent = color;
+          root.style.setProperty('--cool', color);
         });
 
         // Heat intensity
