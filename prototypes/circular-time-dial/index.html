@@ -340,6 +340,38 @@
             color: #ccc;
             font-size: 0.8em;
         }
+        
+        .acceleration-debug {
+            position: absolute;
+            top: 20px;
+            left: 200px;
+            background: rgba(40, 40, 40, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .acceleration-debug h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+        
+        .acceleration-debug .rapid-mode {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .acceleration-debug .normal-mode {
+            color: #51cf66;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
         .instructions {
             position: fixed;
             bottom: 20px;
@@ -355,6 +387,13 @@
 <body>
     <div class="outer-container">
         <div class="prototype-container">
+            <div class="acceleration-debug hidden" id="accelerationDebug">
+                <h4>Acceleration Debug</h4>
+                <div>Key Presses: <span id="keyPressCount">0</span> / 30</div>
+                <div>Mode: <span id="rapidModeStatus" class="normal-mode">Normal</span></div>
+                <div>Multiplier: <span id="accelerationMultiplier">1</span>x</div>
+                <div>Last Key: <span id="lastKey">None</span></div>
+            </div>
             <div class="container">
         <div class="cooking-status" id="cookingStatus"></div>
         <canvas id="dial" width="320" height="320"></canvas>
@@ -415,8 +454,17 @@
         <div class="debug-control">
             <label>Trail Mode (P/O keys):</label>
             <select id="trailModeSelect">
-                <option value="stay">P: Normal, O: Trail on opposite side</option>
-                <option value="normal" selected>P/O: Normal increase/decrease</option>
+                <option value="normal">Standard</option>
+                <option value="stay">Directional</option>
+                <option value="animated" selected>Animated</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Show Acceleration Debug:</label>
+            <select id="accelerationDebugSelect">
+                <option value="false" selected>Hidden</option>
+                <option value="true">Visible</option>
             </select>
         </div>
         
@@ -430,14 +478,14 @@
             <label>Enable Tick Scaling:</label>
             <select id="enableScalingSelect">
                 <option value="false">Disabled</option>
-                <option value="true">Enabled</option>
+                <option value="true" selected>Enabled</option>
             </select>
         </div>
         
         <div class="debug-control scaling-control">
             <label>Current Tick Length:</label>
-            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="3.0">
-            <div class="debug-value" id="currentLengthValue">3.0x</div>
+            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="2.0">
+            <div class="debug-value" id="currentLengthValue">2.0x</div>
         </div>
         
         <div class="debug-control scaling-control">
@@ -462,15 +510,15 @@
         
         <div class="debug-control scaling-control">
             <label>Reset Delay (seconds):</label>
-            <input type="number" id="resetDelay" min="0.5" max="10" step="0.1" value="0.5" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
-            <div class="debug-value" id="resetDelayValue">0.5s</div>
+            <input type="number" id="resetDelay" min="0.5" max="10" step="0.1" value="0.45" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="resetDelayValue">0.45s</div>
         </div>
         
         <div class="debug-control scaling-control">
             <label>Tick Alignment:</label>
             <select id="alignmentSelect">
                 <option value="center">Centered</option>
-                <option value="inward">Inward</option>
+                <option value="inward" selected>Inward</option>
                 <option value="outward">Outward</option>
             </select>
         </div>
@@ -482,7 +530,7 @@
                 <option value="linear">Linear</option>
                 <option value="easeOut">Ease Out</option>
                 <option value="sine">Sine Wave</option>
-                <option value="exponential">Exponential</option>
+                <option value="exponential" selected>Exponential</option>
             </select>
         </div>
         
@@ -553,6 +601,16 @@
                 this.lastActionTime = Date.now();
                 this.scalingActive = false;
                 
+                // Acceleration properties for rapid key presses
+                this.keyPressHistory = []; // Array to store recent key press timestamps
+                this.accelerationMultiplier = 1;
+                this.maxAcceleration = 4; // Maximum acceleration multiplier in rapid mode
+                this.rapidMode = false; // Whether we're in rapid mode
+                this.rapidModeThreshold = 30; // Number of clicks needed to trigger rapid mode
+                this.rapidModeWindow = 2000; // Time window (2 seconds) to count clicks for rapid mode
+                this.rapidModeDecayTime = 600; // ms - time of inactivity before exiting rapid mode
+                this.lastKeyPressed = null; // Track which key was last pressed ('o' or 'p')
+                
                 // Animation properties
                 this.animationDuration = 300; // ms
                 this.animationStartTime = null;
@@ -585,23 +643,23 @@
                 
                 // Debug settings
                 this.debugSettings = {
-                    scalingEnabled: false,
+                    scalingEnabled: true,
                     gradientColorMode: 'seamless', // 'standard', 'gradient', 'seamless'
-                    currentLength: 3.0,
+                    currentLength: 2.0,
                     adjacentFalloff: 25, // Percentage falloff from current
                     radiusPercent: 10,
-                    alignment: 'center',
-                    curve: 'easeIn',
+                    alignment: 'inward',
+                    curve: 'exponential',
                     tickMode: 'wrap',
                     autoReset: true,
-                    resetDelay: 0.5,
+                    resetDelay: 0.45,
                     gapAngle: 20, // Gap angle in degrees
                     preheatEnabled: true,
                     tempTickCount: 72, // Number of temperature ticks
                     flashDuration: 150, // Flash duration in ms
                     flashCount: 3, // Number of flashes
                     globalTickMode: '72-continuous', // 'default', '72-ticks', or '72-continuous'
-                    trailMode: 'normal' // 'normal' or 'stay'
+                    trailMode: 'standard' // 'normal', 'stay', or 'animated'
                 };
                 
                 // Trail direction state (for 'stay' mode)
@@ -609,6 +667,19 @@
                 this.trailDirectionTarget = 'normal'; // Target direction for animation
                 this.trailDirectionAnimationStart = null; // Animation start time
                 this.trailDirectionAnimationDuration = 200; // Animation duration in ms
+                
+                // Animated trail state (for 'animated' mode)
+                this.trailAnimationTickPositions = []; // Array of tick positions for animated trail
+                this.trailCatchUpAnimation = false;
+                this.trailCatchUpStart = null;
+                this.trailFlowOutAnimation = false;
+                this.trailFlowOutStart = null;
+                this.lastMovementTime = Date.now();
+                this.isMoving = false;
+                this.previousCurrentTick = -1;
+                this.movementDirection = null; // 'forward' or 'backward'
+                this.trailLength = 0; // How many trail ticks to show (grows as you move)
+                this.maxTrailLength = 7; // Maximum trail length
                 
                 this.setupEventListeners();
                 this.setupDebugControls();
@@ -647,6 +718,215 @@
                 });
             }
             
+            calculateAcceleration(currentKey) {
+                const now = Date.now();
+                
+                // Check if direction changed - if so, reset rapid mode
+                if (this.lastKeyPressed && this.lastKeyPressed !== currentKey) {
+                    this.rapidMode = false;
+                    this.keyPressHistory = [];
+                    this.accelerationMultiplier = 1;
+                    console.log('Direction changed - rapid mode reset'); // Debug feedback
+                }
+                this.lastKeyPressed = currentKey;
+                
+                // Add current key press to history
+                this.keyPressHistory.push(now);
+                
+                // Clean old key presses (older than rapid mode window)
+                this.keyPressHistory = this.keyPressHistory.filter(timestamp => 
+                    now - timestamp <= this.rapidModeWindow
+                );
+                
+                // Check if we should enter rapid mode
+                if (!this.rapidMode && this.keyPressHistory.length >= this.rapidModeThreshold) {
+                    this.rapidMode = true;
+                    console.log('Rapid mode activated!'); // Debug feedback
+                }
+                
+                // Check if we should exit rapid mode (no recent key presses)
+                if (this.rapidMode) {
+                    const timeSinceLastPress = now - this.keyPressHistory[this.keyPressHistory.length - 2] || 0;
+                    if (timeSinceLastPress > this.rapidModeDecayTime) {
+                        this.rapidMode = false;
+                        this.accelerationMultiplier = 1;
+                        console.log('Rapid mode deactivated'); // Debug feedback
+                        return 1;
+                    }
+                }
+                
+                if (this.rapidMode) {
+                    // Rapid mode uses 3x acceleration
+                    this.accelerationMultiplier = this.maxAcceleration;
+                } else {
+                    // Normal mode: always 1x
+                    this.accelerationMultiplier = 1;
+                }
+                
+                // Update debug display
+                this.updateAccelerationDebug();
+                
+                return Math.round(this.accelerationMultiplier);
+            }
+            
+            updateAccelerationDebug() {
+                const keyPressCount = document.getElementById('keyPressCount');
+                const rapidModeStatus = document.getElementById('rapidModeStatus');
+                const accelerationMultiplierDisplay = document.getElementById('accelerationMultiplier');
+                const lastKeyDisplay = document.getElementById('lastKey');
+                
+                keyPressCount.textContent = this.keyPressHistory.length;
+                
+                if (this.rapidMode) {
+                    rapidModeStatus.textContent = 'RAPID MODE';
+                    rapidModeStatus.className = 'rapid-mode';
+                } else {
+                    rapidModeStatus.textContent = 'Normal';
+                    rapidModeStatus.className = 'normal-mode';
+                }
+                
+                accelerationMultiplierDisplay.textContent = Math.round(this.accelerationMultiplier);
+                lastKeyDisplay.textContent = this.lastKeyPressed || 'None';
+            }
+            
+            handleTrailMovement(direction) {
+                if (this.debugSettings.trailMode !== 'animated') return;
+                
+                const now = Date.now();
+                this.lastMovementTime = now;
+                this.isMoving = true;
+                this.movementDirection = direction;
+                
+                // Grow trail by one tick each key press (not per individual time increment)
+                this.trailLength = Math.min(this.trailLength + 1, this.maxTrailLength);
+                
+                // Stop any catch-up animation since we're moving
+                this.trailCatchUpAnimation = false;
+                this.trailCatchUpStart = null;
+                this.trailAnimationCatchUpProgress = undefined;
+            }
+            
+            updateAnimatedTrail() {
+                if (this.debugSettings.trailMode !== 'animated') return;
+                
+                const now = Date.now();
+                const timeSinceLastMovement = now - this.lastMovementTime;
+                
+                // Check if we should stop moving and start catch-up
+                if (this.isMoving && timeSinceLastMovement > 0) { // Immediate catch-up when stopped
+                    this.isMoving = false;
+                    this.trailFlowOutAnimation = false;
+                    this.trailFlowOutStart = null;
+                    
+                    // Start catch-up animation if we have a trail
+                    if (this.trailLength > 0) {
+                        this.trailCatchUpAnimation = true;
+                        this.trailCatchUpStart = now;
+                    }
+                }
+                
+                // Update trail positions based on animation state
+                if (this.trailCatchUpAnimation && this.trailCatchUpStart) {
+                    this.updateTrailCatchUp();
+                } else if (this.trailFlowOutAnimation && this.trailFlowOutStart) {
+                    this.updateTrailFlowOut();
+                }
+            }
+            
+            updateTrailFade() {
+                const elapsed = Date.now() - this.trailFadeStart;
+                const fadeOutDuration = 400; // 400ms to fade to 30% opacity
+                const progress = Math.min(elapsed / fadeOutDuration, 1);
+                
+                // Fade from 100% to 30% opacity
+                this.trailOpacity = 1.0 - (progress * 0.7); // Goes from 1.0 to 0.3
+                
+                if (progress >= 1) {
+                    // Fade complete - start catch-up animation
+                    this.trailFadeAnimation = false;
+                    this.trailFadeStart = null;
+                    
+                    // Start catch-up animation
+                    this.trailCatchUpAnimation = true;
+                    this.trailCatchUpStart = Date.now();
+                }
+            }
+            
+            updateTrailCatchUp() {
+                const elapsed = Date.now() - this.trailCatchUpStart;
+                const duration = 350; // 350ms for full catch-up
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Calculate remaining trail length more smoothly to avoid simultaneous disappearance
+                // Use continuous calculation instead of discrete steps
+                const totalTicksToRemove = this.trailLength + 1; // +1 to ensure complete removal
+                const exactTicksToRemove = progress * totalTicksToRemove;
+                const remainingTrail = Math.max(0, this.trailLength + 1 - exactTicksToRemove);
+                
+                this.trailAnimationCatchUpProgress = progress;
+                this.currentTrailLength = Math.max(0, Math.floor(remainingTrail));
+                
+                if (progress >= 1) {
+                    // Animation complete - ensure trail is completely cleared
+                    this.trailCatchUpAnimation = false;
+                    this.trailCatchUpStart = null;
+                    this.trailAnimationCatchUpProgress = undefined;
+                    this.trailLength = 0;
+                    this.currentTrailLength = 0;
+                }
+            }
+            
+            updateTrailFlowOut() {
+                const elapsed = Date.now() - this.trailFlowOutStart;
+                const duration = 300; // 300ms for flow-out effect
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease-out function for smooth flow
+                const easeProgress = 1 - Math.pow(1 - progress, 2);
+                
+                // Calculate trail flow-out effect
+                this.trailAnimationFlowProgress = easeProgress;
+                
+                if (progress >= 1 && !this.isMoving) {
+                    // Animation complete and we're not moving
+                    this.trailFlowOutAnimation = false;
+                    this.trailFlowOutStart = null;
+                }
+            }
+            
+            getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks) {
+                const start = 67;  // BASE_GRAY channel value
+                const end = 255;   // white
+                
+                // Calculate distance from current tick
+                let distance;
+                if (this.movementDirection === 'backward') {
+                    // Trail goes forward from current tick when moving backward
+                    distance = (tickIndex - currentTickIndex + totalTicks) % totalTicks;
+                } else {
+                    // Trail goes backward from current tick when moving forward (default)
+                    distance = (currentTickIndex - tickIndex + totalTicks) % totalTicks;
+                }
+                
+                // Determine current trail length to show
+                let activeTrailLength;
+                if (this.trailCatchUpAnimation && this.currentTrailLength !== undefined) {
+                    activeTrailLength = this.currentTrailLength;
+                } else {
+                    activeTrailLength = this.trailLength;
+                }
+                
+                // Show trail only within the active trail length
+                if (distance > 0 && distance <= activeTrailLength) {
+                    const trailProgress = distance / this.maxTrailLength;
+                    const intensity = Math.round(start + (end - start) * (1 - trailProgress));
+                    return `rgb(${intensity}, ${intensity}, ${intensity})`;
+                }
+                
+                // Default: no trail
+                return BASE_GRAY;
+            }
+
             setupDebugControls() {
                 // Enable Scaling Control
                 const enableScalingSelect = document.getElementById('enableScalingSelect');
@@ -672,6 +952,17 @@
                     this.trailDirectionTarget = 'normal';
                     this.trailDirectionAnimationStart = null;
                     this.render();
+                });
+                
+                // Acceleration Debug Control
+                const accelerationDebugSelect = document.getElementById('accelerationDebugSelect');
+                accelerationDebugSelect.addEventListener('change', (e) => {
+                    const accelerationDebug = document.getElementById('accelerationDebug');
+                    if (e.target.value === 'true') {
+                        accelerationDebug.classList.remove('hidden');
+                    } else {
+                        accelerationDebug.classList.add('hidden');
+                    }
                 });
                 
                 // Current Length
@@ -801,6 +1092,9 @@
             increaseValue() {
                 if (this.countdownMode) return;
                 
+                // Calculate acceleration multiplier
+                const accelerationMultiplier = this.calculateAcceleration('p');
+                
                 if (this.tempMode) {
                     if (this.temperature >= this.maxTemp) {
                         // Only trigger flash once per boundary hit
@@ -811,6 +1105,9 @@
                         return;
                     }
                     
+                    // Handle animated trail movement tracking (only when actual movement occurs)
+                    this.handleTrailMovement('forward');
+                    
                     // Reset flash boundary flag when moving away from boundary
                     this.hasFlashedAtBoundary = false;
                     
@@ -820,16 +1117,36 @@
                     }
                     this.scalingActive = true;
                     
-                    // Always increment by 5°F regardless of tick count
-                    this.temperature = Math.min(this.temperature + 5, this.maxTemp);
+                    // Apply acceleration to temperature change (base 5°F)
+                    const tempIncrement = 5 * accelerationMultiplier;
+                    this.temperature = Math.min(this.temperature + tempIncrement, this.maxTemp);
                 } else {
-                    this.increaseTime();
+                    // For time mode, check if we can actually increase before handling trail
+                    if (this.totalMinutes >= this.maxMinutes) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Handle animated trail movement tracking (only when actual movement occurs)
+                    this.handleTrailMovement('forward');
+                    
+                    // Apply acceleration to the increase
+                    for (let i = 0; i < accelerationMultiplier; i++) {
+                        this.increaseTime();
+                    }
                 }
                 this.render();
             }
             
             decreaseValue() {
                 if (this.countdownMode) return;
+                
+                // Calculate acceleration multiplier
+                const accelerationMultiplier = this.calculateAcceleration('o');
                 
                 if (this.tempMode) {
                     if (this.temperature <= this.minTemp) {
@@ -841,6 +1158,9 @@
                         return;
                     }
                     
+                    // Handle animated trail movement tracking (only when actual movement occurs)
+                    this.handleTrailMovement('backward');
+                    
                     // Reset flash boundary flag when moving away from boundary
                     this.hasFlashedAtBoundary = false;
                     
@@ -850,10 +1170,27 @@
                     }
                     this.scalingActive = true;
                     
-                    // Always decrement by 5°F regardless of tick count
-                    this.temperature = Math.max(this.temperature - 5, this.minTemp);
+                    // Apply acceleration to temperature change (base 5°F)
+                    const tempDecrement = 5 * accelerationMultiplier;
+                    this.temperature = Math.max(this.temperature - tempDecrement, this.minTemp);
                 } else {
-                    this.decreaseTime();
+                    // For time mode, check if we can actually decrease before handling trail
+                    if (this.totalMinutes <= 1) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Handle animated trail movement tracking (only when actual movement occurs)
+                    this.handleTrailMovement('backward');
+                    
+                    // Apply acceleration to the decrease
+                    for (let i = 0; i < accelerationMultiplier; i++) {
+                        this.decreaseTime();
+                    }
                 }
                 this.render();
             }
@@ -1020,6 +1357,15 @@
                             this.startScalingAnimation(false);
                         }
                         this.scalingActive = false;
+                    }
+                    
+                    // Update animated trail
+                    this.updateAnimatedTrail();
+                    
+                    // Re-render if trail animations are active
+                    if (this.debugSettings.trailMode === 'animated' && 
+                        (this.trailCatchUpAnimation || this.trailFlowOutAnimation)) {
+                        this.render();
                     }
                 }, 100); // Check every 100ms
                 
@@ -1657,6 +2003,20 @@
                 this.lastActionTime = Date.now();
                 this.scalingActive = false;
                 
+                // Reset acceleration properties
+                this.keyPressHistory = [];
+                this.accelerationMultiplier = 1;
+                this.rapidMode = false;
+                this.lastKeyPressed = null;
+                
+                // Reset animated trail properties
+                this.movementDirection = null;
+                this.isMoving = false;
+                this.trailLength = 0;
+                this.currentTrailLength = 0;
+                this.trailCatchUpAnimation = false;
+                this.trailFlowOutAnimation = false;
+                
                 // Reset trail direction and animation
                 this.trailDirection = 'normal';
                 this.trailDirectionTarget = 'normal';
@@ -1971,7 +2331,11 @@
                 // Use standard coloring system
                 let strokeColor;
                 
-                if (this.debugSettings.gradientColorMode === 'seamless') {
+                // Handle animated trail mode first
+                if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
+                    const trailColor = this.getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks);
+                    strokeColor = isCurrent ? '#FA4947' : trailColor;
+                } else if (this.debugSettings.gradientColorMode === 'seamless') {
                     // Seamless mode: apply gradient regardless of fill status or showAsGray
                     if (isCurrent) {
                         strokeColor = '#FA4947';
@@ -2034,6 +2398,7 @@
                     const shouldRenderOpposite = this.debugSettings.trailMode === 'stay' && 
                         (currentTrailDirection === 'opposite' || 
                          (isAnimating && targetTrailDirection === 'opposite'));
+                    
                     
                     // Calculate both trail positions for potential blending
                     const normalTrailStart = currentTickAngle - trailLength;
@@ -2224,7 +2589,11 @@
                 // Determine color
                 let strokeColor;
                 
-                if (this.debugSettings.gradientColorMode === 'standard') {
+                // Handle animated trail mode first
+                if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
+                    const trailColor = this.getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks);
+                    strokeColor = isCurrent ? '#FA4947' : trailColor;
+                } else if (this.debugSettings.gradientColorMode === 'standard') {
                     // Standard color mode
                     if (isFilled) {
                         strokeColor = '#FA4947'; // Filled ticks are red
