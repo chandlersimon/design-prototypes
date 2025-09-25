@@ -583,6 +583,7 @@
                 super('.container', {
                     idPrefix: '',
                     useExistingMarkup: true,
+                    initialMode: 'time',
                     debugRoot: document.getElementById('debugPanel'),
                     debugSettings: {
                         scalingEnabled: false,
@@ -604,31 +605,18 @@
                         trailMode: 'normal'
                     }
                 });
-            constructor() {
-                this.canvas = document.getElementById('dial');
-                this.ctx = this.canvas.getContext('2d');
-                this.tempDisplay = document.getElementById('tempDisplay');
-                this.timeDisplayMain = document.getElementById('timeDisplayMain');
-                this.modeLabel = document.getElementById('modeLabel');
-                this.cookingStatus = document.getElementById('cookingStatus');
-                this.completionButtons = document.getElementById('completionButtons');
-                this.bitMoreBtn = document.getElementById('bitMoreBtn');
-                this.keepWarmBtn = document.getElementById('keepWarmBtn');
-                
-                // Heat slider elements
+
                 this.heatSliderContainer = document.getElementById('heatSliderContainer');
                 this.heatDistributionLabel = document.getElementById('heatDistributionLabel');
                 this.heatSliderMount = document.getElementById('heatSliderMount');
                 this.container = document.querySelector('.container');
-                
-                // 3-mode system: 0 = temperature, 1 = time, 2 = custom-cook
-                this.currentMode = 1; // Start in time mode
-                this.dialModeBeforeHeat = 1; // Track the dial mode before entering heat mode
-                this.dialVisualMode = 1; // Track what the dial should visually display
-                
-                // Heat slider settings
-                this.heatDistribution = 75; // 0-100, where 50 is center, 75 is one notch right
-                this.heatSliderOn = false; // Start with heat slider off (since not in custom-cook mode)
+
+                this.currentMode = 1;
+                this.dialModeBeforeHeat = 1;
+                this.dialVisualMode = 1;
+
+                this.heatDistribution = 75;
+                this.heatSliderOn = false;
 
                 this.heatSlider = new HeatSlider(this.heatSliderMount, {
                     initialPosition: this.heatDistribution,
@@ -641,57 +629,11 @@
                 });
                 this.heatSlider.toggle(this.heatSliderOn);
                 this.heatSlider.showLabel(false);
-                
-                this.centerX = 160;
-                this.centerY = 160;
-                this.radius = 136;
-                
-                // Timer for scaling reset
-                this.lastActionTime = Date.now();
-                this.scalingActive = false;
-                
-                // Animation properties
-                this.animationDuration = 300; // ms
-                this.animationStartTime = null;
-                this.animatingToState = null; // 'active' or 'inactive'
-                this.previousMultipliers = new Map(); // Store previous multipliers for smooth transitions
-                
-                // Ring fill animation properties
-                this.ringFillAnimation = false;
-                this.ringFillStartTime = null;
-                this.ringFillDuration = 800; // ms - longer for smoother fill
-                
-                // Countdown mode properties
-                this.countdownMode = false;
-                this.countdownStartTime = null;
-                this.countdownDuration = 0; // in seconds
-                this.colonBlinkState = true;
-                this.preheatPhase = false;
-                this.preheatFlashState = true;
-                
-                // Completion state properties
-                this.cookingComplete = false;
-                this.selectedButton = 0; // 0 = "A bit more", 1 = "Keep warm"
-                
-                // Flash animation properties
-                this.isFlashing = false;
-                this.flashStartTime = null;
-                this.flashCount = 0;
-                this.flashVisible = true;
-                this.hasFlashedAtBoundary = false;
-                
-                this.debugSettings.customCookScaleMode = '0.9';
-                
-                // Trail direction state (for 'stay' mode)
-                this.trailDirection = 'normal'; // 'normal' or 'opposite'
-                this.trailDirectionTarget = 'normal'; // Target direction for animation
-                this.trailDirectionAnimationStart = null; // Animation start time
-                this.trailDirectionAnimationDuration = 200; // Animation duration in ms
-                
-                // Initialize heat slider and modes
-                this.setHeatDistribution(75); // Start one notch to the right
-                this.updateModeVisuals(); // Set initial visual mode
 
+                this.debugSettings.customCookScaleMode = '0.9';
+
+                this.setHeatDistribution(75);
+                this.updateModeVisuals();
                 this.render();
             }
             
