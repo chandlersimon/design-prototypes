@@ -108,6 +108,7 @@
         <div class="header">
             <h1>Design Prototypes</h1>
             <p>Interactive component explorations and experiments</p>
+            <p id="lastUpdated" style="color: #666; font-size: 0.9rem; margin-top: 0.75rem;"></p>
         </div>
 
         <div class="prototypes-grid" id="prototypesGrid">
@@ -193,8 +194,11 @@
     </div>
 
     <script>
-        // Auto-update last updated date
-        document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        if (lastUpdatedEl) {
+            const lastModified = new Date(document.lastModified);
+            lastUpdatedEl.textContent = `Last updated ${lastModified.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
+        }
 
         // You can add auto-discovery of prototypes here later
         // by reading the prototypes directory structure
