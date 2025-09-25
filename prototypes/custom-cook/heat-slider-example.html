@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Custom Cook with Heat Slider</title>
 
-  <!-- Include shared heat slider component styles -->
   <link rel="stylesheet" href="../../shared/components/heat-slider.css">
 
   <style>
@@ -13,7 +12,7 @@
 
     body {
       margin: 0;
-      background: var(--bg);
+      background: #0b0b0b;
       color: #eee;
       font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
       display: grid;
@@ -85,13 +84,14 @@
       font-size: 12px;
       color: #aaa;
       margin-top: 16px;
+      line-height: 1.5;
     }
 
-    /* Custom styling for the heat slider in this context */
     #heatSliderContainer {
       background: #2a2a2a;
       border-radius: 12px;
       padding: 16px;
+      --heat-slider-cool: #2e0b12;
     }
   </style>
 </head>
@@ -116,34 +116,28 @@
 
     <div class="instructions">
       <strong>Controls:</strong><br>
+      • Drag or tap preset regions on the bar<br>
       • <kbd>O</kbd> / <kbd>P</kbd> - Adjust heat distribution<br>
       • <kbd>Q</kbd> - Toggle on/off<br>
       • <kbd>R</kbd> - Reset to center
     </div>
   </div>
 
-  <!-- Include shared heat slider component script -->
-  <script src="../../shared/components/heat-slider.js"></script>
-
+  <script src="../../shared/components/heat-slider.global.js"></script>
   <script>
-    // Initialize the heat slider component
-    const heatSlider = HeatSlider.create('heatSliderContainer', {
+    const heatSlider = new HeatSlider('#heatSliderContainer', {
       initialPosition: 60,
-      showLabel: true,
+      showLabel: false,
       stepMode: 'preset',
-      onChange: function(data) {
+      onChange: (data) => {
         console.log('Heat distribution changed:', data);
-        // You could update other UI elements here based on the heat distribution
       },
-      onToggle: function(data) {
+      onToggle: (data) => {
         console.log('Heat slider toggled:', data);
-        // Handle on/off state changes
       }
     });
 
-    // Example of programmatic control
-    // heatSlider.setPosition(75);
-    // heatSlider.showLabel(false);
+    window.demoHeatSlider = heatSlider;
   </script>
 </body>
 </html>

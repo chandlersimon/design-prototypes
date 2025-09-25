@@ -3,142 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Oven Heat Distribution (Cleaned & Clamped)</title>
+  <title>Heat Slider Prototype</title>
+  <link rel="stylesheet" href="../../shared/components/heat-slider.css">
   <style>
     :root {
-      --bg: #0b0b0b;
-      --cool: #490307;
-      --hot-r: 255;
-      --hot-g: 95;
-      --hot-b: 66;
-      --hot: rgb(var(--hot-r), var(--hot-g), var(--hot-b));
-      --p: 50; /* peak position 0-100 (Top %) */
-      --w: 40; /* half-width of hot band */
-      --intensity: 0.85; /* editable by debug UI */
-      --anim-ms: 80ms; /* editable by debug UI */
+      color-scheme: dark;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      background: var(--bg);
+      background: #0b0b0b;
       color: #eee;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: inherit;
       display: grid;
       place-items: center;
       min-height: 100vh;
       overflow: hidden;
-      user-select: none;
     }
 
     .outer-container {
       width: 400px;
       height: 600px;
-      background: transparent;
       border: 1px solid #444;
       border-top-right-radius: 75px;
       display: grid;
       place-items: center;
       position: relative;
+      background: transparent;
     }
 
     .prototype-container {
       width: 272px;
       height: 480px;
-      background: transparent;
-      border-radius: 12px;
       display: grid;
       align-content: center;
       justify-items: stretch;
       gap: 24px;
     }
 
-    .row {
-      display: grid;
-      grid-template-columns: 26px 1fr 26px;
-      align-items: center;
-      gap: 8px;
+    #heatSlider {
+      --heat-slider-cool: #490307;
       width: 100%;
-      min-width: 0;
     }
-
-    .heatbar {
-      position: relative;
-      height: 32px;
-      border-radius: 16px;
-      background: var(--cool);
-      overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-      width: 100%;
-      min-width: 0;
-      transition: height 0.3s ease;
-    }
-
-    /* Hot overlay as gradient with soft edges */
-    .heatbar .overlay {
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(
-        to right,
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% - calc(var(--w) * 1.5%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% - calc(var(--w) * 1.2%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% - calc(var(--w) * 0.8%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% - calc(var(--w) * 0.4%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% - calc(var(--w) * 0.1%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p) * 1%),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% + calc(var(--w) * 0.1%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% + calc(var(--w) * 0.4%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% + calc(var(--w) * 0.8%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% + calc(var(--w) * 1.2%)),
-        rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% + calc(var(--w) * 1.5%))
-      );
-      transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
-    }
-
-    /* Split indicator — clamped to stay within bounds with padding */
-    .heatbar::after {
-      content: "";
-      position: absolute;
-      /* Keep the indicator inside the pill with 24px padding from edges */
-      left: calc(24px + (var(--p) * 1% * (100% - 48px) / 100%) - 2px);
-      top: 2px;
-      bottom: 2px;
-      width: 4px;
-      background: #fff;
-      border-radius: 2px;
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
-    /* Off state - greyscale only the background and overlay */
-    body.off .heatbar {
-      background: #33333342;
-      height: 24px;
-      transition: height 0.3s ease;
-    }
-    
-    body.off .heatbar .overlay {
-      filter: grayscale(100%);
-    }
-    
-    body.off .heatbar::after {
-      background: #fa4947;
-    }
-
-    .icon { display: grid; place-items: center; }
-    .icon svg { width: 25px; height: 24px; }
-
-    .distribution-label {
-      text-align: center;
-      font-weight: 600;
-      font-size: 16px;
-      color: #eee;
-      margin-top: 8px;
-      font-variant-numeric: tabular-nums;
-    }
-    .distribution-label.hidden { display: none; }
 
     .instructions {
       position: fixed;
@@ -148,6 +59,7 @@
       text-align: center;
       color: #888;
       font-size: 0.9em;
+      font-family: inherit;
     }
 
     .debug-toggle {
@@ -162,57 +74,58 @@
       cursor: pointer;
       font-size: 0.8em;
       z-index: 1001;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: inherit;
     }
 
     .debug-panel {
       position: fixed;
       top: 20px;
       right: -220px;
-      background: rgba(40, 40, 40, 0.95);
+      width: 200px;
       padding: 15px;
       border-radius: 8px;
+      background: rgba(40, 40, 40, 0.95);
       color: white;
       font-size: 0.8em;
-      width: 200px;
       transition: right 0.3s ease;
       z-index: 1000;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: inherit;
     }
-    .debug-panel.open { right: 20px; }
-    .debug-panel h3 { margin: 0 0 10px 0; font-size: 1em; }
-    .debug-control { margin: 8px 0; }
-    .debug-control label { display: block; margin-bottom: 4px; }
-    .debug-control input[type="range"], .debug-control select { width: 100%; }
-    .debug-value { color: #ccc; font-size: 0.85em; }
 
-    @media (prefers-reduced-motion: reduce) {
-      :root { --anim-ms: 0ms; }
+    .debug-panel.open {
+      right: 20px;
+    }
+
+    .debug-panel h3 {
+      margin: 0 0 10px 0;
+      font-size: 1em;
+    }
+
+    .debug-control {
+      margin: 10px 0;
+    }
+
+    .debug-control label {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .debug-control input[type="range"],
+    .debug-control select,
+    .debug-control input[type="color"] {
+      width: 100%;
+    }
+
+    .debug-value {
+      color: #ccc;
+      font-size: 0.85em;
     }
   </style>
 </head>
 <body>
   <div class="outer-container">
     <div class="prototype-container">
-      <div class="row" aria-label="Heat distribution" role="group">
-        <div class="icon" id="icon-bottom" aria-label="Bottom element" role="img">
-          <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(180deg);">
-            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
-          </svg>
-        </div>
-
-        <div class="heatbar" id="heatbar" aria-hidden="true">
-          <div class="overlay"></div>
-        </div>
-
-        <div class="icon" id="icon-top" aria-label="Top element" role="img">
-          <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
-          </svg>
-        </div>
-      </div>
-
-      <div class="distribution-label hidden" id="distributionLabel" aria-live="polite"></div>
+      <div id="heatSlider" data-heat-slider></div>
     </div>
   </div>
 
@@ -222,24 +135,24 @@
     <h3>Heat Controls</h3>
 
     <div class="debug-control">
-      <label for="animationSpeed">Heat Distribution Speed:</label>
+      <label for="animationSpeed">Animation speed</label>
       <input type="range" id="animationSpeed" min="0" max="200" step="10" value="80" />
       <div class="debug-value" id="animationSpeedValue">80ms</div>
     </div>
 
     <div class="debug-control">
-      <label>Heat Band Width:</label>
-      <div class="debug-value" id="bandWidthValue">Auto (25-50)</div>
+      <label>Heat band width</label>
+      <div class="debug-value" id="bandWidthValue">auto (25-50)</div>
     </div>
 
     <div class="debug-control">
-      <label for="coolColor">Cool Color:</label>
+      <label for="coolColor">Cool side color</label>
       <input type="color" id="coolColor" value="#490307" />
       <div class="debug-value" id="coolColorValue">#490307</div>
     </div>
 
     <div class="debug-control">
-      <label for="heatIntensity">Heat Intensity:</label>
+      <label for="heatIntensity">Heat intensity</label>
       <select id="heatIntensity">
         <option value="0.85" selected>High (85%)</option>
         <option value="0.7">Medium (70%)</option>
@@ -248,17 +161,17 @@
     </div>
 
     <div class="debug-control">
-      <label for="stepSize">Step Mode:</label>
+      <label for="stepSize">Step mode</label>
       <select id="stepSize">
         <option value="1">1% increments</option>
         <option value="5">5% increments</option>
         <option value="20">20% increments</option>
-        <option value="preset" selected>Preset positions (100:0, 75:25, 50:50, 25:75, 0:100)</option>
+        <option value="preset" selected>Preset positions</option>
       </select>
     </div>
 
     <div class="debug-control">
-      <label for="showLabel">Show Distribution Label:</label>
+      <label for="showLabel">Distribution label</label>
       <select id="showLabel">
         <option value="true">Show</option>
         <option value="false" selected>Hide</option>
@@ -267,181 +180,70 @@
   </div>
 
   <div class="instructions">
-    Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+    Drag the bar, tap for presets, or use keys: <strong>O</strong> / <strong>P</strong> adjust • <strong>Q</strong> toggle • <strong>R</strong> reset
   </div>
 
+  <script src="../../shared/components/heat-slider.global.js"></script>
   <script>
-    (() => {
-      const root = document.documentElement;
-      const iconTop = document.getElementById('icon-top');
-      const iconBottom = document.getElementById('icon-bottom');
-      const distributionLabel = document.getElementById('distributionLabel');
+    const slider = new HeatSlider('#heatSlider', {
+      initialPosition: 60,
+      showLabel: false,
+      onChange: updateBandWidth,
+    });
 
-      const clamp01 = (v) => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
-      const getP = () => {
-        // Read current CSS var; fallback to 75 if not set
-        const raw = root.style.getPropertyValue('--p');
-        return raw ? clamp01(raw) : 50;
-      };
+    const animationSpeed = document.getElementById('animationSpeed');
+    const animationSpeedValue = document.getElementById('animationSpeedValue');
+    const coolColorInput = document.getElementById('coolColor');
+    const coolColorValue = document.getElementById('coolColorValue');
+    const heatIntensity = document.getElementById('heatIntensity');
+    const stepSize = document.getElementById('stepSize');
+    const showLabel = document.getElementById('showLabel');
+    const bandWidthValue = document.getElementById('bandWidthValue');
+    const debugToggle = document.getElementById('debugToggle');
+    const debugPanel = document.getElementById('debugPanel');
 
-      function setTopPct(v) {
-        const topPct = clamp01(v);
-        const bottomPct = 100 - topPct;
-
-        // Update CSS variable for peak position
-        root.style.setProperty('--p', String(topPct));
-
-        // Calculate dynamic heat band width: 50 at edges, 25 in middle
-        // Distance from center (50) normalized to 0-1
-        const distanceFromCenter = Math.abs(topPct - 50) / 50;
-        const dynamicWidth = 25 + (distanceFromCenter * 25); // interpolate between 25 and 50
-        root.style.setProperty('--w', String(dynamicWidth));
-
-        // Update band width display if debug panel exists
-        const bandWidthDisplay = document.getElementById('bandWidthValue');
-        if (bandWidthDisplay) {
-          bandWidthDisplay.textContent = `${Math.round(dynamicWidth)}`;
-        }
-
-        // Calculate dynamic icon opacity based on position
-        // At 50% (middle): both icons at 50% opacity
-        // At 0% (full left): left icon 100%, right icon 10%
-        // At 25% (quarter left): left icon 75%, right icon 25%
-        // At 75% (quarter right): left icon 25%, right icon 75%
-        // At 100% (full right): left icon 10%, right icon 100%
-        
-        let leftOpacity, rightOpacity;
-        
-        if (topPct <= 50) {
-          // Moving from center to left
-          const progress = (50 - topPct) / 50; // 0 at center, 1 at full left
-          leftOpacity = 0.5 + (progress * 0.5); // 50% to 100%
-          rightOpacity = 0.5 - (progress * 0.4); // 50% to 10%
-        } else {
-          // Moving from center to right
-          const progress = (topPct - 50) / 50; // 0 at center, 1 at full right
-          leftOpacity = 0.5 - (progress * 0.4); // 50% to 10%
-          rightOpacity = 0.5 + (progress * 0.5); // 50% to 100%
-        }
-
-        // Apply opacity to icons
-        iconBottom.style.opacity = leftOpacity.toFixed(2);
-        iconTop.style.opacity = rightOpacity.toFixed(2);
-
-        // Update distribution label
-        distributionLabel.textContent = `${bottomPct}% Bottom / ${topPct}% Top`;
-
-        // Remove the old toggle logic since we're using opacity now
-        // iconTop.classList.toggle('off', topPct === 0);
-        // iconBottom.classList.toggle('off', bottomPct === 0);
+    function updateBandWidth() {
+      const current = slider.root.style.getPropertyValue('--heat-slider-w');
+      const numeric = Number(current);
+      if (!Number.isFinite(numeric)) {
+        bandWidthValue.textContent = 'auto (25-50)';
+        return;
       }
+      bandWidthValue.textContent = `${Math.round(numeric)}% span`;
+    }
 
-      // On/off state
-      let isOn = true;
-      
-      function toggleOnOff() {
-        isOn = !isOn;
-        document.body.classList.toggle('off', !isOn);
-      }
+    animationSpeed.addEventListener('input', (event) => {
+      const value = Number(event.target.value);
+      slider.setAnimationDuration(value);
+      animationSpeedValue.textContent = `${value}ms`;
+    });
 
-      // Keyboard shortcuts: O (left), P (right), R (reset), Q (toggle on/off)
-      document.addEventListener('keydown', (e) => {
-        const k = e.key.toLowerCase();
-        if (k === 'q') {
-          e.preventDefault();
-          toggleOnOff();
-        } else if ((k === 'o' || k === 'p') && isOn) {
-          e.preventDefault();
-          const current = getP();
-          const stepMode = document.getElementById('stepSize').value;
-          
-          if (stepMode === 'preset') {
-            const presets = [0, 25, 50, 75, 100];
-            const currentIndex = presets.findIndex(preset => Math.abs(preset - current) <= 2);
-            let newIndex;
-            
-            if (currentIndex === -1) {
-              // Not on a preset, find closest
-              newIndex = k === 'o' 
-                ? presets.findIndex(preset => preset >= current) - 1
-                : presets.findIndex(preset => preset > current);
-            } else {
-              newIndex = currentIndex + (k === 'o' ? -1 : 1);
-            }
-            
-            if (newIndex >= 0 && newIndex < presets.length) {
-              setTopPct(presets[newIndex]);
-            }
-          } else {
-            const stepSize = parseInt(stepMode) || 1;
-            const delta = k === 'o' ? -stepSize : stepSize;
-            setTopPct(current + delta);
-          }
-        } else if (k === 'r') {
-          e.preventDefault();
-          setTopPct(50);
-        }
-      });
+    coolColorInput.addEventListener('input', (event) => {
+      const value = event.target.value;
+      slider.setTheme({ coolColor: value });
+      coolColorValue.textContent = value;
+    });
 
-      // Initialize
-      setTopPct(getP());
+    heatIntensity.addEventListener('change', (event) => {
+      slider.setIntensity(parseFloat(event.target.value));
+    });
 
-      // Debug panel functionality
-      function toggleDebug() {
-        const panel = document.getElementById('debugPanel');
-        const toggleBtn = document.getElementById('debugToggle');
-        panel.classList.toggle('open');
-        const isOpen = panel.classList.contains('open');
-        toggleBtn.textContent = isOpen ? 'Close' : 'Open controls';
-        toggleBtn.setAttribute('aria-expanded', String(isOpen));
-      }
-      window.toggleDebug = toggleDebug; // expose for button
-      document.getElementById('debugToggle').addEventListener('click', toggleDebug);
+    stepSize.addEventListener('change', (event) => {
+      slider.setStepMode(event.target.value);
+    });
 
-      // Debug controls
-      (function setupDebugControls() {
-        const overlay = document.querySelector('.heatbar .overlay');
+    showLabel.addEventListener('change', (event) => {
+      const shouldShow = event.target.value === 'true';
+      slider.showLabel(shouldShow);
+    });
 
-        // Animation speed
-        const animationSpeed = document.getElementById('animationSpeed');
-        const animationSpeedValue = document.getElementById('animationSpeedValue');
-        animationSpeed.addEventListener('input', (e) => {
-          const ms = Math.max(0, Number(e.target.value) || 0);
-          animationSpeedValue.textContent = `${ms}ms`;
-          root.style.setProperty('--anim-ms', `${ms}ms`);
-        });
+    debugToggle.addEventListener('click', () => {
+      const isOpen = debugPanel.classList.toggle('open');
+      debugToggle.setAttribute('aria-expanded', String(isOpen));
+      debugToggle.textContent = isOpen ? 'Close controls' : 'Open controls';
+    });
 
-        // Band width display (now auto-calculated)
-        const bandWidthValue = document.getElementById('bandWidthValue');
-
-        // Cool color picker
-        const coolColor = document.getElementById('coolColor');
-        const coolColorValue = document.getElementById('coolColorValue');
-        coolColor.addEventListener('input', (e) => {
-          const color = e.target.value;
-          coolColorValue.textContent = color;
-          root.style.setProperty('--cool', color);
-        });
-
-        // Heat intensity
-        const heatIntensity = document.getElementById('heatIntensity');
-        heatIntensity.addEventListener('change', (e) => {
-          const intensity = String(e.target.value);
-          root.style.setProperty('--intensity', intensity);
-          // Force recompute by toggling background value (not strictly necessary with CSS var)
-          overlay.style.background = getComputedStyle(overlay).background;
-        });
-
-        // Step mode (no additional handling needed since it's a select)
-
-        // Show/hide distribution label
-        const showLabel = document.getElementById('showLabel');
-        showLabel.addEventListener('change', (e) => {
-          const shouldShow = e.target.value === 'true';
-          distributionLabel.classList.toggle('hidden', !shouldShow);
-        });
-      })();
-    })();
+    updateBandWidth();
   </script>
 </body>
 </html>

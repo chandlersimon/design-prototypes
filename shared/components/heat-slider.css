@@ -1,18 +1,22 @@
 /* Heat Slider Component Styles */
-:root {
-  --bg: #0b0b0b;
-  --cool: #490307;
-  --hot-r: 255;
-  --hot-g: 95;
-  --hot-b: 66;
-  --hot: rgb(var(--hot-r), var(--hot-g), var(--hot-b));
-  --p: 50; /* peak position 0-100 (Top %) */
-  --w: 40; /* half-width of hot band */
-  --intensity: 0.85; /* editable by debug UI */
-  --anim-ms: 80ms; /* editable by debug UI */
+.heat-slider {
+  --heat-slider-bg: #0b0b0b;
+  --heat-slider-cool: #490307;
+  --heat-slider-hot-r: 255;
+  --heat-slider-hot-g: 95;
+  --heat-slider-hot-b: 66;
+  --heat-slider-intensity: 0.85;
+  --heat-slider-anim-ms: 80ms;
+  --heat-slider-p: 50;
+  --heat-slider-w: 40;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  color: #eee;
 }
 
-.heat-slider-row {
+.heat-slider__row {
   display: grid;
   grid-template-columns: 26px 1fr 26px;
   align-items: center;
@@ -21,93 +25,111 @@
   min-width: 0;
 }
 
-.heat-slider-heatbar {
+.heat-slider__icon {
+  display: grid;
+  place-items: center;
+  transition: opacity 0.18s ease;
+}
+
+.heat-slider__icon svg {
+  width: 25px;
+  height: 24px;
+}
+
+.heat-slider__heatbar {
   position: relative;
   height: 32px;
   border-radius: 16px;
-  background: var(--cool);
+  background: var(--heat-slider-cool);
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   width: 100%;
   min-width: 0;
-  transition: height 0.3s ease;
+  transition: height 0.3s ease, background 0.2s ease;
+  touch-action: none;
+  cursor: pointer;
 }
 
-/* Hot overlay as gradient with soft edges */
-.heat-slider-heatbar .overlay {
+.heat-slider__heatbar:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 4px;
+}
+
+.heat-slider__overlay {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background: linear-gradient(
     to right,
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% - calc(var(--w) * 1.5%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% - calc(var(--w) * 1.2%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% - calc(var(--w) * 0.8%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% - calc(var(--w) * 0.4%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% - calc(var(--w) * 0.1%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p) * 1%),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% + calc(var(--w) * 0.1%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% + calc(var(--w) * 0.4%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% + calc(var(--w) * 0.8%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% + calc(var(--w) * 1.2%)),
-    rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% + calc(var(--w) * 1.5%))
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0) calc(var(--heat-slider-p) * 1% - calc(var(--heat-slider-w) * 1.5%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.1) calc(var(--heat-slider-p) * 1% - calc(var(--heat-slider-w) * 1.2%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.3) calc(var(--heat-slider-p) * 1% - calc(var(--heat-slider-w) * 0.8%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.6) calc(var(--heat-slider-p) * 1% - calc(var(--heat-slider-w) * 0.4%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), var(--heat-slider-intensity)) calc(var(--heat-slider-p) * 1% - calc(var(--heat-slider-w) * 0.1%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 1) calc(var(--heat-slider-p) * 1%),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), var(--heat-slider-intensity)) calc(var(--heat-slider-p) * 1% + calc(var(--heat-slider-w) * 0.1%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.6) calc(var(--heat-slider-p) * 1% + calc(var(--heat-slider-w) * 0.4%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.3) calc(var(--heat-slider-p) * 1% + calc(var(--heat-slider-w) * 0.8%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0.1) calc(var(--heat-slider-p) * 1% + calc(var(--heat-slider-w) * 1.2%)),
+    rgba(var(--heat-slider-hot-r), var(--heat-slider-hot-g), var(--heat-slider-hot-b), 0) calc(var(--heat-slider-p) * 1% + calc(var(--heat-slider-w) * 1.5%))
   );
-  transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
+  transition: background-position var(--heat-slider-anim-ms) linear, background var(--heat-slider-anim-ms) linear;
 }
 
-/* Split indicator — clamped to stay within bounds with padding */
-.heat-slider-heatbar::after {
-  content: "";
+.heat-slider__indicator {
   position: absolute;
-  /* Keep the indicator inside the pill with 24px padding from edges */
-  left: calc(24px + (var(--p) * 1% * (100% - 48px) / 100%) - 2px);
   top: 2px;
   bottom: 2px;
   width: 4px;
-  background: #fff;
   border-radius: 2px;
+  background: #fff;
   opacity: 0.9;
   pointer-events: none;
+  left: calc(var(--heat-slider-p) * 1%);
+  transform: translateX(-50%);
+  transition: left var(--heat-slider-anim-ms) linear, transform var(--heat-slider-anim-ms) linear;
 }
 
-/* Off state - greyscale only the background and overlay */
-body.off .heat-slider-heatbar {
-  background: #33333342;
-  height: 24px;
-  transition: height 0.3s ease;
-}
-
-body.off .heat-slider-heatbar .overlay {
-  filter: grayscale(100%);
-}
-
-body.off .heat-slider-heatbar::after {
-  background: #fa4947;
-}
-
-.heat-slider-icon {
-  display: grid;
-  place-items: center;
-}
-
-.heat-slider-icon svg {
-  width: 25px;
-  height: 24px;
-}
-
-.heat-slider-distribution-label {
+.heat-slider__label {
   text-align: center;
   font-weight: 600;
   font-size: 16px;
   color: #eee;
-  margin-top: 8px;
   font-variant-numeric: tabular-nums;
 }
 
-.heat-slider-distribution-label.hidden {
+.heat-slider__label--hidden {
   display: none;
 }
 
+.heat-slider--off .heat-slider__heatbar {
+  background: rgba(51, 51, 51, 0.26);
+  height: 24px;
+  cursor: default;
+}
+
+.heat-slider--off .heat-slider__overlay {
+  filter: grayscale(100%);
+}
+
+.heat-slider--off .heat-slider__indicator {
+  background: #fa4947;
+}
+
+.heat-slider--off .heat-slider__heatbar:focus-visible {
+  outline-color: rgba(250, 73, 71, 0.6);
+}
+
+.heat-slider--dragging .heat-slider__heatbar {
+  cursor: grabbing;
+}
+
+.heat-slider--grayscale .heat-slider__overlay {
+  filter: grayscale(100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :root { --anim-ms: 0ms; }
+  .heat-slider {
+    --heat-slider-anim-ms: 0ms;
+  }
 }

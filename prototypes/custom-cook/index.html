@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Circular Time Dial</title>
+    <link rel="stylesheet" href="../../shared/components/heat-slider.css">
+    <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
     <style>
         @font-face {
             font-family: 'JaffleNeue';
@@ -391,6 +393,10 @@
             transition: filter 300ms ease, opacity 300ms ease;
         }
 
+        .heat-slider-container .heat-slider {
+            width: 100%;
+        }
+
         .heat-distribution-label {
             text-align: center;
             font-size: var(--label-xs-lv2);
@@ -414,90 +420,6 @@
             filter: grayscale(1) opacity(0.4);
         }
         
-        .heat-row {
-            display: grid;
-            grid-template-columns: 26px 1fr 26px;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            min-width: 0;
-        }
-        
-        .heatbar {
-            position: relative;
-            height: 32px;
-            border-radius: 16px;
-            background: var(--cool);
-            overflow: hidden;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-            width: 100%;
-            min-width: 0;
-            transition: height 0.3s ease;
-        }
-        
-        /* Hot overlay as gradient with soft edges */
-        .heatbar .overlay {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: linear-gradient(
-                to right,
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% - calc(var(--w) * 1.5%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% - calc(var(--w) * 1.2%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% - calc(var(--w) * 0.8%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% - calc(var(--w) * 0.4%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% - calc(var(--w) * 0.1%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 1) calc(var(--p) * 1%),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), var(--intensity)) calc(var(--p) * 1% + calc(var(--w) * 0.1%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.6) calc(var(--p) * 1% + calc(var(--w) * 0.4%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.3) calc(var(--p) * 1% + calc(var(--w) * 0.8%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0.1) calc(var(--p) * 1% + calc(var(--w) * 1.2%)),
-                rgba(var(--hot-r), var(--hot-g), var(--hot-b), 0) calc(var(--p) * 1% + calc(var(--w) * 1.5%))
-            );
-            transition: background-position var(--anim-ms) linear, background var(--anim-ms) linear;
-        }
-        
-        /* Split indicator — clamped to stay within bounds with padding */
-        .heatbar::after {
-            content: "";
-            position: absolute;
-            /* Keep the indicator inside the pill with 24px padding from edges */
-            left: calc(24px + (var(--p) * 1% * (100% - 48px) / 100%) - 2px);
-            top: 2px;
-            bottom: 2px;
-            width: 4px;
-            background: #fff;
-            border-radius: 2px;
-            opacity: 0.9;
-            pointer-events: none;
-        }
-        
-        .heat-icon { 
-            display: grid; 
-            place-items: center; 
-        }
-        .heat-icon svg { width: 25px; height: 24px; }
-
-        /* Off state - greyscale only the background and overlay */
-        body.off .heat-slider-container .heatbar {
-            background: #33333342 !important;
-            height: 24px !important;
-            transition: height 0.3s ease;
-        }
-        
-        body.off .heat-slider-container .heatbar .overlay {
-            filter: grayscale(100%) opacity(0.4) !important;
-        }
-        
-        body.off .heat-slider-container .heatbar::after {
-            background: #fa4947 !important;
-        }
-        
-        /* Override the container's grayscale when body is off */
-        body.off .heat-slider-container {
-            filter: none !important;
-            opacity: 1 !important;
-        }
         
         
         /* Dial container modifications for custom-cook mode */
@@ -562,23 +484,7 @@
             <!-- Heat Slider -->
             <div class="heat-slider-container grayscale" id="heatSliderContainer">
                 <div class="heat-distribution-label" id="heatDistributionLabel">Heat Distribution</div>
-                <div class="heat-row" aria-label="Heat distribution" role="group">
-                    <div class="heat-icon" id="iconBottom" aria-label="Bottom element" role="img">
-                        <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(180deg);">
-                            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
-                        </svg>
-                    </div>
-
-                    <div class="heatbar" id="heatbar" aria-hidden="true">
-                        <div class="overlay"></div>
-                    </div>
-
-                    <div class="heat-icon" id="iconTop" aria-label="Top element" role="img">
-                        <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M21.6667 13.25C22.219 13.25 22.6667 13.6977 22.6667 14.25V18C22.6667 20.2091 20.8759 22 18.6667 22H6.66675C4.45761 22 2.66675 20.2091 2.66675 18V14.25C2.66675 13.6977 3.11446 13.25 3.66675 13.25C4.21903 13.25 4.66675 13.6977 4.66675 14.25V18C4.66675 19.1046 5.56218 20 6.66675 20H18.6667C19.7713 20 20.6667 19.1046 20.6667 18V14.25C20.6667 13.6977 21.1145 13.25 21.6667 13.25ZM18.6667 2C20.8759 2 22.6667 3.79086 22.6667 6V9.75C22.6667 10.3023 22.219 10.75 21.6667 10.75C21.1145 10.75 20.6667 10.3023 20.6667 9.75V6C20.6667 4.89543 19.7713 4 18.6667 4H6.66675C5.56218 4 4.66675 4.89543 4.66675 6V9.75C4.66675 10.3023 4.21903 10.75 3.66675 10.75C3.11446 10.75 2.66675 10.3023 2.66675 9.75V6C2.66675 3.79086 4.45761 2 6.66675 2H18.6667ZM16.7244 6C17.1213 6.00004 17.3933 6.207 17.53 6.34668L17.533 6.34961L19.3845 8.25684C19.7692 8.65308 19.7593 9.2862 19.363 9.6709C18.9668 10.0555 18.3337 10.0466 17.949 9.65039L16.7244 8.38867L15.4988 9.65039L15.4968 9.65332C15.3602 9.79299 15.0881 9.99993 14.6912 10C14.2943 9.99999 14.0222 9.79301 13.8855 9.65332L13.8826 9.65039L12.6501 8.37988L11.5291 9.50391C11.4847 9.57969 11.4308 9.65153 11.365 9.71582C10.9698 10.1013 10.3367 10.0932 9.95093 9.69824L8.66675 8.38281L7.38257 9.69824C6.99685 10.0933 6.36368 10.1013 5.96851 9.71582C5.57348 9.3301 5.56545 8.69693 5.95093 8.30176L7.85815 6.34863L7.86011 6.3457L7.98901 6.23242C8.14242 6.11535 8.3699 6 8.66675 6C9.06261 6.00001 9.33513 6.2052 9.47339 6.3457L9.47534 6.34863L10.6511 7.55273L11.8582 6.34082L11.8591 6.3418C11.9977 6.20225 12.2667 6.00001 12.658 6C13.0549 6.0001 13.327 6.20702 13.4636 6.34668L13.4656 6.34961L14.6912 7.61035L15.9158 6.34961L15.9187 6.34668L16.0466 6.23438C16.1993 6.11711 16.4265 6.00001 16.7244 6Z" fill="white"/>
-                        </svg>
-                    </div>
-                </div>
+                <div id="heatSliderMount"></div>
             </div>
         </div>
     </div>
@@ -666,10 +572,38 @@
         Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to cycle modes • <strong>1</strong> to start • <strong>R</strong> to restart
     </div>
 
-    <script>
+    <script type="module">
+        import CircularTimeDial from '../../shared/components/circular-time-dial.js';
+        import { HeatSlider } from '../../shared/components/heat-slider.js';
+
         const BASE_GRAY = '#434343';
         
-        class CircularTimeDial {
+        class CustomCircularTimeDial extends CircularTimeDial {
+            constructor() {
+                super('.container', {
+                    idPrefix: '',
+                    useExistingMarkup: true,
+                    debugRoot: document.getElementById('debugPanel'),
+                    debugSettings: {
+                        scalingEnabled: false,
+                        gradientColorMode: 'seamless',
+                        currentLength: 3.0,
+                        adjacentFalloff: 25,
+                        radiusPercent: 10,
+                        alignment: 'center',
+                        curve: 'easeIn',
+                        tickMode: 'wrap',
+                        autoReset: true,
+                        resetDelay: 0.5,
+                        gapAngle: 20,
+                        preheatEnabled: true,
+                        tempTickCount: 72,
+                        flashDuration: 150,
+                        flashCount: 3,
+                        globalTickMode: '72-continuous',
+                        trailMode: 'normal'
+                    }
+                });
             constructor() {
                 this.canvas = document.getElementById('dial');
                 this.ctx = this.canvas.getContext('2d');
@@ -684,16 +618,8 @@
                 // Heat slider elements
                 this.heatSliderContainer = document.getElementById('heatSliderContainer');
                 this.heatDistributionLabel = document.getElementById('heatDistributionLabel');
-                this.iconTop = document.getElementById('iconTop');
-                this.iconBottom = document.getElementById('iconBottom');
+                this.heatSliderMount = document.getElementById('heatSliderMount');
                 this.container = document.querySelector('.container');
-                
-                this.totalMinutes = 10; // Start with 10 minutes
-                this.maxMinutes = 72 * 60;
-                
-                this.temperature = 400; // Start with 400°F
-                this.minTemp = 300;
-                this.maxTemp = 480;
                 
                 // 3-mode system: 0 = temperature, 1 = time, 2 = custom-cook
                 this.currentMode = 1; // Start in time mode
@@ -703,6 +629,18 @@
                 // Heat slider settings
                 this.heatDistribution = 75; // 0-100, where 50 is center, 75 is one notch right
                 this.heatSliderOn = false; // Start with heat slider off (since not in custom-cook mode)
+
+                this.heatSlider = new HeatSlider(this.heatSliderMount, {
+                    initialPosition: this.heatDistribution,
+                    showLabel: true,
+                    enableShortcuts: false,
+                    stepMode: 'preset',
+                    onChange: ({ topPct }) => {
+                        this.heatDistribution = topPct;
+                    }
+                });
+                this.heatSlider.toggle(this.heatSliderOn);
+                this.heatSlider.showLabel(false);
                 
                 this.centerX = 160;
                 this.centerY = 160;
@@ -742,27 +680,7 @@
                 this.flashVisible = true;
                 this.hasFlashedAtBoundary = false;
                 
-                // Debug settings
-                this.debugSettings = {
-                    scalingEnabled: false,
-                    gradientColorMode: 'seamless', // 'standard', 'gradient', 'seamless'
-                    currentLength: 3.0,
-                    adjacentFalloff: 25, // Percentage falloff from current
-                    radiusPercent: 10,
-                    alignment: 'center',
-                    curve: 'easeIn',
-                    tickMode: 'wrap',
-                    autoReset: true,
-                    resetDelay: 0.5,
-                    gapAngle: 20, // Gap angle in degrees
-                    preheatEnabled: true,
-                    tempTickCount: 72, // Number of temperature ticks
-                    flashDuration: 150, // Flash duration in ms
-                    flashCount: 3, // Number of flashes
-                    globalTickMode: '72-continuous', // 'default', '72-ticks', or '72-continuous'
-                    trailMode: 'normal', // 'normal' or 'stay'
-                    customCookScaleMode: '0.9' // 'none', '0.9', '0.8', '0.7', '0.6'
-                };
+                this.debugSettings.customCookScaleMode = '0.9';
                 
                 // Trail direction state (for 'stay' mode)
                 this.trailDirection = 'normal'; // 'normal' or 'opposite'
@@ -770,15 +688,10 @@
                 this.trailDirectionAnimationStart = null; // Animation start time
                 this.trailDirectionAnimationDuration = 200; // Animation duration in ms
                 
-                this.setupEventListeners();
-                this.setupDebugControls();
-                this.startUpdateLoop();
-                
                 // Initialize heat slider and modes
                 this.setHeatDistribution(75); // Start one notch to the right
-                document.body.classList.toggle('off', !this.heatSliderOn); // Set initial off state
                 this.updateModeVisuals(); // Set initial visual mode
-                
+
                 this.render();
             }
             
@@ -788,43 +701,18 @@
             }
             
             getHeatDistribution() {
-                // Read current CSS var; fallback to 50 if not set
-                const raw = document.documentElement.style.getPropertyValue('--p');
-                return raw ? this.clamp01(raw) : 50;
+                if (this.heatSlider) {
+                    return this.heatSlider.getPosition();
+                }
+                return this.heatDistribution;
             }
             
             setHeatDistribution(v) {
                 const topPct = this.clamp01(v);
-                const bottomPct = 100 - topPct;
-                
-                // Update CSS variable for peak position
-                document.documentElement.style.setProperty('--p', String(topPct));
-                this.heatDistribution = topPct;
-                
-                // Calculate dynamic heat band width: 50 at edges, 25 in middle
-                // Distance from center (50) normalized to 0-1
-                const distanceFromCenter = Math.abs(topPct - 50) / 50;
-                const dynamicWidth = 25 + (distanceFromCenter * 25); // interpolate between 25 and 50
-                document.documentElement.style.setProperty('--w', String(dynamicWidth));
-
-                // Calculate dynamic icon opacity based on position
-                let leftOpacity, rightOpacity;
-                
-                if (topPct <= 50) {
-                    // Moving from center to left
-                    const progress = (50 - topPct) / 50; // 0 at center, 1 at full left
-                    leftOpacity = 0.8 + (progress * 0.2); // 80% to 100%
-                    rightOpacity = 0.6 - (progress * 0.2); // 60% to 40%
-                } else {
-                    // Moving from center to right
-                    const progress = (topPct - 50) / 50; // 0 at center, 1 at full right
-                    leftOpacity = 0.8 - (progress * 0.4); // 80% to 40%
-                    rightOpacity = 0.6 + (progress * 0.4); // 60% to 100%
+                if (this.heatSlider) {
+                    this.heatSlider.setPosition(topPct);
                 }
-
-                // Apply opacity to icons
-                this.iconBottom.style.opacity = leftOpacity.toFixed(2);
-                this.iconTop.style.opacity = rightOpacity.toFixed(2);
+                this.heatDistribution = topPct;
             }
             
 
@@ -1068,9 +956,8 @@
                 const wasHeatSliderOn = this.heatSliderOn;
                 this.heatSliderOn = (this.currentMode === 2); // On only in custom-cook mode
                 
-                // Update body class if heat slider state changed
-                if (wasHeatSliderOn !== this.heatSliderOn) {
-                    document.body.classList.toggle('off', !this.heatSliderOn);
+                if (this.heatSlider && wasHeatSliderOn !== this.heatSliderOn) {
+                    this.heatSlider.toggle(this.heatSliderOn);
                 }
                 
                 // Update visual states based on mode
@@ -1089,6 +976,9 @@
                     
                     // Show heat distribution label
                     this.heatDistributionLabel.classList.add('visible');
+                    if (this.heatSlider) {
+                        this.heatSlider.showLabel(true);
+                    }
                     
                     // Apply scale based on debug setting
                     const scaleMode = this.debugSettings.customCookScaleMode;
@@ -1109,6 +999,9 @@
                     
                     // Hide heat distribution label
                     this.heatDistributionLabel.classList.remove('visible');
+                    if (this.heatSlider) {
+                        this.heatSlider.showLabel(false);
+                    }
                 }
                 
                 // Update dialVisualMode and tempMode for rendering
@@ -2548,16 +2441,16 @@
             }
         }
         
-        function toggleDebug() {
+        window.toggleDebug = function toggleDebug() {
             const panel = document.getElementById('debugPanel');
             const toggleBtn = document.getElementById('debugToggle');
             
             panel.classList.toggle('open');
             toggleBtn.textContent = panel.classList.contains('open') ? 'Close' : 'Open animation controls';
-        }
+        };
         
         // Initialize the dial
-        new CircularTimeDial();
+        new CustomCircularTimeDial();
     </script>
 </body>
 </html>
