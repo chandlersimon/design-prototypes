@@ -24,13 +24,13 @@
             --number-5xl-lv2: 84px;
             --number-5xl-lv2-line-height: 0.8;
             --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-5xl-lv2-weight: 600;
+            --number-5xl-lv2-weight: 500;
             --number-5xl-lv2-spacing: 0;
             
             --number-2xl-lv2: 43px;
             --number-2xl-lv2-line-height: 0.8;
             --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-2xl-lv2-weight: 600;
+            --number-2xl-lv2-weight: 500;
             --number-2xl-lv2-spacing: 0;
             
             --label-sm-lv2: 18px;
@@ -139,7 +139,7 @@
             transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1), 
                        color 300ms ease,
                        opacity 300ms ease;
-            font-weight: bold;
+            font-weight: var(--number-5xl-lv2-weight);
             line-height: 0.8;
         }
         
@@ -573,7 +573,7 @@
     </div>
 
     <script type="module">
-        import CircularTimeDial from '../../shared/components/circular-time-dial.js';
+        import CircularTimeDial, { createCircularTimeDialDebugSettings } from '../../shared/components/circular-time-dial.js';
         import { HeatSlider } from '../../shared/components/heat-slider.js';
 
         const BASE_GRAY = '#434343';
@@ -585,25 +585,15 @@
                     useExistingMarkup: true,
                     initialMode: 'time',
                     debugRoot: document.getElementById('debugPanel'),
-                    debugSettings: {
+                    debugSettings: createCircularTimeDialDebugSettings({
+                        customCookScaleMode: '0.9',
                         scalingEnabled: false,
-                        gradientColorMode: 'seamless',
                         currentLength: 3.0,
-                        adjacentFalloff: 25,
-                        radiusPercent: 10,
                         alignment: 'center',
                         curve: 'easeIn',
-                        tickMode: 'wrap',
-                        autoReset: true,
                         resetDelay: 0.5,
-                        gapAngle: 20,
-                        preheatEnabled: true,
-                        tempTickCount: 72,
-                        flashDuration: 150,
-                        flashCount: 3,
-                        globalTickMode: '72-continuous',
                         trailMode: 'normal'
-                    }
+                    })
                 });
 
                 this.heatSliderContainer = document.getElementById('heatSliderContainer');
@@ -630,7 +620,14 @@
                 this.heatSlider.toggle(this.heatSliderOn);
                 this.heatSlider.showLabel(false);
 
-                this.debugSettings.customCookScaleMode = '0.9';
+                const customCookScaleSelect = this.getDebugElement('customCookScaleSelect');
+                if (customCookScaleSelect) {
+                    customCookScaleSelect.value = this.debugSettings.customCookScaleMode;
+                    customCookScaleSelect.addEventListener('change', (e) => {
+                        this.debugSettings.customCookScaleMode = e.target.value;
+                        this.updateModeVisuals();
+                    });
+                }
 
                 this.setHeatDistribution(75);
                 this.updateModeVisuals();
@@ -719,96 +716,6 @@
                         this.toggleMode();
                     } else if (key === '1') {
                         this.startCooking();
-                    }
-                });
-            }
-            
-            setupDebugControls() {
-                // Custom Cook Scale Mode Control
-                const customCookScaleSelect = document.getElementById('customCookScaleSelect');
-                customCookScaleSelect.addEventListener('change', (e) => {
-                    this.debugSettings.customCookScaleMode = e.target.value;
-                    this.updateModeVisuals();
-                });
-                
-                // Enable Scaling Control
-                const enableScalingSelect = document.getElementById('enableScalingSelect');
-                enableScalingSelect.addEventListener('change', (e) => {
-                    this.debugSettings.scalingEnabled = e.target.value === 'true';
-                    this.toggleScalingControls();
-                    this.render();
-                });
-                
-                
-                // Current Length
-                const currentLengthSlider = document.getElementById('currentLength');
-                const currentLengthValue = document.getElementById('currentLengthValue');
-                currentLengthSlider.addEventListener('input', (e) => {
-                    this.debugSettings.currentLength = parseFloat(e.target.value);
-                    currentLengthValue.textContent = `${this.debugSettings.currentLength}x`;
-                    this.render();
-                });
-                
-                // Adjacent Falloff
-                const adjacentFalloffSlider = document.getElementById('adjacentFalloff');
-                const adjacentFalloffValue = document.getElementById('adjacentFalloffValue');
-                adjacentFalloffSlider.addEventListener('input', (e) => {
-                    this.debugSettings.adjacentFalloff = parseInt(e.target.value);
-                    adjacentFalloffValue.textContent = `${this.debugSettings.adjacentFalloff}%`;
-                    this.render();
-                });
-                
-                // Radius Percent
-                const radiusPercentSlider = document.getElementById('radiusPercent');
-                const radiusPercentValue = document.getElementById('radiusPercentValue');
-                radiusPercentSlider.addEventListener('input', (e) => {
-                    this.debugSettings.radiusPercent = parseInt(e.target.value);
-                    radiusPercentValue.textContent = `${this.debugSettings.radiusPercent}%`;
-                    this.render();
-                });
-                
-                // Alignment Dropdown
-                const alignmentSelect = document.getElementById('alignmentSelect');
-                alignmentSelect.addEventListener('change', (e) => {
-                    this.debugSettings.alignment = e.target.value;
-                    this.render();
-                });
-                
-                // Curve Dropdown
-                const curveSelect = document.getElementById('curveSelect');
-                curveSelect.addEventListener('change', (e) => {
-                    this.debugSettings.curve = e.target.value;
-                    this.render();
-                });
-                
-                
-                // Auto Reset Dropdown
-                const autoResetSelect = document.getElementById('autoResetSelect');
-                autoResetSelect.addEventListener('change', (e) => {
-                    this.debugSettings.autoReset = e.target.value === 'true';
-                    this.render();
-                });
-                
-                // Reset Delay Input
-                const resetDelayInput = document.getElementById('resetDelay');
-                const resetDelayValue = document.getElementById('resetDelayValue');
-                resetDelayInput.addEventListener('input', (e) => {
-                    this.debugSettings.resetDelay = parseFloat(e.target.value);
-                    resetDelayValue.textContent = `${this.debugSettings.resetDelay}s`;
-                });
-                
-                
-                // Initialize scaling controls visibility
-                this.toggleScalingControls();
-            }
-            
-            toggleScalingControls() {
-                const scalingControls = document.querySelectorAll('.scaling-control');
-                scalingControls.forEach(control => {
-                    if (this.debugSettings.scalingEnabled) {
-                        control.classList.remove('hidden');
-                    } else {
-                        control.classList.add('hidden');
                     }
                 });
             }

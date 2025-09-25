@@ -11,7 +11,7 @@ const ID_SUFFIXES = {
     keepWarmBtn: 'keepWarmBtn'
 };
 
-const DEFAULT_DEBUG_SETTINGS = {
+export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     scalingEnabled: true,
     gradientColorMode: 'seamless',
     currentLength: 2.0,
@@ -29,7 +29,12 @@ const DEFAULT_DEBUG_SETTINGS = {
     flashCount: 3,
     globalTickMode: '72-continuous',
     trailMode: 'standard'
-};
+});
+
+export const createCircularTimeDialDebugSettings = (overrides = {}) => ({
+    ...DEFAULT_DEBUG_SETTINGS,
+    ...overrides
+});
 
 const buildTemplate = (idPrefix) => {
     const withPrefix = (suffix) => (idPrefix ? `${idPrefix}-${suffix}` : suffix);
