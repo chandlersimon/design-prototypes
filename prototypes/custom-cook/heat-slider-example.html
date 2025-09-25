@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Custom Cook with Heat Slider</title>
 
-  <!-- Include shared heat slider component styles -->
+  <!-- Include shared design tokens and heat slider component styles -->
+  <link rel="stylesheet" href="../../shared/tokens.css">
   <link rel="stylesheet" href="../../shared/components/heat-slider.css">
 
   <style>
@@ -13,9 +14,9 @@
 
     body {
       margin: 0;
-      background: var(--bg);
-      color: #eee;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg-default);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
       display: grid;
       place-items: center;
       min-height: 100vh;
@@ -24,10 +25,10 @@
 
     .cook-container {
       width: 400px;
-      background: #1a1a1a;
+      background: var(--color-surface);
       border-radius: 16px;
       padding: 24px;
-      border: 1px solid #333;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .cook-header {
@@ -43,7 +44,7 @@
 
     .cook-subtitle {
       font-size: 14px;
-      color: #888;
+      color: var(--color-text-muted);
       margin: 0;
     }
 
@@ -55,11 +56,11 @@
       font-size: 16px;
       font-weight: 600;
       margin: 0 0 16px 0;
-      color: #fff;
+      color: var(--color-text-primary);
     }
 
     .temp-display {
-      background: #2a2a2a;
+      background: rgba(255, 255, 255, 0.06);
       border-radius: 12px;
       padding: 16px;
       text-align: center;
@@ -69,27 +70,27 @@
     .temp-value {
       font-size: 32px;
       font-weight: 700;
-      color: #ff5f42;
+      color: var(--color-accent);
       margin: 0;
     }
 
     .temp-unit {
       font-size: 14px;
-      color: #888;
+      color: var(--color-text-muted);
     }
 
     .instructions {
-      background: #2a2a2a;
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 8px;
       padding: 12px;
       font-size: 12px;
-      color: #aaa;
+      color: var(--color-text-muted);
       margin-top: 16px;
     }
 
     /* Custom styling for the heat slider in this context */
     #heatSliderContainer {
-      background: #2a2a2a;
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 12px;
       padding: 16px;
     }
@@ -122,20 +123,18 @@
     </div>
   </div>
 
-  <!-- Include shared heat slider component script -->
-  <script src="../../shared/components/heat-slider.js"></script>
+  <script type="module">
+    import { createHeatSlider } from '../../shared/components/heat-slider.js';
 
-  <script>
-    // Initialize the heat slider component
-    const heatSlider = HeatSlider.create('heatSliderContainer', {
+    const heatSlider = createHeatSlider('heatSliderContainer', {
       initialPosition: 60,
       showLabel: true,
       stepMode: 'preset',
-      onChange: function(data) {
+      onChange(data) {
         console.log('Heat distribution changed:', data);
         // You could update other UI elements here based on the heat distribution
       },
-      onToggle: function(data) {
+      onToggle(data) {
         console.log('Heat slider toggled:', data);
         // Handle on/off state changes
       }
