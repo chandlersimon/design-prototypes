@@ -1,4 +1,5 @@
 const BASE_GRAY = '#434343';
+const DEFAULT_TEMP_TICK_COUNT = 72;
 
 const ID_SUFFIXES = {
     dial: 'dial',
@@ -24,11 +25,11 @@ export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     resetDelay: 0.45,
     gapAngle: 20,
     preheatEnabled: true,
-    tempTickCount: 72,
     flashDuration: 150,
     flashCount: 3,
     globalTickMode: '72-continuous',
-    trailMode: 'standard'
+    trailMode: 'standard',
+    rapidModeThreshold: 30
 });
 
 export const createCircularTimeDialDebugSettings = (overrides = {}) => ({
@@ -76,6 +77,16 @@ class CircularTimeDial {
         this.debugRoot = options.debugRoot || null;
         this.debugSelectors = options.debugSelectors || {};
         this._debugElementCache = new Map();
+
+        // Debug settings
+        const providedDebug = options.debugSettings || {};
+        this.debugSettings = {
+            ...DEFAULT_DEBUG_SETTINGS,
+            ...providedDebug
+        };
+
+        this.autoBindKeys = options.autoBindKeys !== false;
+        this.boundHandleKeydown = this.handleKeydown.bind(this);
 
         const idPrefix = typeof options.idPrefix === 'string' ? options.idPrefix : 'circular-time-dial';
         this.idPrefix = idPrefix;
@@ -126,7 +137,8 @@ class CircularTimeDial {
         this.accelerationMultiplier = 1;
         this.maxAcceleration = 4; // Maximum acceleration multiplier in rapid mode
         this.rapidMode = false; // Whether we're in rapid mode
-        this.rapidModeThreshold = 30; // Number of clicks needed to trigger rapid mode
+        this.rapidModeThreshold = Math.max(1, parseInt(this.debugSettings.rapidModeThreshold, 10) || 30); // Number of clicks needed to trigger rapid mode
+        this.debugSettings.rapidModeThreshold = this.rapidModeThreshold;
         this.rapidModeWindow = 2000; // Time window (2 seconds) to count clicks for rapid mode
         this.rapidModeDecayTime = 600; // ms - time of inactivity before exiting rapid mode
         this.lastKeyPressed = null; // Track which key was last pressed ('o' or 'p')
@@ -161,13 +173,6 @@ class CircularTimeDial {
         this.flashVisible = true;
         this.hasFlashedAtBoundary = false;
 
-        // Debug settings
-        const providedDebug = options.debugSettings || {};
-        this.debugSettings = {
-            ...DEFAULT_DEBUG_SETTINGS,
-            ...providedDebug
-        };
-
         // Trail direction state (for 'stay' mode)
         this.trailDirection = 'normal'; // 'normal' or 'opposite'
         this.trailDirectionTarget = 'normal'; // Target direction for animation
@@ -187,41 +192,49 @@ class CircularTimeDial {
         this.trailLength = 0; // How many trail ticks to show (grows as you move)
         this.maxTrailLength = 7; // Maximum trail length
 
-        this.setupEventListeners();
+        if (this.autoBindKeys) {
+            this.setupEventListeners();
+        }
         this.setupDebugControls();
         this.startUpdateLoop();
         this.render();
     }
 
     setupEventListeners() {
-        document.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-            if (key === 'p') {
-                if (this.cookingComplete) {
-                    this.navigateButtons(1); // Next button
-                } else {
-                    if (this.debugSettings.trailMode === 'stay') {
-                        this.startTrailDirectionAnimation('normal'); // P sets trail to normal direction
-                    }
-                    this.increaseValue();
+        document.addEventListener('keydown', this.boundHandleKeydown);
+    }
+
+    handleKeydown(event) {
+        if (!event || !event.key) {
+            return;
+        }
+
+        const key = event.key.toLowerCase();
+        if (key === 'p') {
+            if (this.cookingComplete) {
+                this.navigateButtons(1); // Next button
+            } else {
+                if (this.debugSettings.trailMode === 'stay') {
+                    this.startTrailDirectionAnimation('normal'); // P sets trail to normal direction
                 }
-            } else if (key === 'o') {
-                if (this.cookingComplete) {
-                    this.navigateButtons(-1); // Previous button
-                } else {
-                    if (this.debugSettings.trailMode === 'stay') {
-                        this.startTrailDirectionAnimation('opposite'); // O sets trail to opposite direction
-                    }
-                    this.decreaseValue();
-                }
-            } else if (key === 'r') {
-                this.restart();
-            } else if (key === 'q') {
-                this.toggleMode();
-            } else if (key === '1') {
-                this.startCooking();
+                this.increaseValue();
             }
-        });
+        } else if (key === 'o') {
+            if (this.cookingComplete) {
+                this.navigateButtons(-1); // Previous button
+            } else {
+                if (this.debugSettings.trailMode === 'stay') {
+                    this.startTrailDirectionAnimation('opposite'); // O sets trail to opposite direction
+                }
+                this.decreaseValue();
+            }
+        } else if (key === 'r') {
+            this.restart();
+        } else if (key === 'q') {
+            this.toggleMode();
+        } else if (key === '1') {
+            this.startCooking();
+        }
     }
 
     calculateAcceleration(currentKey) {
@@ -232,7 +245,6 @@ class CircularTimeDial {
             this.rapidMode = false;
             this.keyPressHistory = [];
             this.accelerationMultiplier = 1;
-            console.log('Direction changed - rapid mode reset'); // Debug feedback
         }
         this.lastKeyPressed = currentKey;
 
@@ -247,7 +259,6 @@ class CircularTimeDial {
         // Check if we should enter rapid mode
         if (!this.rapidMode && this.keyPressHistory.length >= this.rapidModeThreshold) {
             this.rapidMode = true;
-            console.log('Rapid mode activated!'); // Debug feedback
         }
 
         // Check if we should exit rapid mode (no recent key presses)
@@ -256,7 +267,6 @@ class CircularTimeDial {
             if (timeSinceLastPress > this.rapidModeDecayTime) {
                 this.rapidMode = false;
                 this.accelerationMultiplier = 1;
-                console.log('Rapid mode deactivated'); // Debug feedback
                 return 1;
             }
         }
@@ -280,12 +290,16 @@ class CircularTimeDial {
         const rapidModeStatus = this.getDebugElement('rapidModeStatus');
         const accelerationMultiplierDisplay = this.getDebugElement('accelerationMultiplier');
         const lastKeyDisplay = this.getDebugElement('lastKey');
+        const thresholdDisplay = this.getDebugElement('rapidModeThresholdDisplay');
 
         if (!keyPressCount || !rapidModeStatus || !accelerationMultiplierDisplay || !lastKeyDisplay) {
             return;
         }
 
         keyPressCount.textContent = this.keyPressHistory.length;
+        if (thresholdDisplay) {
+            thresholdDisplay.textContent = this.debugSettings.rapidModeThreshold;
+        }
 
         if (this.rapidMode) {
             rapidModeStatus.textContent = 'RAPID MODE';
@@ -473,22 +487,68 @@ class CircularTimeDial {
         return element;
     }
 
-    setupDebugControls() {
-        const enableScalingSelect = this.getDebugElement('enableScalingSelect');
-        if (enableScalingSelect) {
-            enableScalingSelect.value = this.debugSettings.scalingEnabled ? 'true' : 'false';
-            enableScalingSelect.addEventListener('change', (e) => {
-                this.debugSettings.scalingEnabled = e.target.value === 'true';
-                this.toggleScalingControls();
-                this.render();
-            });
+    bindDebugControl({
+        elementId,
+        valueElementId,
+        eventType = 'change',
+        getValue,
+        setValue,
+        formatValue = (value) => value,
+        render = false
+    }) {
+        if (typeof getValue !== 'function' || typeof setValue !== 'function') {
+            return null;
         }
+
+        const control = this.getDebugElement(elementId);
+        if (!control) {
+            return null;
+        }
+
+        const valueElement = valueElementId ? this.getDebugElement(valueElementId) : null;
+        const format = typeof formatValue === 'function' ? formatValue : (value) => value;
+
+        const updateValueDisplay = (value) => {
+            if (!valueElement) {
+                return;
+            }
+            valueElement.textContent = format(value);
+        };
+
+        const initialValue = getValue();
+        if (initialValue !== undefined) {
+            control.value = String(initialValue);
+            updateValueDisplay(initialValue);
+        }
+
+        control.addEventListener(eventType, (event) => {
+            const updatedValue = setValue(event.target.value);
+            updateValueDisplay(updatedValue);
+            if (render) {
+                this.render();
+            }
+        });
+
+        return control;
+    }
+
+    setupDebugControls() {
+        this.bindDebugControl({
+            elementId: 'enableScalingSelect',
+            getValue: () => (this.debugSettings.scalingEnabled ? 'true' : 'false'),
+            setValue: (value) => {
+                this.debugSettings.scalingEnabled = value === 'true';
+                this.toggleScalingControls();
+                return value;
+            },
+            render: true
+        });
 
         const gradientColorSelect = this.getDebugElement('gradientColorSelect');
         if (gradientColorSelect) {
             gradientColorSelect.value = this.debugSettings.gradientColorMode;
-            gradientColorSelect.addEventListener('change', (e) => {
-                this.debugSettings.gradientColorMode = e.target.value;
+            gradientColorSelect.addEventListener('change', (event) => {
+                this.debugSettings.gradientColorMode = event.target.value;
                 this.render();
             });
         }
@@ -496,8 +556,8 @@ class CircularTimeDial {
         const trailModeSelect = this.getDebugElement('trailModeSelect');
         if (trailModeSelect) {
             trailModeSelect.value = this.debugSettings.trailMode;
-            trailModeSelect.addEventListener('change', (e) => {
-                this.debugSettings.trailMode = e.target.value;
+            trailModeSelect.addEventListener('change', (event) => {
+                this.debugSettings.trailMode = event.target.value;
                 this.trailDirection = 'normal';
                 this.trailDirectionTarget = 'normal';
                 this.trailDirectionAnimationStart = null;
@@ -509,11 +569,11 @@ class CircularTimeDial {
         if (accelerationDebugSelect) {
             accelerationDebugSelect.value = 'false';
             const accelerationDebug = this.getDebugElement('accelerationDebug');
-            accelerationDebugSelect.addEventListener('change', (e) => {
+            accelerationDebugSelect.addEventListener('change', (event) => {
                 if (!accelerationDebug) {
                     return;
                 }
-                if (e.target.value === 'true') {
+                if (event.target.value === 'true') {
                     accelerationDebug.classList.remove('hidden');
                 } else {
                     accelerationDebug.classList.add('hidden');
@@ -521,177 +581,157 @@ class CircularTimeDial {
             });
         }
 
-        const currentLengthSlider = this.getDebugElement('currentLength');
-        if (currentLengthSlider) {
-            currentLengthSlider.value = String(this.debugSettings.currentLength);
-            const currentLengthValue = this.getDebugElement('currentLengthValue');
-            currentLengthSlider.addEventListener('input', (e) => {
-                this.debugSettings.currentLength = parseFloat(e.target.value);
-                if (currentLengthValue) {
-                    currentLengthValue.textContent = `${this.debugSettings.currentLength}x`;
-                }
-                this.render();
-            });
-            if (currentLengthValue) {
-                currentLengthValue.textContent = `${this.debugSettings.currentLength}x`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'rapidModeThreshold',
+            valueElementId: 'rapidModeThresholdValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.rapidModeThreshold,
+            setValue: (value) => {
+                const parsed = Math.max(1, parseInt(value, 10) || 1);
+                this.debugSettings.rapidModeThreshold = parsed;
+                this.rapidModeThreshold = parsed;
+                return this.debugSettings.rapidModeThreshold;
+            },
+            formatValue: (value) => `${value} presses`
+        });
 
-        const adjacentFalloffSlider = this.getDebugElement('adjacentFalloff');
-        if (adjacentFalloffSlider) {
-            adjacentFalloffSlider.value = String(this.debugSettings.adjacentFalloff);
-            const adjacentFalloffValue = this.getDebugElement('adjacentFalloffValue');
-            adjacentFalloffSlider.addEventListener('input', (e) => {
-                this.debugSettings.adjacentFalloff = parseInt(e.target.value, 10);
-                if (adjacentFalloffValue) {
-                    adjacentFalloffValue.textContent = `${this.debugSettings.adjacentFalloff}%`;
-                }
-                this.render();
-            });
-            if (adjacentFalloffValue) {
-                adjacentFalloffValue.textContent = `${this.debugSettings.adjacentFalloff}%`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'currentLength',
+            valueElementId: 'currentLengthValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.currentLength,
+            setValue: (value) => {
+                this.debugSettings.currentLength = parseFloat(value);
+                return this.debugSettings.currentLength;
+            },
+            formatValue: (value) => `${value}x`,
+            render: true
+        });
 
-        const radiusPercentSlider = this.getDebugElement('radiusPercent');
-        if (radiusPercentSlider) {
-            radiusPercentSlider.value = String(this.debugSettings.radiusPercent);
-            const radiusPercentValue = this.getDebugElement('radiusPercentValue');
-            radiusPercentSlider.addEventListener('input', (e) => {
-                this.debugSettings.radiusPercent = parseInt(e.target.value, 10);
-                if (radiusPercentValue) {
-                    radiusPercentValue.textContent = `${this.debugSettings.radiusPercent}%`;
-                }
-                this.render();
-            });
-            if (radiusPercentValue) {
-                radiusPercentValue.textContent = `${this.debugSettings.radiusPercent}%`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'adjacentFalloff',
+            valueElementId: 'adjacentFalloffValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.adjacentFalloff,
+            setValue: (value) => {
+                this.debugSettings.adjacentFalloff = parseInt(value, 10);
+                return this.debugSettings.adjacentFalloff;
+            },
+            formatValue: (value) => `${value}%`,
+            render: true
+        });
 
-        const alignmentSelect = this.getDebugElement('alignmentSelect');
-        if (alignmentSelect) {
-            alignmentSelect.value = this.debugSettings.alignment;
-            alignmentSelect.addEventListener('change', (e) => {
-                this.debugSettings.alignment = e.target.value;
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'radiusPercent',
+            valueElementId: 'radiusPercentValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.radiusPercent,
+            setValue: (value) => {
+                this.debugSettings.radiusPercent = parseInt(value, 10);
+                return this.debugSettings.radiusPercent;
+            },
+            formatValue: (value) => `${value}%`,
+            render: true
+        });
 
-        const curveSelect = this.getDebugElement('curveSelect');
-        if (curveSelect) {
-            curveSelect.value = this.debugSettings.curve;
-            curveSelect.addEventListener('change', (e) => {
-                this.debugSettings.curve = e.target.value;
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'alignmentSelect',
+            getValue: () => this.debugSettings.alignment,
+            setValue: (value) => {
+                this.debugSettings.alignment = value;
+                return this.debugSettings.alignment;
+            },
+            render: true
+        });
 
-        const tickModeSelect = this.getDebugElement('tickModeSelect');
-        if (tickModeSelect) {
-            tickModeSelect.value = this.debugSettings.tickMode;
-            tickModeSelect.addEventListener('change', (e) => {
-                this.debugSettings.tickMode = e.target.value;
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'curveSelect',
+            getValue: () => this.debugSettings.curve,
+            setValue: (value) => {
+                this.debugSettings.curve = value;
+                return this.debugSettings.curve;
+            },
+            render: true
+        });
 
-        const gapAngleSlider = this.getDebugElement('gapAngle');
-        if (gapAngleSlider) {
-            gapAngleSlider.value = String(this.debugSettings.gapAngle);
-            const gapAngleValue = this.getDebugElement('gapAngleValue');
-            gapAngleSlider.addEventListener('input', (e) => {
-                this.debugSettings.gapAngle = parseInt(e.target.value, 10);
-                if (gapAngleValue) {
-                    gapAngleValue.textContent = `${this.debugSettings.gapAngle}°`;
-                }
-                this.render();
-            });
-            if (gapAngleValue) {
-                gapAngleValue.textContent = `${this.debugSettings.gapAngle}°`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'gapAngle',
+            valueElementId: 'gapAngleValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.gapAngle,
+            setValue: (value) => {
+                this.debugSettings.gapAngle = parseInt(value, 10);
+                return this.debugSettings.gapAngle;
+            },
+            formatValue: (value) => `${value}°`,
+            render: true
+        });
 
-        const preheatSelect = this.getDebugElement('preheatSelect');
-        if (preheatSelect) {
-            preheatSelect.value = this.debugSettings.preheatEnabled ? 'true' : 'false';
-            preheatSelect.addEventListener('change', (e) => {
-                this.debugSettings.preheatEnabled = e.target.value === 'true';
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'preheatSelect',
+            getValue: () => (this.debugSettings.preheatEnabled ? 'true' : 'false'),
+            setValue: (value) => {
+                this.debugSettings.preheatEnabled = value === 'true';
+                return value;
+            },
+            render: true
+        });
 
-        const autoResetSelect = this.getDebugElement('autoResetSelect');
-        if (autoResetSelect) {
-            autoResetSelect.value = this.debugSettings.autoReset ? 'true' : 'false';
-            autoResetSelect.addEventListener('change', (e) => {
-                this.debugSettings.autoReset = e.target.value === 'true';
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'autoResetSelect',
+            getValue: () => (this.debugSettings.autoReset ? 'true' : 'false'),
+            setValue: (value) => {
+                this.debugSettings.autoReset = value === 'true';
+                return value;
+            },
+            render: true
+        });
 
-        const resetDelayInput = this.getDebugElement('resetDelay');
-        if (resetDelayInput) {
-            resetDelayInput.value = String(this.debugSettings.resetDelay);
-            const resetDelayValue = this.getDebugElement('resetDelayValue');
-            resetDelayInput.addEventListener('input', (e) => {
-                this.debugSettings.resetDelay = parseFloat(e.target.value);
-                if (resetDelayValue) {
-                    resetDelayValue.textContent = `${this.debugSettings.resetDelay}s`;
-                }
-            });
-            if (resetDelayValue) {
-                resetDelayValue.textContent = `${this.debugSettings.resetDelay}s`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'resetDelay',
+            valueElementId: 'resetDelayValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.resetDelay,
+            setValue: (value) => {
+                this.debugSettings.resetDelay = parseFloat(value);
+                return this.debugSettings.resetDelay;
+            },
+            formatValue: (value) => `${value}s`,
+        });
 
-        const tempTickCountSelect = this.getDebugElement('tempTickCountSelect');
-        if (tempTickCountSelect) {
-            tempTickCountSelect.value = String(this.debugSettings.tempTickCount);
-            tempTickCountSelect.addEventListener('change', (e) => {
-                this.debugSettings.tempTickCount = parseInt(e.target.value, 10);
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'flashDuration',
+            valueElementId: 'flashDurationValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.flashDuration,
+            setValue: (value) => {
+                this.debugSettings.flashDuration = parseInt(value, 10);
+                return this.debugSettings.flashDuration;
+            },
+            formatValue: (value) => `${value}ms`,
+        });
 
-        const flashDurationInput = this.getDebugElement('flashDuration');
-        if (flashDurationInput) {
-            flashDurationInput.value = String(this.debugSettings.flashDuration);
-            const flashDurationValue = this.getDebugElement('flashDurationValue');
-            flashDurationInput.addEventListener('input', (e) => {
-                this.debugSettings.flashDuration = parseInt(e.target.value, 10);
-                if (flashDurationValue) {
-                    flashDurationValue.textContent = `${this.debugSettings.flashDuration}ms`;
-                }
-            });
-            if (flashDurationValue) {
-                flashDurationValue.textContent = `${this.debugSettings.flashDuration}ms`;
-            }
-        }
+        this.bindDebugControl({
+            elementId: 'flashCount',
+            valueElementId: 'flashCountValue',
+            eventType: 'input',
+            getValue: () => this.debugSettings.flashCount,
+            setValue: (value) => {
+                this.debugSettings.flashCount = parseInt(value, 10);
+                return this.debugSettings.flashCount;
+            },
+            formatValue: (value) => `${value} flashes`,
+        });
 
-        const flashCountInput = this.getDebugElement('flashCount');
-        if (flashCountInput) {
-            flashCountInput.value = String(this.debugSettings.flashCount);
-            const flashCountValue = this.getDebugElement('flashCountValue');
-            flashCountInput.addEventListener('input', (e) => {
-                this.debugSettings.flashCount = parseInt(e.target.value, 10);
-                if (flashCountValue) {
-                    flashCountValue.textContent = `${this.debugSettings.flashCount} flashes`;
-                }
-            });
-            if (flashCountValue) {
-                flashCountValue.textContent = `${this.debugSettings.flashCount} flashes`;
-            }
-        }
-
-        const globalTickModeSelect = this.getDebugElement('globalTickModeSelect');
-        if (globalTickModeSelect) {
-            globalTickModeSelect.value = this.debugSettings.globalTickMode;
-            globalTickModeSelect.addEventListener('change', (e) => {
-                this.debugSettings.globalTickMode = e.target.value;
-                this.render();
-            });
-        }
+        this.bindDebugControl({
+            elementId: 'globalTickModeSelect',
+            getValue: () => this.debugSettings.globalTickMode,
+            setValue: (value) => {
+                this.debugSettings.globalTickMode = value;
+                return this.debugSettings.globalTickMode;
+            },
+            render: true
+        });
 
         this.toggleScalingControls();
     }
@@ -1175,7 +1215,7 @@ class CircularTimeDial {
             filledTempTicks = Math.floor((this.temperature - this.minTemp) / tempIncrement) + 1;
         } else {
             // Default mode
-            tempIncrement = tempRange / this.debugSettings.tempTickCount;
+            tempIncrement = tempRange / DEFAULT_TEMP_TICK_COUNT;
             currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement);
             filledTempTicks = currentTempTick + 1;
         }
@@ -1604,7 +1644,7 @@ class CircularTimeDial {
         // Default mode - use original tick counts
         switch(mode) {
             case 'phaseA': return 59; // Minute mode (1-59 minutes)
-            case 'tempMode': return this.debugSettings.tempTickCount + 1; // Temperature + 1 for endpoint
+            case 'tempMode': return DEFAULT_TEMP_TICK_COUNT + 1; // Temperature + 1 for endpoint
             case 'phaseBHourly': return 72; // Hourly mode
             case 'phaseBWrap': return 72; // Wrap mode  
             case 'phaseB15Min': return 285; // 15-minute mode (71 hours * 4 + 1)
@@ -2278,4 +2318,5 @@ class CircularTimeDial {
 }
 
 export { CircularTimeDial };
+export { BASE_GRAY };
 export default CircularTimeDial;

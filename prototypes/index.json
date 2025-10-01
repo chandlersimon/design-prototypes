@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "circular-time-dial",
+    "title": "Circular Time Dial",
+    "description": "Interactive time and temperature selector with animated scaling and countdown functionality."
+  },
+  {
+    "slug": "custom-cook",
+    "title": "Circular Time Dial",
+    "description": "Circular time and temperature dial with interactive controls, scaling animations, and custom cooking presets."
+  },
+  {
+    "slug": "guage-coffee",
+    "title": "Circular Time Dial",
+    "description": "Interactive coffee brewing gauge with pressure tracking, time control, and animated dial visualization."
+  },
+  {
+    "slug": "heat-slider",
+    "title": "Heat Slider Prototype",
+    "description": "Interactive oven heat distribution control with dynamic gradient visualization and element icons."
+  },
+  {
+    "slug": "list-item",
+    "title": "Cooking Methods Prototype",
+    "description": "Interactive cooking method selector with focus states, reordering, and bottom sheet editing interface."
+  },
+  {
+    "slug": "segmented-range",
+    "title": "Segment Range Prototype",
+    "description": "Interactive slice and darkness selector with keyboard controls and dynamic state management."
+  }
+]

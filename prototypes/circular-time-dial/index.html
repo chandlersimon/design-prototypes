@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circular Time Dial</title>
+    <meta name="prototype:description" content="Interactive time and temperature selector with animated scaling and countdown functionality.">
+    <title>circular-time-dial</title>
+    <link rel="stylesheet" href="../../shared/prototype-shell.css">
     <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
     <style>
         @font-face {
@@ -58,29 +60,6 @@
             height: 100vh;
             overflow: hidden;
         }
-
-        .outer-container {
-            width: 400px;
-            height: 600px;
-            background: transparent;
-            border: 1px solid #444;
-            border-top-right-radius: 75px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .prototype-container {
-            width: 272px;
-            height: 480px;
-            background: transparent;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
         .container {
             position: relative;
             width: 320px;
@@ -212,7 +191,7 @@
         .temp-display.inactive .temp-unit {
             padding-top: 0.5%;
         }
-        
+
         .cooking-status {
             position: absolute;
             top: -75px;
@@ -228,7 +207,7 @@
             text-align: center;
             display: none;
         }
-        
+
         .completion-buttons {
             position: absolute;
             bottom: -100px;
@@ -239,7 +218,7 @@
             gap: 10px;
             align-items: center;
         }
-        
+
         .completion-btn {
             background: #333;
             color: white;
@@ -252,81 +231,17 @@
             transition: all 300ms ease;
             min-width: 120px;
         }
-        
+
         .completion-btn.active {
             background: #555;
             border-color: #777;
             color: #fff;
         }
-        
+
         .completion-btn:hover {
             background: #444;
         }
-        
-        .debug-panel {
-            position: absolute;
-            top: 20px;
-            right: -240px;
-            background: rgba(40, 40, 40, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.8em;
-            width: 200px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        .debug-panel.open {
-            right: 20px;
-        }
-        
-        .debug-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #333;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            z-index: 1001;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        .debug-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 1em;
-        }
-        
-        .debug-control {
-            margin: 8px 0;
-        }
-        
-        .debug-control label {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 0.9em;
-        }
-        
-        .debug-control input[type="range"] {
-            width: 100%;
-            margin: 2px 0;
-        }
-        
-        .debug-control select {
-            width: 100%;
-            padding: 4px;
-            background: #555;
-            color: white;
-            border: 1px solid #666;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        
+
         .scaling-control {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -335,11 +250,6 @@
             opacity: 0.3;
             pointer-events: none;
             transform: scale(0.95);
-        }
-        
-        .debug-value {
-            color: #ccc;
-            font-size: 0.8em;
         }
         
         .acceleration-debug {
@@ -373,16 +283,6 @@
         .hidden {
             display: none !important;
         }
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: #888;
-            font-size: 0.9em;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
     </style>
 </head>
 <body>
@@ -390,7 +290,7 @@
         <div class="prototype-container">
             <div class="acceleration-debug hidden" id="accelerationDebug">
                 <h4>Acceleration Debug</h4>
-                <div>Key Presses: <span id="keyPressCount">0</span> / 30</div>
+                <div>Key Presses: <span id="keyPressCount">0</span> / <span id="rapidModeThresholdDisplay">30</span></div>
                 <div>Mode: <span id="rapidModeStatus" class="normal-mode">Normal</span></div>
                 <div>Multiplier: <span id="accelerationMultiplier">1</span>x</div>
                 <div>Last Key: <span id="lastKey">None</span></div>
@@ -405,14 +305,14 @@
         <h3>Debug Controls</h3>
         
         <div class="debug-control">
-            <label>Phase B Tick Mode:</label>
-            <select id="tickModeSelect">
-                <option value="wrap">Wrap mode (72 ticks, 4 laps)</option>
-                <option value="15min">15-min ticks (285 total)</option>
-                <option value="hourly">Hourly ticks (72 total)</option>
+            <label>Global Tick Mode:</label>
+            <select id="globalTickModeSelect">
+                <option value="default">Default (Original tick counts)</option>
+                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
+                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
             </select>
         </div>
-        
+
         <div class="debug-control">
             <label>Enable Preheat:</label>
             <select id="preheatSelect">
@@ -422,20 +322,11 @@
         </div>
         
         <div class="debug-control">
-            <label>Gradient Color Mode:</label>
-            <select id="gradientColorSelect">
-                <option value="standard">Standard Colors</option>
-                <option value="gradient">White-to-Gray Gradient</option>
-                <option value="seamless" selected>Seamless Gradient (20% trail)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
             <label>Trail Mode (P/O keys):</label>
             <select id="trailModeSelect">
-                <option value="normal">Standard</option>
+                <option value="standard" selected>Standard</option>
                 <option value="stay">Directional</option>
-                <option value="animated" selected>Animated</option>
+                <option value="animated">Animated</option>
             </select>
         </div>
         
@@ -445,6 +336,12 @@
                 <option value="false" selected>Hidden</option>
                 <option value="true">Visible</option>
             </select>
+        </div>
+
+        <div class="debug-control">
+            <label>Rapid Mode Threshold:</label>
+            <input type="number" id="rapidModeThreshold" min="1" max="120" step="1" value="30" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="rapidModeThresholdValue">30 presses</div>
         </div>
         
         <div class="debug-control">
@@ -514,14 +411,6 @@
         </div>
         
         <div class="debug-control">
-            <label>Temperature Tick Count:</label>
-            <select id="tempTickCountSelect">
-                <option value="36">36 ticks (5°F steps)</option>
-                <option value="72" selected>72 ticks (2.5°F steps)</option>
-            </select>
-        </div>
-        
-        <div class="debug-control">
             <label>Flash Duration (ms):</label>
             <input type="number" id="flashDuration" min="50" max="500" step="25" value="150" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
             <div class="debug-value" id="flashDurationValue">150ms</div>
@@ -531,15 +420,6 @@
             <label>Flash Count:</label>
             <input type="number" id="flashCount" min="1" max="10" step="1" value="3" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
             <div class="debug-value" id="flashCountValue">3 flashes</div>
-        </div>
-        
-        <div class="debug-control">
-            <label>Global Tick Mode:</label>
-            <select id="globalTickModeSelect">
-                <option value="default">Default (Original tick counts)</option>
-                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
-                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
-            </select>
         </div>
         
     </div>

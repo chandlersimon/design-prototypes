@@ -116,7 +116,9 @@
         intensity: options.intensity,
         animationMs: options.animationMs,
         onChange: options.onChange,
-        onToggle: options.onToggle
+        onToggle: options.onToggle,
+        showTitle: options.showTitle ?? false,
+        titleText: options.titleText ?? 'Heat Distribution'
       };
 
       this.root = container;
@@ -131,7 +133,7 @@
       this._applyTheme();
       this._bindEvents();
       this.setPosition(this._currentTop);
-      this.showLabel(this.options.showLabel);
+      this.showTitle(this.options.showTitle);
 
       HeatSlider.instances.add(this);
     }
@@ -168,11 +170,10 @@
 
       row.append(this.iconBottom, this.heatbar, this.iconTop);
 
-      this.labelEl = createElement('div', 'heat-slider__label', {
-        'aria-live': 'polite'
-      });
+      this.titleEl = createElement('div', 'heat-slider__title');
+      this.titleEl.textContent = this.options.titleText;
 
-      this.root.append(row, this.labelEl);
+      this.root.append(this.titleEl, row);
     }
 
     _applyTheme() {
@@ -330,7 +331,6 @@
       this.iconBottom.style.opacity = bottomOpacity.toFixed(2);
       this.iconTop.style.opacity = topOpacity.toFixed(2);
 
-      this.labelEl.textContent = this.options.labelFormatter(bottomPct, topPct);
       this.heatbar.setAttribute('aria-valuenow', String(topPct));
 
       if (wasDifferent && typeof this.options.onChange === 'function') {
@@ -369,7 +369,30 @@
 
     showLabel(show) {
       this.options.showLabel = !!show;
-      this.labelEl.classList.toggle('heat-slider__label--hidden', !this.options.showLabel);
+    }
+
+    showTitle(show) {
+      this.options.showTitle = !!show;
+      if (this.titleEl) {
+        this.root.classList.toggle('heat-slider--title-enabled', this.options.showTitle);
+      }
+    }
+
+    setLabelFormatter(formatter) {
+      if (typeof formatter !== 'function') {
+        return;
+      }
+      this.options.labelFormatter = formatter;
+    }
+
+    setTitleText(text) {
+      if (typeof text !== 'string') {
+        return;
+      }
+      this.options.titleText = text;
+      if (this.titleEl) {
+        this.titleEl.textContent = text;
+      }
     }
 
     setIntensity(intensity) {

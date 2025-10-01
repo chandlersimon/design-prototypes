@@ -55,29 +55,15 @@
             border: 1px solid #333;
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .prototype-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             border-color: #555;
-        }
-
-        .prototype-preview {
-            width: 100%;
-            aspect-ratio: 1;
-            background: #000;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 0.9rem;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
         }
 
         .prototype-info h3 {
@@ -90,6 +76,13 @@
             color: #aaa;
             font-size: 0.9rem;
             margin-bottom: 1rem;
+        }
+
+        .prototype-slug {
+            font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            color: #666;
         }
 
 
@@ -112,83 +105,7 @@
         </div>
 
         <div class="prototypes-grid" id="prototypesGrid">
-            <!-- Circular Time Dial -->
-            <a href="prototypes/circular-time-dial/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background-image: url('assets/dial.png'); background-size: cover; background-position: center;">
-                </div>
-                <div class="prototype-info">
-                    <h3>Tenzing cook ring</h3>
-                    <p>Interactive time and temperature selector with animated scaling and countdown functionality.</p>
-                </div>
-            </a>
-
-            <!-- Segment Picker -->
-            <a href="prototypes/segment-picker/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background-image: url('assets/segmented.png'); background-size: cover; background-position: center;">
-                </div>
-                <div class="prototype-info">
-                    <h3>Segmented range</h3>
-                    <p>Interactive slice and darkness selector with keyboard controls and dynamic state management.</p>
-                </div>
-            </a>
-
-            <!-- Coffee Gauge -->
-            <a href="prototypes/guage-coffee/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background: radial-gradient(circle, #1a1a1a 0%, #000 70%); display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 120px; height: 120px; border: 3px solid #444; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;">
-                        <div style="width: 4px; height: 40px; background: #FA4947; transform: rotate(45deg); transform-origin: bottom; margin-bottom: 20px; border-radius: 2px;"></div>
-                        <div style="position: absolute; bottom: 25px; font-size: 12px; color: #888;">0.00</div>
-                    </div>
-                </div>
-                <div class="prototype-info">
-                    <h3>Pressure gauge</h3>
-                    <p>Interactive coffee brewing gauge with pressure tracking, time control, and animated dial visualization.</p>
-                </div>
-            </a>
-
-            <!-- Cooking Methods List -->
-            <a href="prototypes/list-item/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background: linear-gradient(145deg, #111, #000); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                    <div style="width: 200px; display: flex; flex-direction: column; gap: 4px;">
-                        <div style="height: 32px; background: #FA4947; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: white;">Toast</div>
-                        <div style="height: 32px; background: #333; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: #aaa;">Bagel</div>
-                        <div style="height: 32px; background: #333; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: #aaa;">Bake</div>
-                    </div>
-                </div>
-                <div class="prototype-info">
-                    <h3>List item reordering</h3>
-                    <p>Interactive cooking method selector with focus states, reordering, and bottom sheet editing interface.</p>
-                </div>
-            </a>
-
-            <!-- Heat Slider -->
-            <a href="prototypes/heat-slider/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background: linear-gradient(145deg, #111, #000); display: flex; align-items: center; justify-content: center; padding: 20px;">
-                    <div style="width: 180px; height: 32px; background: #490307; border-radius: 16px; position: relative; overflow: hidden;">
-                        <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(255, 95, 66, 0) 0%, rgba(255, 95, 66, 0.8) 50%, rgba(255, 95, 66, 0) 100%); border-radius: inherit;"></div>
-                        <div style="position: absolute; left: 50%; top: 2px; bottom: 2px; width: 4px; background: #fff; border-radius: 2px; transform: translateX(-50%); opacity: 0.9;"></div>
-                    </div>
-                </div>
-                <div class="prototype-info">
-                    <h3>Heat slider</h3>
-                    <p>Interactive oven heat distribution control with dynamic gradient visualization and element icons.</p>
-                </div>
-            </a>
-
-            <!-- Custom Cook -->
-            <a href="prototypes/custom-cook/" class="prototype-card" target="_blank">
-                <div class="prototype-preview" style="background: linear-gradient(145deg, #111, #000); display: flex; align-items: center; justify-content: center;">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                        <div style="font-family: 'Inter', sans-serif; font-size: 48px; font-weight: 600; color: #FA4947; line-height: 0.8;">8:30</div>
-                        <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888; letter-spacing: 0.08em;">CUSTOM COOK</div>
-                    </div>
-                </div>
-                <div class="prototype-info">
-                    <h3>Custom cook dial</h3>
-                    <p>Circular time and temperature dial with interactive controls, scaling animations, and custom cooking presets.</p>
-                </div>
-            </a>
-
+            <!-- Cards get injected by the script below -->
         </div>
 
     </div>
@@ -200,8 +117,138 @@
             lastUpdatedEl.textContent = `Last updated ${lastModified.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
         }
 
-        // You can add auto-discovery of prototypes here later
-        // by reading the prototypes directory structure
+        const prototypesGrid = document.getElementById('prototypesGrid');
+        const fallbackPrototypes = [
+            {
+                slug: 'circular-time-dial',
+                title: 'circular-time-dial',
+                description: 'Interactive time and temperature selector with animated scaling and countdown functionality.'
+            },
+            {
+                slug: 'segmented-range',
+                title: 'segmented-range',
+                description: 'Interactive slice and darkness selector with keyboard controls and dynamic state management.'
+            },
+            {
+                slug: 'guage-coffee',
+                title: 'guage-coffee',
+                description: 'Interactive coffee brewing gauge with pressure tracking, time control, and animated dial visualization.'
+            },
+            {
+                slug: 'list-item',
+                title: 'list-item',
+                description: 'Interactive cooking method selector with focus states, reordering, and bottom sheet editing interface.'
+            },
+            {
+                slug: 'heat-slider',
+                title: 'heat-slider',
+                description: 'Interactive oven heat distribution control with dynamic gradient visualization and element icons.'
+            },
+            {
+                slug: 'custom-cook',
+                title: 'custom-cook',
+                description: 'Circular time and temperature dial with interactive controls, scaling animations, and custom cooking presets.'
+            }
+        ];
+
+        const fallbackMetadata = fallbackPrototypes.reduce((acc, item) => {
+            acc[item.slug] = item;
+            return acc;
+        }, {});
+
+        const createCard = ({ slug, title, description }) => {
+            const card = document.createElement('a');
+            card.href = `prototypes/${slug}/`;
+            card.target = '_blank';
+            card.rel = 'noopener noreferrer';
+            card.className = 'prototype-card';
+
+            const info = document.createElement('div');
+            info.className = 'prototype-info';
+
+            const heading = document.createElement('h3');
+            heading.textContent = slug;
+            info.appendChild(heading);
+
+            if (description && description.trim().length > 0) {
+                const desc = document.createElement('p');
+                desc.textContent = description;
+                info.appendChild(desc);
+            }
+
+            const slugEl = document.createElement('div');
+            slugEl.className = 'prototype-slug';
+            slugEl.textContent = `/${slug}`;
+
+            card.appendChild(info);
+            card.appendChild(slugEl);
+
+            return card;
+        };
+
+        const renderPrototypes = (list) => {
+            if (!prototypesGrid) return;
+            prototypesGrid.innerHTML = '';
+            list.forEach((prototype) => {
+                prototypesGrid.appendChild(createCard(prototype));
+            });
+        };
+
+        const normalizeEntry = (entry) => {
+            if (typeof entry === 'string') {
+                const fallback = fallbackMetadata[entry] || {};
+                return {
+                    slug: entry,
+                    title: entry,
+                    description: fallback.description || ''
+                };
+            }
+
+            if (entry && typeof entry === 'object') {
+                const slug = entry.slug || entry.title;
+                if (!slug) {
+                    return null;
+                }
+                const fallback = fallbackMetadata[slug] || {};
+                return {
+                    slug,
+                    title: entry.title || slug,
+                    description: entry.description ?? (fallback.description || '')
+                };
+            }
+
+            return null;
+        };
+
+        const fetchPrototypeIndex = async () => {
+            const response = await fetch('prototypes/index.json', { cache: 'no-cache' });
+            if (!response.ok) {
+                throw new Error(`Failed to load prototypes/index.json: ${response.status}`);
+            }
+            return response.json();
+        };
+
+        const loadPrototypes = async () => {
+            let entries = [];
+            try {
+                const rawEntries = await fetchPrototypeIndex();
+                if (Array.isArray(rawEntries)) {
+                    entries = rawEntries
+                        .map(normalizeEntry)
+                        .filter(Boolean);
+                }
+            } catch (error) {
+                console.warn('Falling back to inline prototype list:', error);
+            }
+
+            if (!entries.length) {
+                entries = fallbackPrototypes;
+            }
+
+            renderPrototypes(entries);
+        };
+
+        loadPrototypes();
     </script>
 </body>
 </html>

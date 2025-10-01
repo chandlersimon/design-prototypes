@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circular Time Dial</title>
+    <meta name="prototype:description" content="Circular time and temperature dial with interactive controls, scaling animations, and custom cooking presets.">
+    <title>custom-cook</title>
+    <link rel="stylesheet" href="../../shared/prototype-shell.css">
     <link rel="stylesheet" href="../../shared/components/heat-slider.css">
     <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
     <style>
@@ -92,27 +94,8 @@
             text-transform: none;
         }
 
-        .outer-container {
-            width: 400px;
-            height: 600px;
-            background: transparent;
-            border: 1px solid #444;
-            border-top-right-radius: 75px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .prototype-container {
             width: 272px;
-            height: 480px;
-            background: transparent;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
         }
         
         .container {
@@ -263,104 +246,6 @@
             display: none;
         }
         
-        .completion-buttons {
-            position: absolute;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .completion-btn {
-            background: #333;
-            color: white;
-            border: 2px solid #555;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 300ms ease;
-            min-width: 120px;
-        }
-        
-        .completion-btn.active {
-            background: #555;
-            border-color: #777;
-            color: #fff;
-        }
-        
-        .completion-btn:hover {
-            background: #444;
-        }
-        
-        .debug-panel {
-            position: absolute;
-            top: 20px;
-            right: -240px;
-            background: rgba(40, 40, 40, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.8em;
-            width: 200px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        .debug-panel.open {
-            right: 20px;
-        }
-        
-        .debug-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #333;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            z-index: 1001;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        .debug-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 1em;
-        }
-        
-        .debug-control {
-            margin: 8px 0;
-        }
-        
-        .debug-control label {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 0.9em;
-        }
-        
-        .debug-control input[type="range"] {
-            width: 100%;
-            margin: 2px 0;
-        }
-        
-        .debug-control select {
-            width: 100%;
-            padding: 4px;
-            background: #555;
-            color: white;
-            border: 1px solid #666;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        
         .scaling-control {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -371,53 +256,18 @@
             transform: scale(0.95);
         }
         
-        .debug-value {
-            color: #ccc;
-            font-size: 0.8em;
-        }
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: #888;
-            font-size: 0.9em;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
         /* Heat Slider Styles */
         .heat-slider-container {
             width: 100%;
             margin-top: 24px;
-            transition: filter 300ms ease, opacity 300ms ease;
         }
 
         .heat-slider-container .heat-slider {
             width: 100%;
         }
 
-        .heat-distribution-label {
-            text-align: center;
-            font-size: var(--label-xs-lv2);
-            line-height: var(--label-xs-lv2-line-height);
-            font-family: var(--label-xs-lv2-font);
-            font-weight: var(--label-xs-lv2-weight);
-            font-feature-settings: var(--label-xs-lv2-features);
-            letter-spacing: var(--label-xs-lv2-spacing);
-            margin: 0 0 8px 0;
-            color: white;
-            text-transform: uppercase;
-            opacity: 0;
-            transition: opacity 300ms ease;
-        }
-
-        .heat-distribution-label.visible {
-            opacity: 1;
-        }
-        
-        .heat-slider-container.grayscale {
-            filter: grayscale(1) opacity(0.4);
+        #heatSlider {
+            width: 272px;
         }
         
         
@@ -482,9 +332,8 @@
             </div>
             
             <!-- Heat Slider -->
-            <div class="heat-slider-container grayscale" id="heatSliderContainer">
-                <div class="heat-distribution-label" id="heatDistributionLabel">Heat Distribution</div>
-                <div id="heatSliderMount"></div>
+            <div class="heat-slider-container" id="heatSliderContainer">
+                <div id="heatSlider"></div>
             </div>
         </div>
     </div>
@@ -495,6 +344,15 @@
         <h3>Debug Controls</h3>
         
         <div class="debug-control">
+            <label>Global Tick Mode:</label>
+            <select id="globalTickModeSelect">
+                <option value="default">Default (Original tick counts)</option>
+                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
+                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
+            </select>
+        </div>
+
+        <div class="debug-control">
             <label>Custom-Cook Scale Mode:</label>
             <select id="customCookScaleSelect">
                 <option value="none">None (no scaling)</option>
@@ -504,19 +362,25 @@
                 <option value="0.6">0.6x Scale</option>
             </select>
         </div>
+
+        <div class="debug-control">
+            <label>Rapid Mode Threshold:</label>
+            <input type="number" id="rapidModeThreshold" min="1" max="120" step="1" value="30" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="rapidModeThresholdValue">30 presses</div>
+        </div>
         
         <div class="debug-control">
             <label>Enable Tick Scaling:</label>
             <select id="enableScalingSelect">
-                <option value="false" selected>Disabled</option>
-                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+                <option value="true" selected>Enabled</option>
             </select>
         </div>
         
         <div class="debug-control scaling-control">
             <label>Current Tick Length:</label>
-            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="3.0">
-            <div class="debug-value" id="currentLengthValue">3.0x</div>
+            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="2.0">
+            <div class="debug-value" id="currentLengthValue">2.0x</div>
         </div>
         
         <div class="debug-control scaling-control">
@@ -541,19 +405,19 @@
         
         <div class="debug-control scaling-control">
             <label>Reset Delay (seconds):</label>
-            <input type="number" id="resetDelay" min="0.5" max="10" step="0.1" value="0.5" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
-            <div class="debug-value" id="resetDelayValue">0.5s</div>
+            <input type="number" id="resetDelay" min="0.5" max="10" step="0.05" value="0.45" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+            <div class="debug-value" id="resetDelayValue">0.45s</div>
         </div>
         
         <div class="debug-control scaling-control">
             <label>Tick Alignment:</label>
             <select id="alignmentSelect">
                 <option value="center">Centered</option>
-                <option value="inward">Inward</option>
+                <option value="inward" selected>Inward</option>
                 <option value="outward">Outward</option>
             </select>
         </div>
-        
+
         <div class="debug-control scaling-control">
             <label>Falloff Curve:</label>
             <select id="curveSelect">
@@ -561,7 +425,7 @@
                 <option value="linear">Linear</option>
                 <option value="easeOut">Ease Out</option>
                 <option value="sine">Sine Wave</option>
-                <option value="exponential">Exponential</option>
+                <option value="exponential" selected>Exponential</option>
             </select>
         </div>
         
@@ -573,52 +437,52 @@
     </div>
 
     <script type="module">
-        import CircularTimeDial, { createCircularTimeDialDebugSettings } from '../../shared/components/circular-time-dial.js';
+        import CircularTimeDial, { BASE_GRAY, createCircularTimeDialDebugSettings } from '../../shared/components/circular-time-dial.js';
         import { HeatSlider } from '../../shared/components/heat-slider.js';
 
-        const BASE_GRAY = '#434343';
+        const TEMP_TICK_COUNT = 72;
+
         
         class CustomCircularTimeDial extends CircularTimeDial {
             constructor() {
                 super('.container', {
                     idPrefix: '',
                     useExistingMarkup: true,
+                    autoBindKeys: false,
                     initialMode: 'time',
                     debugRoot: document.getElementById('debugPanel'),
                     debugSettings: createCircularTimeDialDebugSettings({
-                        customCookScaleMode: '0.9',
-                        scalingEnabled: false,
-                        currentLength: 3.0,
-                        alignment: 'center',
-                        curve: 'easeIn',
-                        resetDelay: 0.5,
-                        trailMode: 'normal'
+                        customCookScaleMode: '0.9'
                     })
                 });
 
                 this.heatSliderContainer = document.getElementById('heatSliderContainer');
-                this.heatDistributionLabel = document.getElementById('heatDistributionLabel');
-                this.heatSliderMount = document.getElementById('heatSliderMount');
+                this.heatSliderElement = document.getElementById('heatSlider');
                 this.container = document.querySelector('.container');
+                this.cookingStatus = document.getElementById('cookingStatus');
 
-                this.currentMode = 1;
-                this.dialModeBeforeHeat = 1;
-                this.dialVisualMode = 1;
+                this.modeSequence = [1, 0, 2, 0, 1];
+                this.modeLoopStartIndex = 2; // Loop back to heat after index 4
+                this.modeIndex = 0; // Start at time
+                this.currentMode = this.modeSequence[this.modeIndex];
+                this.dialModeBeforeHeat = this.currentMode;
 
                 this.heatDistribution = 75;
-                this.heatSliderOn = false;
 
-                this.heatSlider = new HeatSlider(this.heatSliderMount, {
+                // Create heat slider
+                this.heatSlider = new HeatSlider(this.heatSliderElement, {
                     initialPosition: this.heatDistribution,
-                    showLabel: true,
+                    showTitle: true,
+                    titleText: 'HEAT DISTRIBUTION',
                     enableShortcuts: false,
                     stepMode: 'preset',
                     onChange: ({ topPct }) => {
                         this.heatDistribution = topPct;
                     }
                 });
-                this.heatSlider.toggle(this.heatSliderOn);
-                this.heatSlider.showLabel(false);
+                this.setHeatSliderEnabled(false);
+
+                this.setupEventListeners();
 
                 const customCookScaleSelect = this.getDebugElement('customCookScaleSelect');
                 if (customCookScaleSelect) {
@@ -630,10 +494,21 @@
                 }
 
                 this.setHeatDistribution(75);
+
+                // Set initial state
                 this.updateModeVisuals();
                 this.render();
             }
-            
+            ensureStatusElements() {
+                if (!this.cookingStatus) {
+                    this.cookingStatus = document.getElementById('cookingStatus');
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.display = 'none';
+                        this.cookingStatus.textContent = '';
+                    }
+                }
+            }
+
             // Heat slider functionality
             clamp01(v) {
                 return Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
@@ -656,7 +531,7 @@
             
 
             adjustHeatDistribution(delta) {
-                if (this.currentMode !== 2 || !this.heatSliderOn) return; // Only work in custom-cook mode when on
+                if (this.currentMode !== 2) return; // Only work in heat mode
                 
                 const current = this.getHeatDistribution();
                 const presets = [0, 25, 50, 75, 100];
@@ -678,46 +553,27 @@
             }
             
             setupEventListeners() {
-                document.addEventListener('keydown', (e) => {
-                    const key = e.key.toLowerCase();
-                    if (key === 'p') {
-                        if (this.cookingComplete) {
-                            this.navigateButtons(1); // Next button
-                        } else {
-                            if (this.currentMode === 2 && this.heatSliderOn) {
-                                // Custom-cook mode: adjust heat distribution
-                                this.adjustHeatDistribution(1);
-                            } else {
-                                // Temperature/Time modes: existing functionality
-                                if (this.debugSettings.trailMode === 'stay') {
-                                    this.startTrailDirectionAnimation('normal');
-                                }
-                                this.increaseValue();
-                            }
-                        }
-                    } else if (key === 'o') {
-                        if (this.cookingComplete) {
-                            this.navigateButtons(-1); // Previous button
-                        } else {
-                            if (this.currentMode === 2 && this.heatSliderOn) {
-                                // Custom-cook mode: adjust heat distribution
-                                this.adjustHeatDistribution(-1);
-                            } else {
-                                // Temperature/Time modes: existing functionality
-                                if (this.debugSettings.trailMode === 'stay') {
-                                    this.startTrailDirectionAnimation('opposite');
-                                }
-                                this.decreaseValue();
-                            }
-                        }
-                    } else if (key === 'r') {
-                        this.restart();
-                    } else if (key === 'q') {
-                        this.toggleMode();
-                    } else if (key === '1') {
-                        this.startCooking();
+                document.addEventListener('keydown', (event) => {
+                    const key = event.key.toLowerCase();
+
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+
+                    if (event.repeat && key === 'q') {
+                        return;
                     }
-                });
+
+                    if (this.cookingComplete) {
+                        return;
+                    }
+
+                    if (this.currentMode === 2 && !this.countdownMode && (key === 'p' || key === 'o')) {
+                        this.adjustHeatDistribution(key === 'p' ? 1 : -1);
+                        return;
+                    }
+
+                    super.handleKeydown(event);
+                }, true);
             }
             
             increaseValue() {
@@ -783,87 +639,81 @@
             
             toggleMode() {
                 if (this.countdownMode) return;
-                
+
+                const previousMode = this.currentMode;
+
                 if (this.currentMode === 2) {
-                    // Coming from heat slider mode - return to the same mode we came from
-                    this.currentMode = this.dialModeBeforeHeat;
+                    const dialReturnMode = this.dialModeBeforeHeat ?? 1;
+                    this.currentMode = dialReturnMode;
+
+                    if (dialReturnMode === 0) {
+                        this.modeIndex = 3;
+                    } else {
+                        this.modeIndex = 0;
+                    }
                 } else {
-                    // Currently on dial mode
-                    if (this.currentMode === 0 || this.currentMode === 1) {
-                        // If we're on a different dial mode than last time, go to heat
-                        if (this.currentMode !== this.dialModeBeforeHeat) {
-                            this.dialModeBeforeHeat = this.currentMode; // Remember dial mode before entering heat
-                            this.currentMode = 2; // Go to heat slider
-                        } else {
-                            // If we're on the same mode as before, switch to the other dial mode
-                            this.currentMode = this.currentMode === 0 ? 1 : 0;
-                        }
+                    if (this.modeIndex >= this.modeSequence.length - 1) {
+                        this.modeIndex = this.modeLoopStartIndex;
+                    } else {
+                        this.modeIndex += 1;
+                    }
+
+                    this.currentMode = this.modeSequence[this.modeIndex];
+
+                    if (this.currentMode === 2 && previousMode !== 2) {
+                        this.dialModeBeforeHeat = previousMode;
                     }
                 }
-                
-                // Control heat slider on/off based on mode
-                const wasHeatSliderOn = this.heatSliderOn;
-                this.heatSliderOn = (this.currentMode === 2); // On only in custom-cook mode
-                
-                if (this.heatSlider && wasHeatSliderOn !== this.heatSliderOn) {
-                    this.heatSlider.toggle(this.heatSliderOn);
-                }
-                
-                // Update visual states based on mode
+
                 this.updateModeVisuals();
                 this.render();
             }
-            
+
             updateModeVisuals() {
-                // Remove all mode classes first
+                // Clear dial classes
                 this.container.classList.remove('custom-cook-mode', 'scale-none', 'scale-0-9', 'scale-0-8', 'scale-0-7', 'scale-0-6');
-                this.heatSliderContainer.classList.remove('grayscale');
-                
+
                 if (this.currentMode === 2) {
-                    // Custom-cook mode: dial grayscale/scaled, heat-slider active
+                    // Heat mode: scale and greyscale the dial
                     this.container.classList.add('custom-cook-mode');
-                    
-                    // Show heat distribution label
-                    this.heatDistributionLabel.classList.add('visible');
-                    if (this.heatSlider) {
-                        this.heatSlider.showLabel(true);
-                    }
-                    
-                    // Apply scale based on debug setting
-                    const scaleMode = this.debugSettings.customCookScaleMode;
-                    if (scaleMode === 'none') {
+                    const scaleMode = this.debugSettings.customCookScaleMode || '0.9';
+                    if (scaleMode !== 'none') {
+                        this.container.classList.add('scale-' + scaleMode.replace('.', '-'));
+                    } else {
                         this.container.classList.add('scale-none');
-                    } else if (scaleMode === '0.9') {
-                        this.container.classList.add('scale-0-9');
-                    } else if (scaleMode === '0.8') {
-                        this.container.classList.add('scale-0-8');
-                    } else if (scaleMode === '0.7') {
-                        this.container.classList.add('scale-0-7');
-                    } else if (scaleMode === '0.6') {
-                        this.container.classList.add('scale-0-6');
                     }
+
+                    // Activate heat slider
+                    this.setHeatSliderEnabled(true);
+
+                    // Mirror the previously active dial mode while the slider is open
+                    const dialMode = this.dialModeBeforeHeat ?? 1;
+                    this.tempMode = (dialMode === 0);
                 } else {
-                    // Temperature or time mode: heat-slider grayscale
-                    this.heatSliderContainer.classList.add('grayscale');
-                    
-                    // Hide heat distribution label
-                    this.heatDistributionLabel.classList.remove('visible');
-                    if (this.heatSlider) {
-                        this.heatSlider.showLabel(false);
-                    }
+                    // Dial mode (time or temp): deactivate heat slider
+                    this.setHeatSliderEnabled(false);
+
+                    // Set tempMode based on current dial mode
+                    this.tempMode = (this.currentMode === 0);
+
+                    // Remember the current dial mode so heat mode can reflect it
+                    this.dialModeBeforeHeat = this.currentMode;
                 }
-                
-                // Update dialVisualMode and tempMode for rendering
-                if (this.currentMode === 2) {
-                    // In heat mode, keep displaying the same dial mode as before entering heat
-                    this.dialVisualMode = this.dialModeBeforeHeat;
-                } else {
-                    // In dial modes, show the current mode
-                    this.dialVisualMode = this.currentMode;
+            }
+            
+            setHeatSliderEnabled(isEnabled) {
+                if (!this.heatSlider) {
+                    return;
                 }
-                
-                // Update tempMode for backwards compatibility with existing render logic
-                this.tempMode = (this.dialVisualMode === 0);
+
+                const isCurrentlyOn = typeof this.heatSlider.isOn === 'function'
+                    ? this.heatSlider.isOn()
+                    : false;
+
+                if (isCurrentlyOn !== isEnabled && typeof this.heatSlider.toggle === 'function') {
+                    this.heatSlider.toggle(isEnabled);
+                }
+
             }
             
             startCooking() {
@@ -1088,9 +938,11 @@
             }
             
             updateSetupDisplay() {
-                // Hide cooking status and completion buttons during setup
-                this.cookingStatus.style.display = 'none';
-                this.completionButtons.style.display = 'none';
+                this.ensureStatusElements();
+                // Hide cooking status during setup
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                }
                 
                 // Determine label text based on phase
                 const labelText = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
@@ -1123,12 +975,13 @@
             }
             
             updateStartingDisplay() {
-                // Hide completion buttons during starting
-                this.completionButtons.style.display = 'none';
-                // Show cooking status during starting animation
-                this.cookingStatus.style.display = 'block';
-                this.cookingStatus.style.opacity = 1.0;
-                this.cookingStatus.textContent = this.debugSettings.preheatEnabled ? 'Preheating...' : 'Actively cooking';
+                this.ensureStatusElements();
+                // No completion buttons in this flow
+                // Keep status label hidden (main component no longer surfaces it)
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
                 
                 this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                 this.tempDisplay.className = 'temp-display inactive';
@@ -1142,11 +995,14 @@
             }
             
             updateCountdownDisplay() {
-                // Hide completion buttons during cooking
-                this.completionButtons.style.display = 'none';
-                // Show cooking status above circle
-                this.cookingStatus.style.display = 'block';
-                
+                this.ensureStatusElements();
+                // No completion buttons in this flow
+                // Keep status label hidden; rely on dial visuals instead
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
+
                 if (this.preheatPhase && this.debugSettings.preheatEnabled) {
                     // During preheat: show temperature and time set
                     this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
@@ -1156,8 +1012,9 @@
                     
                     // Flash the cooking status above circle
                     const labelOpacity = this.preheatFlashState ? 1.0 : 0.25;
-                    this.cookingStatus.style.opacity = labelOpacity;
-                    this.cookingStatus.textContent = 'Preheating...';
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.opacity = labelOpacity;
+                    }
                     
                     // Keep original label below (HR-MIN since we're in phase B during cooking)
                     this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
@@ -1186,10 +1043,11 @@
                     this.timeDisplayMain.className = 'time-display-main active';
                     
                     // Show "Actively cooking" above circle
-                    this.cookingStatus.style.opacity = 1.0;
-                    this.cookingStatus.textContent = 'Actively cooking';
-                    
-                    // Show appropriate label below based on time remaining
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.opacity = 1.0;
+                    }
+                
+                // Show appropriate label below based on time remaining
                     this.modeLabel.textContent = isUnderOneHour ? 'MIN - SEC' : 'HR - MIN';
                     this.modeLabel.style.color = 'var(--text-tertiary)';
                     this.modeLabel.style.opacity = 1.0;
@@ -1211,7 +1069,7 @@
                     filledTempTicks = Math.floor((this.temperature - this.minTemp) / tempIncrement) + 1;
                 } else {
                     // Default mode
-                    tempIncrement = tempRange / this.debugSettings.tempTickCount;
+                    tempIncrement = tempRange / TEMP_TICK_COUNT;
                     currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement);
                     filledTempTicks = currentTempTick + 1;
                 }
@@ -1640,7 +1498,7 @@
                 // Default mode - use original tick counts
                 switch(mode) {
                     case 'phaseA': return 59; // Minute mode (1-59 minutes)
-                    case 'tempMode': return this.debugSettings.tempTickCount + 1; // Temperature + 1 for endpoint
+                    case 'tempMode': return TEMP_TICK_COUNT + 1; // Temperature + 1 for endpoint
                     case 'phaseBHourly': return 72; // Hourly mode
                     case 'phaseBWrap': return 72; // Wrap mode  
                     case 'phaseB15Min': return 285; // 15-minute mode (71 hours * 4 + 1)
@@ -1653,7 +1511,14 @@
                 this.totalMinutes = 10; // Start with 10 minutes
                 this.temperature = 400; // Start with 400°F
                 this.tempMode = true; // Start in temperature mode
-                
+
+                this.modeIndex = 0;
+                this.currentMode = this.modeSequence[this.modeIndex];
+                this.dialModeBeforeHeat = this.currentMode;
+                this.dialVisualMode = this.currentMode;
+                this.stepsToHeat = this.heatCycleLength;
+                this.setHeatSliderEnabled(false);
+
                 // Reset timer and scaling properties
                 this.lastActionTime = Date.now();
                 this.scalingActive = false;
@@ -1680,29 +1545,19 @@
                 this.colonBlinkState = true;
                 this.preheatPhase = false;
                 this.preheatFlashState = true;
-                
+
                 // Reset completion state
                 this.cookingComplete = false;
-                this.selectedButton = 0;
-                
+
                 // Reset flash animation
                 this.isFlashing = false;
                 this.flashStartTime = null;
                 this.flashCount = 0;
                 this.flashVisible = true;
                 this.hasFlashedAtBoundary = false;
-                
+
+                this.updateModeVisuals();
                 this.render();
-            }
-            
-            navigateButtons(direction) {
-                this.selectedButton = (this.selectedButton + direction + 2) % 2; // Keep in range 0-1
-                this.updateButtonSelection();
-            }
-            
-            updateButtonSelection() {
-                this.bitMoreBtn.classList.toggle('active', this.selectedButton === 0);
-                this.keepWarmBtn.classList.toggle('active', this.selectedButton === 1);
             }
             
             renderCompletionMode() {
@@ -1716,13 +1571,11 @@
             }
             
             updateCompletionDisplay() {
-                // Hide cooking status
-                this.cookingStatus.style.display = 'none';
-                
-                // Show completion buttons
-                this.completionButtons.style.display = 'flex';
-                
-                // Update display content
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
+
                 this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
                 this.tempDisplay.className = 'temp-display inactive';
                 this.timeDisplayMain.textContent = '00:00';
@@ -1732,9 +1585,6 @@
                 this.modeLabel.textContent = 'Enjoy';
                 this.modeLabel.style.color = '#2BB671';
                 this.modeLabel.style.opacity = 1.0;
-                
-                // Update button selection
-                this.updateButtonSelection();
             }
             
             increaseTime() {

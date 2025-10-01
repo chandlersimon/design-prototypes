@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="prototype:description" content="Interactive slice and darkness selector with keyboard controls and dynamic state management.">
+    <title>segmented-range</title>
+    <link rel="stylesheet" href="../../shared/prototype-shell.css">
+    <link rel="stylesheet" href="../../shared/components/segment-range.css">
+    <style>
+        :root {
+            --background-dark: #000;
+            --text-tertiary: #979797;
+            --text-primary: #fff;
+            --segment-range-selected-color: var(--tomato-400);
+            --segment-range-unselected-bg: #3d3d3d;
+            --segment-range-minimized-selected-bg: #b6b6b6;
+            --segment-range-transition-duration: 250ms;
+            --segment-range-switch-speed: 250ms;
+            --segment-range-height-easing: ease;
+            --segment-range-color-easing: ease;
+            --segment-range-minimized-height: 13px;
+            --segment-range-normal-height: 51px;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 272px;
+        }
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <div class="prototype-container">
+            <div class="container">
+                <div id="slicesRange"></div>
+                <div id="darknessRange"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="debug-toggle" id="debugToggle">Open animation controls</button>
+    
+    <div class="debug-panel" id="debugPanel">
+        <h3>Animation Controls</h3>
+        
+        <div class="debug-control">
+            <label>Box Transition Duration:</label>
+            <input type="range" id="transitionDuration" min="100" max="1000" step="50" value="250">
+            <div class="debug-value" id="transitionDurationValue">250ms</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Component Switch Speed:</label>
+            <input type="range" id="switchSpeed" min="100" max="800" step="50" value="250">
+            <div class="debug-value" id="switchSpeedValue">250ms</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Box Height Animation:</label>
+            <select id="heightEasing">
+                <option value="ease">Ease</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out">Ease Out</option>
+                <option value="ease-in-out">Ease In Out</option>
+                <option value="linear">Linear</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Background Color Animation:</label>
+            <select id="colorEasing">
+                <option value="ease">Ease</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out">Ease Out</option>
+                <option value="ease-in-out">Ease In Out</option>
+                <option value="linear">Linear</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Minimized Box Height:</label>
+            <input type="range" id="minimizedHeight" min="8" max="20" step="1" value="13">
+            <div class="debug-value" id="minimizedHeightValue">13px</div>
+        </div>
+        
+        <div class="debug-control">
+            <label>Normal Box Height:</label>
+            <input type="range" id="normalHeight" min="40" max="70" step="1" value="51">
+            <div class="debug-value" id="normalHeightValue">51px</div>
+        </div>
+
+        <h4>Slices Range</h4>
+
+        <div class="debug-control">
+            <label>Slices Title:</label>
+            <input type="text" id="slicesTitle" value="Slices" placeholder="Enter title">
+        </div>
+
+        <div class="debug-control">
+            <label>Slices Segments:</label>
+            <input type="number" id="slicesSegments" min="2" max="30" step="1" value="9">
+            <div class="debug-value" id="slicesSegmentsValue">9 segments</div>
+        </div>
+
+        <div class="debug-control">
+            <label>Slices Options (comma separated):</label>
+            <input type="text" id="slicesOptions" placeholder="e.g. Thin,Thick">
+        </div>
+
+        <h4>Darkness Range</h4>
+
+        <div class="debug-control">
+            <label>Darkness Title:</label>
+            <input type="text" id="darknessTitle" value="Darkness" placeholder="Enter title">
+        </div>
+
+        <div class="debug-control">
+            <label>Darkness Segments:</label>
+            <input type="number" id="darknessSegments" min="2" max="10" step="1" value="7">
+            <div class="debug-value" id="darknessSegmentsValue">7 segments</div>
+        </div>
+
+        <div class="debug-control">
+            <label>Darkness Options (comma separated):</label>
+            <input type="text" id="darknessOptions" placeholder="e.g. Light,Dark">
+        </div>
+    </div>
+
+
+    <div class="instructions">
+        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
+    </div>
+
+    <script type="module">
+        import { SegmentRange } from '../../shared/components/segment-range.js';
+
+        class SegmentRangeManager {
+            constructor() {
+                this.components = {
+                    slices: new SegmentRange('#slicesRange', {
+                        title: 'Slices',
+                        segments: 9,
+                        value: 2,
+                        expanded: true,
+                        active: true
+                    }),
+                    darkness: new SegmentRange('#darknessRange', {
+                        title: 'Darkness',
+                        variant: 'darkness',
+                        segments: 7,
+                        value: 3,
+                        expanded: false,
+                        active: false
+                    })
+                };
+
+                this.onReset = null;
+                this.defaults = {
+                    slices: {
+                        title: 'Slices',
+                        segments: 9,
+                        optionLabels: null,
+                        value: 2
+                    },
+                    darkness: {
+                        title: 'Darkness',
+                        segments: 7,
+                        optionLabels: null,
+                        value: 3
+                    }
+                };
+
+                this.activeKey = 'slices';
+                this.handleKeydown = this.handleKeydown.bind(this);
+                document.addEventListener('keydown', this.handleKeydown);
+            }
+
+            setResetCallback(callback) {
+                this.onReset = typeof callback === 'function' ? callback : null;
+            }
+
+            setSegments(key, count) {
+                const component = this.components[key];
+                if (!component) return;
+                component.setSegments(count);
+            }
+
+            setTitle(key, title) {
+                const component = this.components[key];
+                if (!component) return;
+                const trimmed = typeof title === 'string' ? title.trim() : '';
+                component.setTitle(trimmed || this.defaults[key].title);
+            }
+
+            setOptionLabels(key, labels) {
+                const component = this.components[key];
+                if (!component) return;
+                const normalized = Array.isArray(labels) ? labels : null;
+                component.setOptionLabels(normalized);
+            }
+
+            setStyleOption(option, value) {
+                Object.values(this.components).forEach((component) => {
+                    component.setStyleOptions({ [option]: value });
+                });
+            }
+
+            resetStyleOptions() {
+                Object.values(this.components).forEach((component) => {
+                    component.resetStyleOptions();
+                });
+            }
+
+            handleKeydown(event) {
+                const key = event.key.toLowerCase();
+
+                switch (key) {
+                    case 'p':
+                        this.components[this.activeKey].increment();
+                        event.preventDefault();
+                        break;
+                    case 'o':
+                        this.components[this.activeKey].decrement();
+                        event.preventDefault();
+                        break;
+                    case 'q':
+                        this.toggleActiveComponent();
+                        event.preventDefault();
+                        break;
+                    case 'r':
+                        this.reset();
+                        event.preventDefault();
+                        break;
+                    case '1':
+                        this.startProcess();
+                        event.preventDefault();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            toggleActiveComponent() {
+                const nextKey = this.activeKey === 'slices' ? 'darkness' : 'slices';
+                this.setActiveComponent(nextKey);
+            }
+
+            setActiveComponent(key) {
+                if (!this.components[key] || this.activeKey === key) {
+                    return;
+                }
+
+                const current = this.components[this.activeKey];
+                current.setExpanded(false);
+                current.setActive(false);
+
+                this.activeKey = key;
+
+                const next = this.components[this.activeKey];
+                next.setExpanded(true);
+                next.setActive(true);
+            }
+
+            reset() {
+                this.components.slices.setSegments(this.defaults.slices.segments, { preserveValue: true, suppressEvent: true });
+                this.components.slices.setValue(this.defaults.slices.value, { suppressEvent: true, forceUpdate: true });
+                this.components.slices.setTitle(this.defaults.slices.title);
+                this.components.slices.setOptionLabels(this.defaults.slices.optionLabels);
+
+                this.components.darkness.setSegments(this.defaults.darkness.segments, { preserveValue: true, suppressEvent: true });
+                this.components.darkness.setValue(this.defaults.darkness.value, { suppressEvent: true, forceUpdate: true });
+                this.components.darkness.setTitle(this.defaults.darkness.title);
+                this.components.darkness.setOptionLabels(this.defaults.darkness.optionLabels);
+
+                this.components.slices.setExpanded(true);
+                this.components.slices.setActive(true);
+                this.components.darkness.setExpanded(false);
+                this.components.darkness.setActive(false);
+                this.activeKey = 'slices';
+
+                this.resetStyleOptions();
+
+                if (this.onReset) {
+                    this.onReset();
+                }
+            }
+
+            startProcess() {
+                console.log('Starting process with:', {
+                    slices: this.components.slices.getValue(),
+                    darkness: this.components.darkness.getValue()
+                });
+            }
+        }
+
+        const manager = new SegmentRangeManager();
+        window.segmentRangeManager = manager;
+
+        const debugToggle = document.getElementById('debugToggle');
+        const debugPanel = document.getElementById('debugPanel');
+
+        const toggleDebug = () => {
+            debugPanel.classList.toggle('open');
+            debugToggle.textContent = debugPanel.classList.contains('open')
+                ? 'Close'
+                : 'Open animation controls';
+        };
+
+        debugToggle.addEventListener('click', toggleDebug);
+
+        function setupDebugControls() {
+            const stripUnit = (value, unit) => {
+                if (typeof value !== 'string') return value;
+                return value.endsWith(unit) ? value.slice(0, -unit.length) : value;
+            };
+
+            const parseOptionInput = (value) => {
+                if (!value) return null;
+                const parts = value.split(',').map((item) => item.trim()).filter(Boolean);
+                return parts.length ? parts : null;
+            };
+
+            const applyStyleOption = (option, rawValue, unit = '') => {
+                const formattedValue = typeof rawValue === 'number' && unit ? `${rawValue}${unit}` : rawValue;
+                manager.setStyleOption(option, formattedValue);
+                return formattedValue;
+            };
+
+            const transitionDuration = document.getElementById('transitionDuration');
+            const transitionDurationValue = document.getElementById('transitionDurationValue');
+            transitionDuration.addEventListener('input', (event) => {
+                const value = applyStyleOption('transitionDuration', Number(event.target.value), 'ms');
+                transitionDurationValue.textContent = value;
+            });
+
+            const switchSpeed = document.getElementById('switchSpeed');
+            const switchSpeedValue = document.getElementById('switchSpeedValue');
+            switchSpeed.addEventListener('input', (event) => {
+                const value = applyStyleOption('switchSpeed', Number(event.target.value), 'ms');
+                switchSpeedValue.textContent = value;
+            });
+
+            const heightEasing = document.getElementById('heightEasing');
+            heightEasing.addEventListener('change', (event) => {
+                applyStyleOption('heightEasing', event.target.value);
+            });
+
+            const colorEasing = document.getElementById('colorEasing');
+            colorEasing.addEventListener('change', (event) => {
+                applyStyleOption('colorEasing', event.target.value);
+            });
+
+            const minimizedHeight = document.getElementById('minimizedHeight');
+            const minimizedHeightValue = document.getElementById('minimizedHeightValue');
+            minimizedHeight.addEventListener('input', (event) => {
+                const value = applyStyleOption('minimizedHeight', Number(event.target.value), 'px');
+                minimizedHeightValue.textContent = value;
+            });
+
+            const normalHeight = document.getElementById('normalHeight');
+            const normalHeightValue = document.getElementById('normalHeightValue');
+            normalHeight.addEventListener('input', (event) => {
+                const value = applyStyleOption('normalHeight', Number(event.target.value), 'px');
+                normalHeightValue.textContent = value;
+            });
+
+            const slicesTitle = document.getElementById('slicesTitle');
+            const slicesSegments = document.getElementById('slicesSegments');
+            const slicesSegmentsValue = document.getElementById('slicesSegmentsValue');
+            const slicesOptions = document.getElementById('slicesOptions');
+
+            const darknessTitle = document.getElementById('darknessTitle');
+            const darknessSegments = document.getElementById('darknessSegments');
+            const darknessSegmentsValue = document.getElementById('darknessSegmentsValue');
+            const darknessOptions = document.getElementById('darknessOptions');
+
+            const syncControls = () => {
+                const styleState = manager.components.slices.getStyleOptions();
+                transitionDuration.value = Number(stripUnit(styleState.transitionDuration, 'ms'));
+                transitionDurationValue.textContent = styleState.transitionDuration;
+                switchSpeed.value = Number(stripUnit(styleState.switchSpeed, 'ms'));
+                switchSpeedValue.textContent = styleState.switchSpeed;
+                heightEasing.value = styleState.heightEasing;
+                colorEasing.value = styleState.colorEasing;
+                minimizedHeight.value = Number(stripUnit(styleState.minimizedHeight, 'px'));
+                minimizedHeightValue.textContent = styleState.minimizedHeight;
+                normalHeight.value = Number(stripUnit(styleState.normalHeight, 'px'));
+                normalHeightValue.textContent = styleState.normalHeight;
+
+                const slicesComponent = manager.components.slices;
+                const darknessComponent = manager.components.darkness;
+
+                const slicesCount = slicesComponent.getSegmentCount();
+                slicesSegments.value = slicesCount;
+                slicesSegmentsValue.textContent = `${slicesCount} segments`;
+                slicesTitle.value = slicesComponent.getTitle();
+                const slicesLabels = slicesComponent.getOptionLabels();
+                slicesOptions.value = slicesLabels ? slicesLabels.join(', ') : '';
+
+                const darknessCount = darknessComponent.getSegmentCount();
+                darknessSegments.value = darknessCount;
+                darknessSegmentsValue.textContent = `${darknessCount} segments`;
+                darknessTitle.value = darknessComponent.getTitle();
+                const darknessLabels = darknessComponent.getOptionLabels();
+                darknessOptions.value = darknessLabels ? darknessLabels.join(', ') : '';
+            };
+
+            slicesTitle.addEventListener('input', () => {
+                manager.setTitle('slices', slicesTitle.value);
+                syncControls();
+            });
+
+            slicesSegments.addEventListener('input', () => {
+                const value = Number(slicesSegments.value);
+                manager.setSegments('slices', value);
+                const applied = manager.components.slices.getSegmentCount();
+                slicesSegments.value = applied;
+                slicesSegmentsValue.textContent = `${applied} segments`;
+                syncControls();
+            });
+
+            slicesOptions.addEventListener('input', () => {
+                const parsed = parseOptionInput(slicesOptions.value);
+                manager.setOptionLabels('slices', parsed);
+                syncControls();
+            });
+
+            darknessTitle.addEventListener('input', () => {
+                manager.setTitle('darkness', darknessTitle.value);
+                syncControls();
+            });
+
+            darknessSegments.addEventListener('input', () => {
+                const value = Number(darknessSegments.value);
+                manager.setSegments('darkness', value);
+                const applied = manager.components.darkness.getSegmentCount();
+                darknessSegments.value = applied;
+                darknessSegmentsValue.textContent = `${applied} segments`;
+                syncControls();
+            });
+
+            darknessOptions.addEventListener('input', () => {
+                const parsed = parseOptionInput(darknessOptions.value);
+                manager.setOptionLabels('darkness', parsed);
+                syncControls();
+            });
+
+            manager.setResetCallback(syncControls);
+            syncControls();
+        }
+
+        setupDebugControls();
+    </script>
+</body>
+</html>

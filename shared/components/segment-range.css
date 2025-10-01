@@ -1,0 +1,95 @@
+@import url('../tokens.css');
+
+.segment-range {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+  --segment-range-transition-duration: 250ms;
+  --segment-range-height-easing: ease;
+  --segment-range-color-easing: ease;
+  --segment-range-normal-height: 51px;
+  --segment-range-minimized-height: 13px;
+  --segment-range-unselected-bg: #3d3d3d;
+  --segment-range-selected-color: var(--accent, #fa4947);
+  --segment-range-selected-bg: var(--segment-range-selected-color);
+  --segment-range-minimized-selected-bg: #b6b6b6;
+  --segment-range-switch-speed: 250ms;
+  transition: opacity var(--segment-range-switch-speed) ease;
+}
+
+.segment-range:last-child {
+  margin-bottom: 0;
+}
+
+.segment-range__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.segment-range__title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 23px;
+  letter-spacing: 0;
+  color: var(--text-tertiary, #979797);
+}
+
+.segment-range__value {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: 0;
+  color: var(--text-primary, #ffffff);
+  text-align: left;
+}
+
+.segment-range--minimized .segment-range__title,
+.segment-range--minimized .segment-range__value {
+  color: var(--text-tertiary, #979797);
+}
+
+.segment-range--inactive {
+  opacity: 0.6;
+}
+
+.segment-range__segments {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  user-select: none;
+}
+
+.segment-range__segment {
+  flex: 1;
+  height: var(--segment-range-normal-height);
+  border-radius: 3px;
+  background-color: var(--segment-range-unselected-bg);
+  transition: background-color var(--segment-range-transition-duration) var(--segment-range-color-easing),
+    height var(--segment-range-transition-duration) var(--segment-range-height-easing);
+  cursor: pointer;
+}
+
+.segment-range--minimized .segment-range__segment {
+  height: var(--segment-range-minimized-height);
+}
+
+.segment-range__segment--selected {
+  background-color: var(--segment-range-selected-bg, var(--segment-range-selected-color));
+}
+
+.segment-range--minimized .segment-range__segment--selected {
+  background-color: var(--segment-range-minimized-selected-bg);
+}
+
+.segment-range[data-variant='darkness'] .segment-range__segment--selected {
+  background-color: var(--segment-range-selected-bg, var(--tomato-400));
+}
+
+.segment-range[data-variant='darkness'].segment-range--minimized .segment-range__segment--selected {
+  background-color: var(--segment-range-minimized-selected-bg);
+}

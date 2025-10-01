@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Heat Slider Prototype</title>
+  <meta name="prototype:description" content="Interactive oven heat distribution control with dynamic gradient visualization and element icons." />
+  <title>heat-slider</title>
+  <link rel="stylesheet" href="../../shared/prototype-shell.css">
   <link rel="stylesheet" href="../../shared/components/heat-slider.css">
   <style>
     :root {
       color-scheme: dark;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --label-xs-lv2: 14px;
+      --label-xs-lv2-line-height: 18px;
+      --label-xs-lv2-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --label-xs-lv2-weight: 500;
+      --label-xs-lv2-spacing: 0.08em;
+      --label-xs-lv2-features: "ss01" 1, "ss02" 1;
     }
 
     * {
@@ -17,7 +25,7 @@
 
     body {
       margin: 0;
-      background: #0b0b0b;
+      background: #000;
       color: #eee;
       font-family: inherit;
       display: grid;
@@ -27,99 +35,23 @@
     }
 
     .outer-container {
-      width: 400px;
-      height: 600px;
-      border: 1px solid #444;
-      border-top-right-radius: 75px;
       display: grid;
       place-items: center;
-      position: relative;
-      background: transparent;
     }
 
     .prototype-container {
-      width: 272px;
-      height: 480px;
       display: grid;
       align-content: center;
       justify-items: stretch;
       gap: 24px;
+      width: 272px;
     }
 
     #heatSlider {
       --heat-slider-cool: #490307;
-      width: 100%;
+      width: 272px;
     }
 
-    .instructions {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      color: #888;
-      font-size: 0.9em;
-      font-family: inherit;
-    }
-
-    .debug-toggle {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: #333;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8em;
-      z-index: 1001;
-      font-family: inherit;
-    }
-
-    .debug-panel {
-      position: fixed;
-      top: 20px;
-      right: -220px;
-      width: 200px;
-      padding: 15px;
-      border-radius: 8px;
-      background: rgba(40, 40, 40, 0.95);
-      color: white;
-      font-size: 0.8em;
-      transition: right 0.3s ease;
-      z-index: 1000;
-      font-family: inherit;
-    }
-
-    .debug-panel.open {
-      right: 20px;
-    }
-
-    .debug-panel h3 {
-      margin: 0 0 10px 0;
-      font-size: 1em;
-    }
-
-    .debug-control {
-      margin: 10px 0;
-    }
-
-    .debug-control label {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .debug-control input[type="range"],
-    .debug-control select,
-    .debug-control input[type="color"] {
-      width: 100%;
-    }
-
-    .debug-value {
-      color: #ccc;
-      font-size: 0.85em;
-    }
   </style>
 </head>
 <body>
@@ -171,8 +103,8 @@
     </div>
 
     <div class="debug-control">
-      <label for="showLabel">Distribution label</label>
-      <select id="showLabel">
+      <label for="showTitle">Heat distribution title</label>
+      <select id="showTitle">
         <option value="true">Show</option>
         <option value="false" selected>Hide</option>
       </select>
@@ -187,7 +119,8 @@
   <script>
     const slider = new HeatSlider('#heatSlider', {
       initialPosition: 60,
-      showLabel: false,
+      showTitle: false,
+      titleText: 'HEAT DISTRIBUTION',
       onChange: updateBandWidth,
     });
 
@@ -197,7 +130,7 @@
     const coolColorValue = document.getElementById('coolColorValue');
     const heatIntensity = document.getElementById('heatIntensity');
     const stepSize = document.getElementById('stepSize');
-    const showLabel = document.getElementById('showLabel');
+    const showTitle = document.getElementById('showTitle');
     const bandWidthValue = document.getElementById('bandWidthValue');
     const debugToggle = document.getElementById('debugToggle');
     const debugPanel = document.getElementById('debugPanel');
@@ -232,9 +165,9 @@
       slider.setStepMode(event.target.value);
     });
 
-    showLabel.addEventListener('change', (event) => {
+    showTitle.addEventListener('change', (event) => {
       const shouldShow = event.target.value === 'true';
-      slider.showLabel(shouldShow);
+      slider.showTitle(shouldShow);
     });
 
     debugToggle.addEventListener('click', () => {

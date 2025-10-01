@@ -12,6 +12,18 @@
   --color-text-muted: #888888;
   --color-accent: #fa4947;
 
+  /* Tomato scale */
+  --tomato-50: #faeae8;
+  --tomato-100: #f9cbc5;
+  --tomato-200: #faa69d;
+  --tomato-300: #fb7e75;
+  --tomato-400: #fa4947;
+  --tomato-500: #e31d29;
+  --tomato-600: #c01620;
+  --tomato-700: #9d1019;
+  --tomato-800: #7a0b11;
+  --tomato-900: #5a060a;
+
   /* Heat slider defaults */
   --heat-cool: #490307;
   --heat-hot-r: 255;
