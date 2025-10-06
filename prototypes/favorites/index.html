@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="prototype:description" content="Interactive cooking mode list with rotary navigation, press-and-hold edit mode, bottom sheet actions, and reorder experience.">
+    <meta name="prototype:description" content="Favorite cooking modes manager with rotary navigation, editable labels, icon swaps, reorder flow, and removal actions via bottom sheet.">
     <title>Cooking Methods Prototype</title>
     <script src="https://kit.fontawesome.com/8dfe425c81.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../../shared/prototype-shell.css">
@@ -48,21 +48,154 @@
             display: none;
         }
 
-        list-item,
         .list-item {
+            display: flex;
+            align-items: center;
             background: transparent;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 6px;
             min-height: 48px;
-            transition: none;
+            font-size: 22px;
+            font-weight: 500;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 28px;
+            cursor: pointer;
+            transition: all 0ms ease;
+            position: relative;
+            box-sizing: border-box;
         }
 
-        list-item.reordered.reorder-at-top::before,
+        .list-item.focused {
+            background: #FFFFFF;
+            color: black;
+            border: 1px solid #333;
+        }
+
+        .list-item.disabled {
+            background: transparent;
+            color: #979797;
+            cursor: not-allowed;
+            border: none;
+        }
+
+        .list-item.reordered {
+            background: #FFFFFF;
+            color: black;
+            border: 1px solid #333;
+            position: relative;
+        }
+
+        .list-item.reordered::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #ff6b6b;
+        }
+
+        .list-item.reordered::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #ff6b6b;
+        }
+
         .list-item.reordered.reorder-at-top::before {
             content: none;
         }
 
-        list-item.reordered.reorder-at-bottom::after,
         .list-item.reordered.reorder-at-bottom::after {
             content: none;
+        }
+
+        .list-item-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .leading-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+
+        .list-item.disabled .leading-icon {
+            color: #979797;
+        }
+
+
+        .trailing-element {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .arrow-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        .action-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .lock-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        .list-item.disabled .close-icon,
+        .list-item.disabled .arrow-icon,
+        .list-item.disabled .action-icon,
+        .list-item.disabled .lock-icon,
+        .list-item.disabled .cooking-icon {
+            color: #979797;
         }
 
         .cooking-icon {
@@ -75,21 +208,215 @@
             color: white;
         }
 
-        list-item.disabled .cooking-icon,
-        .list-item.disabled .cooking-icon {
-            color: #979797;
-        }
-
-        list-item.focused .leading-icon,
-        .list-item.focused .leading-icon,
-        list-item.focused .cooking-icon,
         .list-item.focused .cooking-icon {
             color: black;
         }
 
-        list-item.reordered .leading-icon,
+        .rack-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .list-item.disabled .rack-icon {
+            color: #979797;
+        }
+
+        .list-item.focused .rack-icon,
+        .list-item.reordered .rack-icon {
+            color: black;
+        }
+
+        .label-lv2-xs {
+            font-size: var(--label-xs-lv2, 14px);
+            line-height: var(--label-xs-lv2-line-height, 18px);
+            font-family: var(--label-xs-lv2-font, 'Inter', sans-serif);
+            font-weight: var(--label-xs-lv2-weight, 500);
+            letter-spacing: var(--label-xs-lv2-spacing, 0.08em);
+            font-feature-settings: var(--label-xs-lv2-features, 'ss01' 1, 'ss02' 1);
+            text-transform: uppercase;
+        }
+
+        .label-lv1-sm {
+            font-size: var(--label-sm-lv1, 16px);
+            line-height: var(--label-sm-lv1-line-height, 20px);
+            font-family: var(--label-sm-lv1-font, 'Inter', sans-serif);
+            font-weight: var(--label-sm-lv1-weight, 400);
+            letter-spacing: var(--label-sm-lv1-spacing, 0.01em);
+            text-transform: none;
+        }
+
+        list-item.detail-metrics,
+        .list-item.detail-metrics {
+            padding: 10px 6px;
+            border-radius: 8px;
+            align-items: flex-start;
+        }
+
+        list-item.detail-metrics .list-item-content,
+        .list-item.detail-metrics .list-item-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+
+        list-item.detail-metrics .detail-label-container,
+        .list-item.detail-metrics .detail-label-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        list-item.detail-metrics .detail-header-row,
+        .list-item.detail-metrics .detail-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+        }
+
+        list-item.detail-metrics .detail-header,
+        .list-item.detail-metrics .detail-header {
+            flex: 1;
+            display: block;
+            font-size: inherit;
+            font-weight: inherit;
+            line-height: inherit;
+        }
+
+        list-item.detail-metrics .trailing-element,
+        .list-item.detail-metrics .trailing-element {
+            align-self: center;
+        }
+
+        list-item.detail-metrics .detail-header-row .trailing-element,
+        .list-item.detail-metrics .detail-header-row .trailing-element {
+            margin-left: 16px;
+        }
+
+        list-item.detail-metrics .detail-card,
+        .list-item.detail-metrics .detail-card {
+            display: none;
+            width: 100%;
+            background: rgb(0 0 0 / 8%);
+            border-radius: 8px;
+            padding: 12px 14px;
+            box-sizing: border-box;
+            color: inherit;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        list-item.detail-metrics .detail-subheader,
+        .list-item.detail-metrics .detail-subheader {
+            display: none;
+            color: #000;
+        }
+
+        list-item.detail-metrics .detail-metrics-row,
+        .list-item.detail-metrics .detail-metrics-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0;
+        }
+
+        list-item.detail-metrics .detail-metric,
+        .list-item.detail-metrics .detail-metric {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 56px;
+        }
+
+        list-item.detail-metrics .detail-value,
+        .list-item.detail-metrics .detail-value {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        list-item.detail-metrics .detail-value.detail-value-stacked,
+        .list-item.detail-metrics .detail-value.detail-value-stacked {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        list-item.detail-metrics .detail-value.detail-value-stacked i,
+        .list-item.detail-metrics .detail-value.detail-value-stacked i {
+            font-size: 22px;
+        }
+
+        list-item.detail-metrics .detail-value .detail-unit,
+        .list-item.detail-metrics .detail-value .detail-unit {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        list-item.detail-metrics .detail-label,
+        .list-item.detail-metrics .detail-label {
+            color: rgb(0 0 0 / 65%);
+            margin-top: auto;
+            padding-top: 6px;
+        }
+
+        list-item.detail-metrics .detail-footnote,
+        .list-item.detail-metrics .detail-footnote {
+            display: none;
+            width: 100%;
+            color: #000;
+        }
+
+        list-item.detail-metrics.focused .detail-card,
+        .list-item.detail-metrics.focused .detail-card {
+            display: flex;
+        }
+
+        list-item.detail-metrics.focused .detail-footnote,
+        .list-item.detail-metrics.focused .detail-footnote {
+            display: block;
+        }
+
+        list-item.detail-metrics.focused .detail-subheader,
+        .list-item.detail-metrics.focused .detail-subheader {
+            display: block;
+        }
+
+        list-item.detail-metrics.reordered .detail-card,
+        .list-item.detail-metrics.reordered .detail-card,
+        list-item.detail-metrics.disabled .detail-card,
+        .list-item.detail-metrics.disabled .detail-card,
+        list-item.detail-metrics.reordered .detail-footnote,
+        .list-item.detail-metrics.reordered .detail-footnote,
+        list-item.detail-metrics.disabled .detail-footnote,
+        .list-item.detail-metrics.disabled .detail-footnote {
+            display: none;
+        }
+
+        .list-item.focused .leading-icon,
+        .list-item.focused .arrow-icon,
+        .list-item.focused .action-icon,
+        .list-item.focused .close-icon,
+        .list-item.focused .lock-icon {
+            color: black;
+        }
+
         .list-item.reordered .leading-icon,
-        list-item.reordered .cooking-icon,
+        .list-item.reordered .arrow-icon,
+        .list-item.reordered .action-icon,
+        .list-item.reordered .close-icon,
+        .list-item.reordered .lock-icon,
         .list-item.reordered .cooking-icon {
             color: black;
         }
@@ -151,6 +478,41 @@
             border-radius: 999px;
         }
 
+        .toggle {
+            width: 45px;
+            height: 28px;
+            background: #333;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle.active {
+            background: #2BB671;
+        }
+
+        .toggle.disabled {
+            background: #979797;
+            cursor: not-allowed;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(21px);
+        }
+
         .press-indicator {
             position: absolute;
             bottom: 0;
@@ -198,6 +560,10 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
+        .bottom-sheet .option-text {
+            color: inherit;
+        }
+
         @keyframes reorderPulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -223,21 +589,39 @@
             <!-- Bottom Sheet -->
             <div class="bottom-sheet" id="bottomSheet">
                 <div class="bottom-sheet-content">
-                    <div class="bottom-sheet-title" id="bottomSheetTitle">Edit Toast</div>
+                    <div class="bottom-sheet-title" id="bottomSheetTitle">Edit Bake</div>
                     
-                    <list-item class="list-item" state="focused" data-action="toggle-visibility">
-                        <span slot="label">Hide</span>
-                        <div slot="trailing" class="toggle"></div>
+                    <list-item class="list-item" state="focused" data-action="rename">
+                        <span slot="label">Rename</span>
+                        <span slot="trailing" class="option-text" id="renameCurrentName">Bake</span>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                    </list-item>
+
+                    <list-item class="list-item" data-action="change-icon">
+                        <span slot="label">Change Icon</span>
+                        <div slot="trailing" class="action-icon"><i class="fa-kit fa-pen-to-square"></i></div>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                    </list-item>
+
+                    <list-item class="list-item" data-action="edit-on-app">
+                        <span slot="label">Edit on App</span>
+                        <div slot="trailing" class="action-icon"><i class="fa-kit fa-arrow-up-right-from-square"></i></div>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
                     </list-item>
 
                     <list-item class="list-item" data-action="reorganize">
                         <span slot="label">Reorganize</span>
-                        <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
                     </list-item>
 
-                    <list-item class="list-item" data-action="hidden-modes">
-                        <span slot="label">Hidden modes</span>
-                        <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                    <list-item class="list-item" data-action="view-original">
+                        <span slot="label">View Original</span>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
+                    </list-item>
+
+                    <list-item class="list-item" data-action="remove-favorite">
+                        <span slot="label">Remove Favorite</span>
+                        <div slot="trailing" class="action-icon"><i class="fa-kit fa-circle-slash"></i></div>
                     </list-item>
 
                     <div class="bottom-sheet-gap"></div>
@@ -246,7 +630,7 @@
 
                     <list-item class="list-item" data-action="system-settings">
                         <span slot="label">System Settings</span>
-                        <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                        <div slot="trailing" class="arrow-icon"><i class="fa-kit fa-chevron-right"></i></div>
                     </list-item>
                 </div>
             </div>
@@ -273,6 +657,7 @@
             const reorganizeItemIndex = Array.from(bottomSheetItems).findIndex(item => item.dataset.action === 'reorganize');
             const bottomSheet = document.getElementById('bottomSheet');
             const bottomSheetTitle = document.getElementById('bottomSheetTitle');
+            const renameCurrentName = document.getElementById('renameCurrentName');
             const pressIndicator = document.getElementById('pressIndicator');
             const pressProgress = document.getElementById('pressProgress');
             
@@ -287,20 +672,194 @@
             let currentReorderModes = []; // Copy of modes array for reordering
             let isReorderFeedbackActive = false;
 
-            const cookingModes = [
-                'Toast', 'Bagel', 'Bake', 'Air Fry', 'Broil', 'Roast', 'Proof', 'Reheat',
-                'Slow Cook', 'Keep Warm', 'Dehydrate', 'Crispy Reheat', 'Bottom Bake',
-                'Bottom Broil', 'Outer Broil', 'Custom Cook'
+            const favoriteModes = [
+                {
+                    name: 'Bake',
+                    icon: 'fa-kit fa-mode-bake',
+                    detail: {
+                        header: 'Bake',
+                        metrics: [
+                            { value: '325', unit: '°F', label: 'TEMP' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '15:00', label: 'MIN-SEC' },
+                        ],
+                    },
+                },
+                {
+                    name: 'Toast',
+                    icon: 'fa-kit fa-mode-toast',
+                    detail: {
+                        header: 'Toast',
+                        metrics: [
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '25:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Darkness 4, Amount 4',
+                    },
+                },
+                {
+                    name: 'Bagel',
+                    icon: 'fa-kit fa-mode-bagel',
+                    detail: {
+                        header: 'Bagel',
+                        metrics: [
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '5:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Darkness 7, Amount 3',
+                    },
+                },
+                {
+                    name: 'Bacon',
+                    icon: 'fa-kit fa-mode-roast',
+                    detail: {
+                        header: 'Bacon',
+                        subheader: 'Roast',
+                        metrics: [
+                            { value: '320', unit: '°F', label: 'TEMP' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '14:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Doneness 7, Amount 3',
+                    },
+                },
+                {
+                    name: 'Custom Cook',
+                    icon: 'fa-kit fa-mode-dial',
+                    detail: {
+                        header: 'Custom Cook',
+                        subheader: 'Manual',
+                        metrics: [
+                            { value: '320', unit: '°F', label: 'TEMP' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '14:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Doneness 7, Amount 3',
+                    },
+                },
+                {
+                    name: 'Salmon',
+                    icon: 'fa-kit fa-mode-slow-cook',
+                    detail: {
+                        header: 'Salmon',
+                        subheader: 'Bake',
+                        metrics: [
+                            { value: '325', unit: '°F', label: 'TEMP' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '25:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Doneness 7, Amount 3',
+                    },
+                },
+                {
+                    name: 'NY Strip Steak',
+                    icon: 'fa-kit fa-mode-broil',
+                    detail: {
+                        header: 'NY Strip Steak',
+                        subheader: 'Broil',
+                        metrics: [
+                            { value: 'HIGH', label: 'LEVEL' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '7:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Doneness Rare, Depth 0.5in',
+                    },
+                },
+                {
+                    name: 'Chicken Wings',
+                    icon: 'fa-kit fa-mode-air-fry',
+                    detail: {
+                        header: 'Chicken Wings',
+                        subheader: 'Autopilot',
+                        metrics: [
+                            { value: 'AUTO', label: 'TEMP' },
+                            { icon: 'fa-kit fa-rack-3-bottom', stacked: true, label: 'RACK' },
+                            { value: '25:00', label: 'MIN-SEC' },
+                        ],
+                        footnote: 'Amount 3-8 Wings',
+                    },
+                },
             ];
 
-            const modeIconMap = {
-                'Toast': 'mode-toast', 'Bagel': 'mode-bagel', 'Bake': 'mode-bake',
-                'Air Fry': 'mode-air-fry', 'Broil': 'mode-broil', 'Roast': 'mode-roast',
-                'Proof': 'mode-proof', 'Reheat': 'mode-reheat', 'Slow Cook': 'mode-slow-cook',
-                'Keep Warm': 'mode-keep-warm', 'Dehydrate': 'mode-dehydrate', 
-                'Crispy Reheat': 'mode-crispy-reheat', 'Bottom Bake': 'mode-bottom-bake',
-                'Bottom Broil': 'mode-bottom-broil', 'Outer Broil': 'mode-outer-broil',
-                'Custom Cook': 'mode-dial'
+            const buildDetailLabel = (detail, state = 'default') => {
+                const container = document.createElement('div');
+                container.className = 'detail-label-container';
+
+                const headerRow = document.createElement('div');
+                headerRow.className = 'detail-header-row';
+                container.appendChild(headerRow);
+
+                const header = document.createElement('span');
+                header.className = 'detail-header';
+                header.textContent = detail.header;
+                headerRow.appendChild(header);
+
+                const detailCard = document.createElement('div');
+                detailCard.className = 'detail-card';
+
+                if (detail.subheader) {
+                    const subheader = document.createElement('div');
+                    subheader.className = 'detail-subheader label-lv1-sm';
+                    subheader.textContent = detail.subheader;
+                    container.appendChild(subheader);
+                }
+
+                if (detail.metrics && detail.metrics.length > 0) {
+                    const metricsRow = document.createElement('div');
+                    metricsRow.className = 'detail-metrics-row';
+
+                    detail.metrics.forEach((metric) => {
+                        const metricEl = document.createElement('div');
+                        metricEl.className = 'detail-metric';
+
+                        const valueEl = document.createElement('div');
+                        valueEl.className = 'detail-value';
+                        if (metric.stacked) {
+                            valueEl.classList.add('detail-value-stacked');
+                        }
+
+                        if (metric.value) {
+                            const valueSpan = document.createElement('span');
+                            valueSpan.textContent = metric.value;
+                            valueEl.appendChild(valueSpan);
+                        }
+
+                        if (metric.icon) {
+                            const icon = document.createElement('i');
+                            icon.className = metric.icon;
+                            valueEl.appendChild(icon);
+                        }
+
+                        if (metric.unit) {
+                            const unitSpan = document.createElement('span');
+                            unitSpan.className = 'detail-unit';
+                            unitSpan.textContent = metric.unit;
+                            valueEl.appendChild(unitSpan);
+                        }
+
+                        metricEl.appendChild(valueEl);
+
+                        const labelEl = document.createElement('div');
+                        labelEl.className = 'detail-label label-lv2-xs';
+                        labelEl.textContent = metric.label;
+                        metricEl.appendChild(labelEl);
+
+                        metricsRow.appendChild(metricEl);
+                    });
+
+                    detailCard.appendChild(metricsRow);
+                }
+
+                container.appendChild(detailCard);
+
+                if (detail.footnote) {
+                    const footnote = document.createElement('div');
+                    footnote.className = 'detail-footnote label-lv1-sm';
+                    footnote.textContent = detail.footnote;
+                    container.appendChild(footnote);
+                }
+
+                return container;
             };
 
             function updateMainFocus(newIndex) {
@@ -319,6 +878,8 @@
                         block: 'nearest'
                     });
                 }
+
+                updateBottomSheetTitle();
             }
 
             function updateBottomSheetFocus(newIndex) {
@@ -333,8 +894,11 @@
             }
 
             function updateBottomSheetTitle() {
-                const selectedMode = cookingModes[currentMainIndex];
+                const selectedMode = favoriteModes[currentMainIndex]?.name || 'Favorite';
                 bottomSheetTitle.textContent = `Edit ${selectedMode}`;
+                if (renameCurrentName) {
+                    renameCurrentName.textContent = selectedMode;
+                }
             }
 
             function showPressIndicator() {
@@ -375,7 +939,7 @@
             function showBottomSheet() {
                 updateBottomSheetTitle();
                 
-                // Always reset to "Show on menu" item (index 0) and clear any existing focus
+                // Always reset to the Rename option (index 0) and clear any existing focus
                 bottomSheetItems.forEach(item => item.state = 'default');
                 currentBottomIndex = 0;
                 bottomSheetItems[currentBottomIndex].state = 'focused';
@@ -395,7 +959,7 @@
                 // Set up reorder mode
                 isReorderMode = true;
                 reorderingIndex = currentMainIndex; // Start with the selected item
-                currentReorderModes = [...cookingModes]; // Make a copy of the array
+                currentReorderModes = [...favoriteModes]; // Make a copy of the array
                 
                 // Hide bottom sheet
                 hideBottomSheet();
@@ -452,9 +1016,9 @@
             }
 
             function confirmReorder() {
-                // Update the main cooking modes array
-                cookingModes.length = 0;
-                cookingModes.push(...currentReorderModes);
+                // Update the main favorites array order
+                favoriteModes.length = 0;
+                favoriteModes.push(...currentReorderModes);
                 
                 // Update current index to new position
                 currentMainIndex = reorderingIndex;
@@ -467,21 +1031,32 @@
                 animateReorderFeedback();
             }
 
-            function createListItemElement(mode, iconClass, state = 'default') {
+            function createListItemElement(mode, state = 'default') {
                 const listItem = document.createElement('list-item');
                 listItem.classList.add('list-item');
-                listItem.setAttribute('label', mode);
-                
+
+                const detail = mode.detail ? { ...mode.detail, header: mode.detail.header || mode.name } : null;
+
+                if (detail) {
+                    listItem.classList.add('detail-metrics');
+                    const labelContent = buildDetailLabel(detail, state);
+                    labelContent.setAttribute('slot', 'label');
+                    listItem.appendChild(labelContent);
+                } else {
+                    listItem.setAttribute('label', mode.name);
+                }
+
                 const trailingIcon = document.createElement('div');
                 trailingIcon.slot = 'trailing';
-                trailingIcon.className = 'cooking-icon';
-                trailingIcon.innerHTML = `<i class="fa-${iconClass} fa-kit"></i>`;
+                trailingIcon.className = detail ? 'cooking-icon rack-icon' : 'cooking-icon';
+                const iconClass = mode.icon || 'fa-kit fa-rack-3-bottom';
+                trailingIcon.innerHTML = `<i class="${iconClass}"></i>`;
                 listItem.appendChild(trailingIcon);
-                
+
                 if (state && state !== 'default') {
                     listItem.state = state;
                 }
-                
+
                 return listItem;
             }
 
@@ -489,9 +1064,8 @@
                 mainScreen.innerHTML = '';
                 
                 currentReorderModes.forEach((mode, index) => {
-                    const iconClass = modeIconMap[mode];
                     const state = index === reorderingIndex ? 'reordered' : 'disabled';
-                    const listItem = createListItemElement(mode, iconClass, state);
+                    const listItem = createListItemElement(mode, state);
                     listItem.classList.toggle('reorder-at-top', state === 'reordered' && reorderingIndex === 0);
                     listItem.classList.toggle('reorder-at-bottom', state === 'reordered' && reorderingIndex === currentReorderModes.length - 1);
                     mainScreen.appendChild(listItem);
@@ -503,10 +1077,9 @@
             function refreshMainScreen() {
                 mainScreen.innerHTML = '';
                 
-                cookingModes.forEach((mode, index) => {
-                    const iconClass = modeIconMap[mode];
+                favoriteModes.forEach((mode, index) => {
                     const state = index === currentMainIndex ? 'focused' : 'default';
-                    const listItem = createListItemElement(mode, iconClass, state);
+                    const listItem = createListItemElement(mode, state);
                     mainScreen.appendChild(listItem);
                 });
             }
@@ -685,12 +1258,6 @@
                 }
             });
 
-            // Handle bottom sheet toggles
-            document.querySelectorAll('.bottom-sheet .toggle:not(.disabled)').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                });
-            });
         });
     </script>
 </body>

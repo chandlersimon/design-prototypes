@@ -22,12 +22,17 @@
   {
     "slug": "list-item",
     "title": "list-item",
-    "description": ""
+    "description": "Grid of list item variants showcasing focus, disabled, and reordered states with icons, toggles, and detail cards."
   },
   {
     "slug": "list-item-reordering",
     "title": "Cooking Methods Prototype",
-    "description": ""
+    "description": "Interactive cooking mode list with rotary navigation, press-and-hold edit mode, bottom sheet actions, and reorder experience."
+  },
+  {
+    "slug": "favorites",
+    "title": "Favorites Prototype",
+    "description": "Favorite cooking modes manager with rotary navigation, editable labels, icon swaps, reorder flow, and removal actions via bottom sheet."
   },
   {
     "slug": "segmented-range",

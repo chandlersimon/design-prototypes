@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="prototype:description" content="Grid of list item variants showcasing focus, disabled, and reordered states with icons, toggles, and detail cards.">
     <title>list-item</title>
     <script src="https://kit.fontawesome.com/8dfe425c81.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="../../shared/components/list-item.css">
     <style>
         body {
             margin: 0;
@@ -43,244 +45,6 @@
             color: #ff69b4;
             margin: 16px 0 8px 0;
             text-align: left;
-        }
-
-        list-item,
-        .list-item {
-            display: flex;
-            align-items: center;
-            background: #1a1a1a;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 6px;
-            font-size: 22px;
-            font-weight: 500;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 28px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        list-item.focused,
-        .list-item.focused {
-            background: #FFFFFF;
-            color: black;
-            border: 1px solid #333;
-        }
-
-        list-item.disabled,
-        .list-item.disabled {
-            background: transparent;
-            color: #979797;
-            cursor: not-allowed;
-            border: none;
-        }
-
-        list-item.reordered,
-        .list-item.reordered {
-            background: #FFFFFF;
-            color: black;
-            border: 1px solid #333;
-            position: relative;
-        }
-
-        list-item.reordered::before,
-        .list-item.reordered::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            right: 50%;
-            transform: translateX(50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 8px solid #ff6b6b;
-        }
-
-        list-item.reordered::after,
-        .list-item.reordered::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            right: 50%;
-            transform: translateX(50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-top: 8px solid #ff6b6b;
-        }
-
-        .list-item-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .leading-icon {
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-        }
-
-
-        list-item.disabled .leading-icon,
-        .list-item.disabled .leading-icon {
-            color: #979797;
-        }
-
-
-        .trailing-element {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .close-icon {
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .arrow-icon {
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-        }
-
-        .lock-icon {
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-        }
-
-        list-item.disabled .close-icon,
-        .list-item.disabled .close-icon,
-        list-item.disabled .arrow-icon,
-        .list-item.disabled .arrow-icon,
-        list-item.disabled .lock-icon,
-        .list-item.disabled .lock-icon {
-            color: #979797;
-        }
-
-        list-item.disabled .option-text,
-        .list-item.disabled .option-text {
-            color: #979797;
-        }
-
-        list-item.focused .close-icon,
-        .list-item.focused .close-icon,
-        list-item.focused .arrow-icon,
-        .list-item.focused .arrow-icon,
-        list-item.focused .lock-icon,
-        .list-item.focused .lock-icon,
-        list-item.reordered .close-icon,
-        .list-item.reordered .close-icon,
-        list-item.reordered .arrow-icon,
-        .list-item.reordered .arrow-icon,
-        list-item.reordered .lock-icon,
-        .list-item.reordered .lock-icon {
-            color: black;
-        }
-
-        .option-text {
-            color: #888;
-            margin-right: 8px;
-            font-size: 18px;
-            line-height: 23px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-weight: 500;
-        }
-
-        .toggle {
-            width: 45px;
-            height: 28px;
-            background: #333;
-            border-radius: 14px;
-            position: relative;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .toggle.active {
-            background: #2BB671;
-        }
-
-        .toggle.disabled {
-            background: #979797;
-            cursor: not-allowed;
-        }
-
-        .toggle::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-        }
-
-        .toggle.active::after {
-            transform: translateX(21px);
-        }
-
-        .radio {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .radio.selected {
-            border-color: #2BB671;
-            background: #2BB671;
-        }
-
-        .radio.selected::after {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 12px;
-        }
-
-        list-item.disabled .radio,
-        .list-item.disabled .radio {
-            border-color: #979797;
-        }
-
-        list-item.disabled .radio.selected,
-        .list-item.disabled .radio.selected {
-            border-color: #979797;
-            background: #979797;
         }
 
         @keyframes spin {
@@ -359,6 +123,106 @@
             return span;
         };
 
+        const buildDetailLabel = (detail, state = 'default') => {
+            const container = document.createElement('div');
+            container.className = 'detail-label-container';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'detail-header-row';
+            container.appendChild(headerRow);
+
+            const header = document.createElement('span');
+            header.className = 'detail-header';
+            header.textContent = detail.header;
+            headerRow.appendChild(header);
+
+            if (detail.subheader) {
+                const subheader = document.createElement('div');
+                subheader.className = 'detail-subheader label-lv1-sm';
+                subheader.textContent = detail.subheader;
+                container.appendChild(subheader);
+            }
+
+            const detailCard = document.createElement('div');
+            detailCard.className = 'detail-card';
+
+            if (detail.metrics && detail.metrics.length > 0) {
+                const metricsRow = document.createElement('div');
+                metricsRow.className = 'detail-metrics-row';
+
+                detail.metrics.forEach((metric) => {
+                    const metricEl = document.createElement('div');
+                    metricEl.className = 'detail-metric';
+
+                    const valueEl = document.createElement('div');
+                    valueEl.className = 'detail-value';
+                    if (metric.stacked) {
+                        valueEl.classList.add('detail-value-stacked');
+                    }
+
+                    if (metric.value) {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = metric.value;
+                        valueEl.appendChild(valueSpan);
+                    }
+
+                    if (metric.icon) {
+                        const icon = document.createElement('i');
+                        icon.className = metric.icon;
+                        valueEl.appendChild(icon);
+                    }
+
+                    if (metric.unit) {
+                        const unitSpan = document.createElement('span');
+                        unitSpan.className = 'detail-unit';
+                        unitSpan.textContent = metric.unit;
+                        valueEl.appendChild(unitSpan);
+                    }
+
+                    metricEl.appendChild(valueEl);
+
+                    const labelEl = document.createElement('div');
+                    labelEl.className = 'detail-label label-lv2-xs';
+                    labelEl.textContent = metric.label;
+                    metricEl.appendChild(labelEl);
+
+                    metricsRow.appendChild(metricEl);
+                });
+
+                detailCard.appendChild(metricsRow);
+            }
+
+            container.appendChild(detailCard);
+
+            if (detail.footnote) {
+                const footnote = document.createElement('div');
+                footnote.className = 'detail-footnote label-lv1-sm';
+                footnote.textContent = detail.footnote;
+                container.appendChild(footnote);
+            }
+
+            return container;
+        };
+
+        const createDetailLabel = (state) =>
+            buildDetailLabel(
+                {
+                    header: 'Bacon',
+                    subheader: 'Roast',
+                    metrics: [
+                        { value: '320', unit: '°F', label: 'TEMP' },
+                        {
+                            icon: 'fa-kit fa-rack-3-bottom',
+                            stacked: true,
+                            label: 'RACK',
+                        },
+                        { value: '14:00', label: 'MIN-SEC' },
+                    ],
+                    footnote: 'Doneness 7, Amount 3',
+                },
+                state,
+            );
+
         const VARIANTS = [
             {
                 id: 'trailing-icon',
@@ -378,6 +242,13 @@
                     createIcon('lock-icon', 'fa-kit fa-lock'),
                     createIcon('close-icon', 'fa-kit fa-times'),
                 ],
+            },
+            {
+                id: 'trailing-icon-detail-card',
+                sectionLabel: 'Trailing icon + detail card',
+                hostClasses: ['detail-metrics'],
+                buildLabel: (state) => [createDetailLabel(state)],
+                trailing: () => [createIcon('rack-icon', 'fa-kit fa-rack-3-bottom')],
             },
             {
                 id: 'selected-option',
@@ -440,13 +311,22 @@
                 item.setAttribute('state', state);
             }
 
+            ensureArray(variant.hostClasses).forEach((cls) => {
+                if (cls) item.classList.add(cls);
+            });
+
             ensureArray(variant.leading?.(state)).forEach((node) => {
                 appendWithSlot(item, node, 'leading');
             });
 
-            const label = document.createElement('span');
-            label.textContent = variant.labelText || DEFAULT_LABEL;
-            appendWithSlot(item, label, 'label');
+            const labelNodes = ensureArray(variant.buildLabel?.(state));
+            if (labelNodes.length > 0) {
+                labelNodes.forEach((node) => appendWithSlot(item, node, 'label'));
+            } else {
+                const label = document.createElement('span');
+                label.textContent = variant.labelText || DEFAULT_LABEL;
+                appendWithSlot(item, label, 'label');
+            }
 
             ensureArray(variant.trailing?.(state)).forEach((node) => {
                 appendWithSlot(item, node, 'trailing');

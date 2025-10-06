@@ -121,7 +121,35 @@ class ListItemElement extends HTMLElement {
     this.appendChild(contentContainer);
 
     if (trailingContainer.childNodes.length > 0) {
-      this.appendChild(trailingContainer);
+      let trailingAttached = false;
+
+      if (this.classList.contains('detail-metrics')) {
+        const detailContainer =
+          contentContainer.querySelector('.detail-label-container');
+        if (detailContainer) {
+          let headerRow =
+            detailContainer.querySelector('.detail-header-row');
+          if (!headerRow) {
+            const header = detailContainer.querySelector('.detail-header');
+            if (header) {
+              headerRow = document.createElement('div');
+              headerRow.className = 'detail-header-row';
+              header.parentNode.insertBefore(headerRow, header);
+              headerRow.appendChild(header);
+            }
+          }
+
+          if (headerRow) {
+            headerRow.appendChild(trailingContainer);
+            trailingAttached = true;
+          }
+        }
+      }
+
+      if (!trailingAttached) {
+        this.appendChild(trailingContainer);
+      }
+
       this._trailingContainer = trailingContainer;
     } else {
       this._trailingContainer = null;
