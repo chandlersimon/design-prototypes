@@ -21,6 +21,7 @@ The `prototypes/` directory holds focused explorations:
 Some folders are full-screen experiences, while others are smaller components intended to be embedded inside broader cooking flows or system screens.
 
 You can browse the full set via [`index.html`](./index.html), which lists and links to each prototype.
+re-run `node scripts/generatePrototypeIndex.mjs` any time a prototype is added or its description changes to keep the homepage feed in sync.
 
 ## Shared design system
 A lightweight design system keeps the explorations consistent:

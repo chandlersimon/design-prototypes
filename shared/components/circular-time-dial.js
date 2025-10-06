@@ -18,7 +18,7 @@ export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     currentLength: 2.0,
     adjacentFalloff: 25,
     radiusPercent: 10,
-    alignment: 'inward',
+    alignment: 'outward',
     curve: 'exponential',
     tickMode: 'wrap',
     autoReset: true,
