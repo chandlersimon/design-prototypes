@@ -4,6 +4,107 @@
   --font-sans: 'Inter', 'JaffleNeue', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-sans-strong: 'JaffleNeue', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
+  /* Text styles */
+  --text-2xs-size: 11px;
+  --text-2xs-line-height: 14px;
+  --text-2xs-letter-spacing: 0px;
+  --text-2xs-paragraph-spacing: 13px;
+  --text-2xs-case: none;
+  --text-2xs-lv1: 400;
+  --text-2xs-lv2: 500;
+  --text-2xs-lv3: 600;
+
+  --text-xs-size: 14px;
+  --text-xs-line-height: 18px;
+  --text-xs-letter-spacing: 0px;
+  --text-xs-paragraph-spacing: 16px;
+  --text-xs-case: none;
+  --text-xs-lv1: 400;
+  --text-xs-lv2: 500;
+  --text-xs-lv3: 600;
+
+  --text-sm-size: 18px;
+  --text-sm-line-height: 23px;
+  --text-sm-letter-spacing: 0px;
+  --text-sm-paragraph-spacing: 21px;
+  --text-sm-case: none;
+  --text-sm-lv1: 400;
+  --text-sm-lv2: 500;
+  --text-sm-lv3: 600;
+
+  --text-base-size: 22px;
+  --text-base-line-height: 28px;
+  --text-base-letter-spacing: 0px;
+  --text-base-paragraph-spacing: 25px;
+  --text-base-case: none;
+  --text-base-lv1: 400;
+  --text-base-lv2: 500;
+  --text-base-lv3: 600;
+
+  --text-lg-size: 28px;
+  --text-lg-line-height: 35px;
+  --text-lg-letter-spacing: 0px;
+  --text-lg-paragraph-spacing: 33px;
+  --text-lg-case: none;
+  --text-lg-lv1: 400;
+  --text-lg-lv2: 500;
+  --text-lg-lv3: 600;
+
+  --text-xl-size: 34px;
+  --text-xl-line-height: 42px;
+  --text-xl-letter-spacing: 0px;
+  --text-xl-paragraph-spacing: 39px;
+  --text-xl-case: none;
+  --text-xl-lv1: 400;
+  --text-xl-lv2: 500;
+  --text-xl-lv3: 600;
+
+  --text-2xl-size: 43px;
+  --text-2xl-line-height: 54px;
+  --text-2xl-letter-spacing: 0px;
+  --text-2xl-paragraph-spacing: 48px;
+  --text-2xl-case: none;
+  --text-2xl-lv1: 400;
+  --text-2xl-lv2: 500;
+  --text-2xl-lv3: 600;
+
+  /* Label styles */
+  --label-2xs-size: 11px;
+  --label-2xs-line-height: 14px;
+  --label-2xs-letter-spacing: 0.08em;
+  --label-2xs-paragraph-spacing: 13px;
+  --label-2xs-case: uppercase;
+  --label-2xs-lv1: 400;
+  --label-2xs-lv2: 500;
+  --label-2xs-lv3: 600;
+
+  --label-xs-size: 14px;
+  --label-xs-line-height: 18px;
+  --label-xs-letter-spacing: 0.08em;
+  --label-xs-paragraph-spacing: 16px;
+  --label-xs-case: uppercase;
+  --label-xs-lv1: 400;
+  --label-xs-lv2: 500;
+  --label-xs-lv3: 600;
+
+  --label-sm-size: 18px;
+  --label-sm-line-height: 23px;
+  --label-sm-letter-spacing: 0.08em;
+  --label-sm-paragraph-spacing: 21px;
+  --label-sm-case: uppercase;
+  --label-sm-lv1: 400;
+  --label-sm-lv2: 500;
+  --label-sm-lv3: 600;
+
+  --label-base-size: 22px;
+  --label-base-line-height: 28px;
+  --label-base-letter-spacing: 0.08em;
+  --label-base-paragraph-spacing: 25px;
+  --label-base-case: uppercase;
+  --label-base-lv1: 400;
+  --label-base-lv2: 500;
+  --label-base-lv3: 600;
+
   /* Color palette */
   --color-bg-default: #0b0b0b;
   --color-surface: #1a1a1a;
@@ -39,3 +140,135 @@
   /* Shadows */
   --shadow-inset-subtle: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
+
+:where(.text-2xs-lv1, .text-2xs-lv2, .text-2xs-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-2xs-size);
+  line-height: var(--text-2xs-line-height);
+  letter-spacing: var(--text-2xs-letter-spacing);
+  margin-block-end: var(--text-2xs-paragraph-spacing);
+  text-transform: var(--text-2xs-case);
+}
+.text-2xs-lv1 { font-weight: var(--text-2xs-lv1); }
+.text-2xs-lv2 { font-weight: var(--text-2xs-lv2); }
+.text-2xs-lv3 { font-weight: var(--text-2xs-lv3); }
+
+:where(.text-xs-lv1, .text-xs-lv2, .text-xs-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-xs-size);
+  line-height: var(--text-xs-line-height);
+  letter-spacing: var(--text-xs-letter-spacing);
+  margin-block-end: var(--text-xs-paragraph-spacing);
+  text-transform: var(--text-xs-case);
+}
+.text-xs-lv1 { font-weight: var(--text-xs-lv1); }
+.text-xs-lv2 { font-weight: var(--text-xs-lv2); }
+.text-xs-lv3 { font-weight: var(--text-xs-lv3); }
+
+:where(.text-sm-lv1, .text-sm-lv2, .text-sm-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line-height);
+  letter-spacing: var(--text-sm-letter-spacing);
+  margin-block-end: var(--text-sm-paragraph-spacing);
+  text-transform: var(--text-sm-case);
+}
+.text-sm-lv1 { font-weight: var(--text-sm-lv1); }
+.text-sm-lv2 { font-weight: var(--text-sm-lv2); }
+.text-sm-lv3 { font-weight: var(--text-sm-lv3); }
+
+:where(.text-base-lv1, .text-base-lv2, .text-base-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-base-size);
+  line-height: var(--text-base-line-height);
+  letter-spacing: var(--text-base-letter-spacing);
+  margin-block-end: var(--text-base-paragraph-spacing);
+  text-transform: var(--text-base-case);
+}
+.text-base-lv1 { font-weight: var(--text-base-lv1); }
+.text-base-lv2 { font-weight: var(--text-base-lv2); }
+.text-base-lv3 { font-weight: var(--text-base-lv3); }
+
+:where(.text-lg-lv1, .text-lg-lv2, .text-lg-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-lg-size);
+  line-height: var(--text-lg-line-height);
+  letter-spacing: var(--text-lg-letter-spacing);
+  margin-block-end: var(--text-lg-paragraph-spacing);
+  text-transform: var(--text-lg-case);
+}
+.text-lg-lv1 { font-weight: var(--text-lg-lv1); }
+.text-lg-lv2 { font-weight: var(--text-lg-lv2); }
+.text-lg-lv3 { font-weight: var(--text-lg-lv3); }
+
+:where(.text-xl-lv1, .text-xl-lv2, .text-xl-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-xl-size);
+  line-height: var(--text-xl-line-height);
+  letter-spacing: var(--text-xl-letter-spacing);
+  margin-block-end: var(--text-xl-paragraph-spacing);
+  text-transform: var(--text-xl-case);
+}
+.text-xl-lv1 { font-weight: var(--text-xl-lv1); }
+.text-xl-lv2 { font-weight: var(--text-xl-lv2); }
+.text-xl-lv3 { font-weight: var(--text-xl-lv3); }
+
+:where(.text-2xl-lv1, .text-2xl-lv2, .text-2xl-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-2xl-size);
+  line-height: var(--text-2xl-line-height);
+  letter-spacing: var(--text-2xl-letter-spacing);
+  margin-block-end: var(--text-2xl-paragraph-spacing);
+  text-transform: var(--text-2xl-case);
+}
+.text-2xl-lv1 { font-weight: var(--text-2xl-lv1); }
+.text-2xl-lv2 { font-weight: var(--text-2xl-lv2); }
+.text-2xl-lv3 { font-weight: var(--text-2xl-lv3); }
+
+:where(.label-2xs-lv1, .label-2xs-lv2, .label-2xs-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--label-2xs-size);
+  line-height: var(--label-2xs-line-height);
+  letter-spacing: var(--label-2xs-letter-spacing);
+  margin-block-end: var(--label-2xs-paragraph-spacing);
+  text-transform: var(--label-2xs-case);
+}
+.label-2xs-lv1 { font-weight: var(--label-2xs-lv1); }
+.label-2xs-lv2 { font-weight: var(--label-2xs-lv2); }
+.label-2xs-lv3 { font-weight: var(--label-2xs-lv3); }
+
+:where(.label-xs-lv1, .label-xs-lv2, .label-xs-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--label-xs-size);
+  line-height: var(--label-xs-line-height);
+  letter-spacing: var(--label-xs-letter-spacing);
+  margin-block-end: var(--label-xs-paragraph-spacing);
+  text-transform: var(--label-xs-case);
+}
+.label-xs-lv1 { font-weight: var(--label-xs-lv1); }
+.label-xs-lv2 { font-weight: var(--label-xs-lv2); }
+.label-xs-lv3 { font-weight: var(--label-xs-lv3); }
+
+:where(.label-sm-lv1, .label-sm-lv2, .label-sm-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line-height);
+  letter-spacing: var(--label-sm-letter-spacing);
+  margin-block-end: var(--label-sm-paragraph-spacing);
+  text-transform: var(--label-sm-case);
+}
+.label-sm-lv1 { font-weight: var(--label-sm-lv1); }
+.label-sm-lv2 { font-weight: var(--label-sm-lv2); }
+.label-sm-lv3 { font-weight: var(--label-sm-lv3); }
+
+:where(.label-base-lv1, .label-base-lv2, .label-base-lv3) {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--label-base-size);
+  line-height: var(--label-base-line-height);
+  letter-spacing: var(--label-base-letter-spacing);
+  margin-block-end: var(--label-base-paragraph-spacing);
+  text-transform: var(--label-base-case);
+}
+.label-base-lv1 { font-weight: var(--label-base-lv1); }
+.label-base-lv2 { font-weight: var(--label-base-lv2); }
+.label-base-lv3 { font-weight: var(--label-base-lv3); }

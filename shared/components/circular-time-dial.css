@@ -128,15 +128,28 @@
 }
 
 .circular-time-dial .rack-icon {
-  margin: 2px 0 0 0;
+  margin: 2px auto 0;
   display: flex;
+  align-items: center;
   justify-content: center;
   transition: opacity 300ms ease;
+  width: 100%;
+  max-width: 46px;
+  height: 46px;
+  font-size: 46px;
 }
 
+.circular-time-dial .rack-icon i,
 .circular-time-dial .rack-icon svg {
-  width: 33px;
-  height: 34px;
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.circular-time-dial .rack-icon .fa-kit {
+  font-size: inherit;
 }
 
 .circular-time-dial .rack-label {

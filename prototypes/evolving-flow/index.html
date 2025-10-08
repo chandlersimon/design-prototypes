@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="prototype:description" content="Interactive cooking mode list with rotary navigation, press-and-hold edit mode, bottom sheet actions, and reorder experience.">
+    <title>Cooking Methods Prototype</title>
+    <script src="https://kit.fontawesome.com/8dfe425c81.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="../../shared/tokens.css">
+    <link rel="stylesheet" href="../../shared/prototype-shell.css">
+    <link rel="stylesheet" href="../../shared/components/list-item.css">
+    <link rel="stylesheet" href="../../shared/components/segment-range.css">
+    <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .prototype-container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            overflow: hidden;
+        }
+
+        .flow-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flow-view[hidden] {
+            display: none;
+        }
+
+        #segmentedRangeContainer {
+            align-items: center;
+            justify-content: center;
+            --background-dark: #000;
+            --text-tertiary: #979797;
+            --text-primary: #fff;
+            --segment-range-selected-color: var(--tomato-400, #fa4947);
+            --segment-range-unselected-bg: #3d3d3d;
+            --segment-range-minimized-selected-bg: #b6b6b6;
+            --segment-range-transition-duration: 250ms;
+            --segment-range-switch-speed: 250ms;
+            --segment-range-height-easing: ease;
+            --segment-range-color-easing: ease;
+            --segment-range-minimized-height: 13px;
+            --segment-range-normal-height: 51px;
+        }
+
+        #segmentedRangeContent {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding: 0;
+        }
+
+        #segmentedRangeContent .container {
+            width: 272px;
+        }
+
+        .custom-cook-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .custom-cook-frame {
+            flex: 1;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+
+        .screen-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen-scroll {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        .screen-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        list-item,
+        .list-item {
+            background: transparent;
+            min-height: 48px;
+            transition: none;
+        }
+
+        list-item.reordered.reorder-at-top::before,
+        .list-item.reordered.reorder-at-top::before {
+            content: none;
+        }
+
+        list-item.reordered.reorder-at-bottom::after,
+        .list-item.reordered.reorder-at-bottom::after {
+            content: none;
+        }
+
+        .cooking-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        list-item.disabled .cooking-icon,
+        .list-item.disabled .cooking-icon {
+            color: #979797;
+        }
+
+        list-item.focused .leading-icon,
+        .list-item.focused .leading-icon,
+        list-item.focused .cooking-icon,
+        .list-item.focused .cooking-icon {
+            color: black;
+        }
+
+        list-item.reordered .leading-icon,
+        .list-item.reordered .leading-icon,
+        list-item.reordered .cooking-icon,
+        .list-item.reordered .cooking-icon {
+            color: black;
+        }
+
+        .scroll-scrim {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 70px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 5;
+        }
+
+        .scroll-scrim.visible {
+            opacity: 1;
+        }
+
+        .scroll-scrim.top {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+        }
+
+        .scroll-scrim.bottom {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+        }
+
+        .list-item.reorder-confirmation {
+            animation: reorderPulse 0.6s ease-in-out 3;
+        }
+
+        .bottom-sheet {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            transform: translateY(100%);
+            height: 482px;
+            border: double 2px transparent;
+            border-radius: 12px 12px 0 0;
+            background-image: linear-gradient(black, black),
+                              linear-gradient(to top, #000000 0%, #5f5f5f 30%, #5f5f5f 100%);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            background-color: black;
+            border-bottom: 0;
+            transition: transform 0.25s ease-out;
+            z-index: 1000;
+        }
+
+        .bottom-sheet.sliding-up {
+            transition: transform 0.5s ease-out;
+        }
+
+        .bottom-sheet.visible {
+            transform: translateY(0);
+        }
+
+        .bottom-sheet-content {
+            padding: 32px 8px 16px 8px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .bottom-sheet-title {
+            color: white;
+            margin-bottom: 32px;
+            padding: 0 8px;
+        }
+
+        .bottom-sheet-gap {
+            height: 13px;
+        }
+
+        .bottom-sheet-divider {
+            height: 2px;
+            background: #3D3D3D;
+            width: 100%;
+            border-radius: 999px;
+        }
+
+        .press-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 32px;
+            background: #666;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .press-indicator.visible {
+            opacity: 1;
+        }
+
+        .press-indicator.fade-out {
+            opacity: 0;
+        }
+
+        .press-progress {
+            width: 24px;
+            height: 24px;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+
+        .progress-circle {
+            fill: none;
+            stroke: white;
+            stroke-width: 2;
+            stroke-dasharray: 0 75.36;
+            transition: none;
+        }
+
+        .press-text {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .mode-detail-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mode-detail-content {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 48px 32px 32px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .mode-detail-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mode-detail-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mode-detail-heading.text-base {
+            gap: 8px;
+        }
+
+        .mode-detail-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 19px;
+            height: 19px;
+            min-width: 19px;
+            min-height: 19px;
+            font-size: 19px;
+            color: inherit;
+        }
+
+        .mode-detail-heading.text-base .mode-detail-icon {
+            font-size: var(--text-base-size);
+        }
+
+        .mode-detail-title {
+            margin: 0;
+            font-size: 42px;
+        }
+
+        .mode-detail-title.text-base-lv2 {
+            font-size: var(--text-base-size);
+            line-height: var(--text-base-line-height);
+            font-weight: var(--text-base-lv2);
+            letter-spacing: var(--text-base-letter-spacing);
+            margin: 0;
+        }
+
+        .mode-detail-subtitle {
+            margin: 0;
+            color: #b9b9b9;
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 360px;
+        }
+
+        .mode-detail-dial-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mode-detail-dial {
+            width: 320px;
+            height: 320px;
+        }
+
+        @keyframes reorderPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <div class="prototype-container">
+            <div class="flow-view" id="mainFlow">
+                <div class="screen-container">
+                    <div class="scroll-scrim top" id="topScrollScrim"></div>
+                    <div class="screen-scroll" id="mainScreen">
+                        <!-- List items populated dynamically -->
+                    </div>
+                    <div class="scroll-scrim bottom" id="bottomScrollScrim"></div>
+                </div>
+
+
+                <!-- Bottom Sheet -->
+                <div class="bottom-sheet" id="bottomSheet">
+                    <div class="bottom-sheet-content">
+                        <div class="bottom-sheet-title text-base-lv3" id="bottomSheetTitle">Edit Toast</div>
+                        
+                        <list-item class="list-item" state="focused" data-action="toggle-visibility">
+                            <span slot="label">Hide</span>
+                            <div slot="trailing" class="toggle"></div>
+                        </list-item>
+
+                        <list-item class="list-item" data-action="reorganize">
+                            <span slot="label">Reorganize</span>
+                            <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                        </list-item>
+
+                        <list-item class="list-item" data-action="hidden-modes">
+                            <span slot="label">Hidden modes</span>
+                            <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                        </list-item>
+
+                        <div class="bottom-sheet-gap"></div>
+                        <div class="bottom-sheet-divider"></div>
+                        <div class="bottom-sheet-gap"></div>
+
+                        <list-item class="list-item" data-action="system-settings">
+                            <span slot="label">System Settings</span>
+                            <div slot="trailing" class="arrow-icon"><i class="fa-chevron-right fa-kit"></i></div>
+                        </list-item>
+                    </div>
+                </div>
+
+                <!-- Press Indicator -->
+                <div class="press-indicator" id="pressIndicator">
+                    <svg class="press-progress" id="pressProgress">
+                        <circle class="progress-circle" cx="12" cy="12" r="12"></circle>
+                    </svg>
+                    <span class="press-text">Hold to edit mode</span>
+                </div>
+            </div>
+
+            <div class="flow-view" id="segmentedRangeContainer" hidden aria-hidden="true" tabindex="-1">
+                <div id="segmentedRangeContent"></div>
+            </div>
+
+            <div class="flow-view mode-detail-container" id="modeDetailContainer" hidden aria-hidden="true" tabindex="-1">
+                <div class="mode-detail-content">
+                    <div class="mode-detail-header">
+                        <div class="mode-detail-heading text-base" id="modeDetailHeading">
+                            <span class="mode-detail-icon" id="modeDetailIcon" aria-hidden="true">
+                                <i class="fa-mode-bake fa-kit"></i>
+                            </span>
+                            <h1 class="mode-detail-title text-base-lv2" id="modeDetailTitle">Bake</h1>
+                        </div>
+                        <p class="mode-detail-subtitle" id="modeDetailSubtitle" hidden></p>
+                    </div>
+                    <div class="mode-detail-dial-wrapper" id="modeDetailDialWrapper">
+                        <div class="mode-detail-dial" id="modeDetailDial"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-view custom-cook-container" id="customCookContainer" hidden aria-hidden="true" tabindex="-1">
+                <iframe class="custom-cook-frame" id="customCookFrame" title="Custom Cook Flow" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="../list-item/list-item-component.js"></script>
+    <script type="module">
+        import { SegmentRange } from '../../shared/components/segment-range.js';
+        import CircularTimeDial from '../../shared/components/circular-time-dial.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainScreen = document.getElementById('mainScreen');
+            const bottomSheetItems = document.querySelectorAll('.bottom-sheet list-item');
+            const reorganizeItemIndex = Array.from(bottomSheetItems).findIndex(item => item.dataset.action === 'reorganize');
+            const bottomSheet = document.getElementById('bottomSheet');
+            const bottomSheetTitle = document.getElementById('bottomSheetTitle');
+            const pressIndicator = document.getElementById('pressIndicator');
+            const pressProgress = document.getElementById('pressProgress');
+            const mainFlow = document.getElementById('mainFlow');
+            const customCookContainer = document.getElementById('customCookContainer');
+            const customCookFrame = document.getElementById('customCookFrame');
+            const segmentedRangeContainer = document.getElementById('segmentedRangeContainer');
+            const segmentedRangeContent = document.getElementById('segmentedRangeContent');
+            const instructionsBanner = document.querySelector('.instructions');
+            const topScrollScrim = document.getElementById('topScrollScrim');
+            const bottomScrollScrim = document.getElementById('bottomScrollScrim');
+            const modeDetailContainer = document.getElementById('modeDetailContainer');
+            const modeDetailHeading = document.getElementById('modeDetailHeading');
+            const modeDetailTitle = document.getElementById('modeDetailTitle');
+            const modeDetailSubtitle = document.getElementById('modeDetailSubtitle');
+            const modeDetailIcon = document.getElementById('modeDetailIcon');
+            const modeDetailDialHost = document.getElementById('modeDetailDial');
+            const modeDetailDialWrapper = document.getElementById('modeDetailDialWrapper');
+            
+            let currentMainIndex = 0;
+            let currentBottomIndex = 0;
+            let qPressStart = null;
+            let qPressTimer = null;
+            let qProgressTimer = null;
+            let isBottomSheetOpen = false;
+            let isReorderMode = false;
+            let reorderingIndex = 0; // Index of item being moved
+            let currentReorderModes = []; // Copy of modes array for reordering
+            let isReorderFeedbackActive = false;
+            let isCustomCookOpen = false;
+            let isSegmentedRangeOpen = false;
+            let isModeDetailOpen = false;
+            let activeModeDetail = null;
+            let modeDetailDial = null;
+
+            if (customCookFrame) {
+                customCookFrame.addEventListener('load', () => {
+                    if (isCustomCookOpen) {
+                        try {
+                            customCookFrame.focus({ preventScroll: true });
+                        } catch (error) {
+                            customCookContainer?.focus({ preventScroll: true });
+                        }
+                    }
+                });
+            }
+
+            const cookingModes = [
+                'Toast', 'Bagel', 'Bake', 'Air Fry', 'Broil', 'Roast', 'Proof', 'Reheat',
+                'Slow Cook', 'Keep Warm', 'Dehydrate', 'Crispy Reheat', 'Bottom Bake',
+                'Bottom Broil', 'Outer Broil', 'Custom Cook'
+            ];
+
+            const modeIconMap = {
+                'Toast': 'mode-toast', 'Bagel': 'mode-bagel', 'Bake': 'mode-bake',
+                'Air Fry': 'mode-air-fry', 'Broil': 'mode-broil', 'Roast': 'mode-roast',
+                'Proof': 'mode-proof', 'Reheat': 'mode-reheat', 'Slow Cook': 'mode-slow-cook',
+                'Keep Warm': 'mode-keep-warm', 'Dehydrate': 'mode-dehydrate', 
+                'Crispy Reheat': 'mode-crispy-reheat', 'Bottom Bake': 'mode-bottom-bake',
+                'Bottom Broil': 'mode-bottom-broil', 'Outer Broil': 'mode-outer-broil',
+                'Custom Cook': 'mode-dial'
+            };
+
+            const modeDetailPresets = {
+                'Bake': {
+                    temperature: 350,
+                    totalMinutes: 45
+                },
+                'Air Fry': {
+                    temperature: 400,
+                    totalMinutes: 18
+                }
+            };
+
+            const dialModes = new Set(['Bake', 'Air Fry']);
+
+            const segmentedRangeDefaults = {
+                slices: { title: 'Slices', segments: 9, value: 2 },
+                darkness: { title: 'Darkness', segments: 7, value: 3 },
+            };
+
+            let segmentedRangeInitialized = false;
+            let segmentedRangeActiveKey = 'slices';
+            const segmentedRangeInstances = {
+                slices: null,
+                darkness: null,
+            };
+
+            const ensureSegmentedRangeInitialized = () => {
+                if (segmentedRangeInitialized || !segmentedRangeContent) {
+                    return;
+                }
+
+                segmentedRangeContent.innerHTML = '';
+
+                segmentedRangeContent.innerHTML = `
+                    <div class="container">
+                        <div id="slicesRange"></div>
+                        <div id="darknessRange"></div>
+                    </div>
+                `;
+
+                const slicesRoot = segmentedRangeContent.querySelector('#slicesRange');
+                const darknessRoot = segmentedRangeContent.querySelector('#darknessRange');
+
+                if (!slicesRoot || !darknessRoot) {
+                    return;
+                }
+
+                segmentedRangeInstances.slices = new SegmentRange(slicesRoot, {
+                    title: segmentedRangeDefaults.slices.title,
+                    segments: segmentedRangeDefaults.slices.segments,
+                    value: segmentedRangeDefaults.slices.value,
+                    expanded: true,
+                    active: true,
+                });
+
+                segmentedRangeInstances.darkness = new SegmentRange(darknessRoot, {
+                    title: segmentedRangeDefaults.darkness.title,
+                    variant: 'darkness',
+                    segments: segmentedRangeDefaults.darkness.segments,
+                    value: segmentedRangeDefaults.darkness.value,
+                    expanded: false,
+                    active: false,
+                });
+
+                segmentedRangeActiveKey = 'slices';
+                segmentedRangeInitialized = true;
+            };
+
+            const setSegmentedRangeActiveKey = (key) => {
+                if (!segmentedRangeInitialized) {
+                    return;
+                }
+
+                const nextKey = key === 'darkness' ? 'darkness' : 'slices';
+                if (segmentedRangeActiveKey === nextKey) {
+                    return;
+                }
+
+                const current = segmentedRangeInstances[segmentedRangeActiveKey];
+                const next = segmentedRangeInstances[nextKey];
+                if (!current || !next) {
+                    return;
+                }
+
+                current.setExpanded(false);
+                current.setActive(false);
+
+                next.setExpanded(true);
+                next.setActive(true);
+
+                segmentedRangeActiveKey = nextKey;
+            };
+
+            const toggleSegmentedRangeActiveKey = () => {
+                const next = segmentedRangeActiveKey === 'slices' ? 'darkness' : 'slices';
+                setSegmentedRangeActiveKey(next);
+            };
+
+            const resetSegmentedRange = () => {
+                if (!segmentedRangeInitialized) {
+                    return;
+                }
+
+                const { slices, darkness } = segmentedRangeInstances;
+                if (slices) {
+                    slices.setSegments(segmentedRangeDefaults.slices.segments, { preserveValue: true, suppressEvent: true });
+                    slices.setValue(segmentedRangeDefaults.slices.value, { suppressEvent: true, forceUpdate: true });
+                    slices.setExpanded(true);
+                    slices.setActive(true);
+                }
+
+                if (darkness) {
+                    darkness.setSegments(segmentedRangeDefaults.darkness.segments, { preserveValue: true, suppressEvent: true });
+                    darkness.setValue(segmentedRangeDefaults.darkness.value, { suppressEvent: true, forceUpdate: true });
+                    darkness.setExpanded(false);
+                    darkness.setActive(false);
+                }
+
+                segmentedRangeActiveKey = 'slices';
+            };
+
+            const handleSegmentedRangeInteraction = (key) => {
+                if (!isSegmentedRangeOpen) {
+                    return false;
+                }
+
+                ensureSegmentedRangeInitialized();
+
+                const activeRange = segmentedRangeInstances[segmentedRangeActiveKey];
+
+                switch (key) {
+                    case 'p':
+                        activeRange?.increment();
+                        return true;
+                    case 'o':
+                        activeRange?.decrement();
+                        return true;
+                    case 'q':
+                        toggleSegmentedRangeActiveKey();
+                        return true;
+                    case 'r':
+                        resetSegmentedRange();
+                        return true;
+                    default:
+                        return false;
+                }
+            };
+
+            function updateScrollScrims() {
+                if (!topScrollScrim || !bottomScrollScrim) {
+                    return;
+                }
+
+                const scrollableHeight = mainScreen.scrollHeight;
+                const visibleHeight = mainScreen.clientHeight;
+                const maxScrollTop = Math.max(scrollableHeight - visibleHeight, 0);
+                const scrollTop = mainScreen.scrollTop;
+
+                if (maxScrollTop <= 0) {
+                    topScrollScrim.classList.remove('visible');
+                    bottomScrollScrim.classList.remove('visible');
+                    return;
+                }
+
+                const hasContentAbove = scrollTop > 1;
+                const hasContentBelow = scrollTop < maxScrollTop - 1;
+
+                topScrollScrim.classList.toggle('visible', hasContentAbove);
+                bottomScrollScrim.classList.toggle('visible', hasContentBelow);
+            }
+
+            mainScreen.addEventListener('scroll', updateScrollScrims, { passive: true });
+
+            function scrollMainSelectionIntoView(item, behavior = 'smooth') {
+                if (!item) {
+                    return;
+                }
+
+                const container = mainScreen;
+                const containerHeight = container.clientHeight;
+
+                if (containerHeight <= 0) {
+                    return;
+                }
+
+                const itemOffsetTop = item.offsetTop;
+                const itemHeight = item.offsetHeight;
+                const itemCenter = itemOffsetTop + itemHeight / 2;
+                const anchor = containerHeight * 0.5;
+
+                let targetScrollTop = itemCenter - anchor;
+                const maxScrollTop = Math.max(container.scrollHeight - containerHeight, 0);
+
+                if (targetScrollTop < 0) {
+                    targetScrollTop = 0;
+                } else if (targetScrollTop > maxScrollTop) {
+                    targetScrollTop = maxScrollTop;
+                }
+
+                container.scrollTo({
+                    top: targetScrollTop,
+                    behavior,
+                });
+
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function updateMainFocus(newIndex) {
+                const currentMainListItems = mainScreen.querySelectorAll('list-item');
+                
+                if (currentMainListItems[currentMainIndex]) {
+                    currentMainListItems[currentMainIndex].state = 'default';
+                }
+                
+                currentMainIndex = newIndex;
+                
+                if (currentMainListItems[currentMainIndex]) {
+                    currentMainListItems[currentMainIndex].state = 'focused';
+                    scrollMainSelectionIntoView(currentMainListItems[currentMainIndex], 'smooth');
+                }
+            }
+
+            function updateBottomSheetFocus(newIndex) {
+                // Remove focused class from current bottom sheet item
+                bottomSheetItems[currentBottomIndex].state = 'default';
+                
+                // Update index
+                currentBottomIndex = newIndex;
+                
+                // Add focused class to new bottom sheet item
+                bottomSheetItems[currentBottomIndex].state = 'focused';
+            }
+
+            function updateBottomSheetTitle() {
+                const selectedMode = cookingModes[currentMainIndex];
+                bottomSheetTitle.textContent = `Edit ${selectedMode}`;
+            }
+
+            function showPressIndicator() {
+                // Remove any fade-out class and add visible for smooth fade-in
+                pressIndicator.classList.remove('fade-out');
+                pressIndicator.classList.add('visible');
+                
+                const circle = pressProgress.querySelector('.progress-circle');
+                circle.style.strokeDasharray = '0 75.36'; // 12px radius circle circumference
+                
+                // Animate progress over 1.2 seconds (from 300ms to 1500ms total)
+                const duration = 1200;
+                const startTime = Date.now();
+                
+                qProgressTimer = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const circumference = 75.36;
+                    const dashArray = (progress * circumference) + ' ' + circumference;
+                    circle.style.strokeDasharray = dashArray;
+                }, 16); // ~60fps
+            }
+
+            function hidePressIndicator() {
+                pressIndicator.classList.add('fade-out');
+                pressIndicator.classList.remove('visible');
+                if (qProgressTimer) {
+                    clearInterval(qProgressTimer);
+                    qProgressTimer = null;
+                }
+                
+                // Remove fade-out class after transition completes
+                setTimeout(() => {
+                    pressIndicator.classList.remove('fade-out');
+                }, 300);
+            }
+
+            function showBottomSheet() {
+                updateBottomSheetTitle();
+                
+                // Always reset to "Show on menu" item (index 0) and clear any existing focus
+                bottomSheetItems.forEach(item => item.state = 'default');
+                currentBottomIndex = 0;
+                bottomSheetItems[currentBottomIndex].state = 'focused';
+                
+                bottomSheet.classList.add('sliding-up');
+                bottomSheet.classList.add('visible');
+                isBottomSheetOpen = true;
+                closeModeDetailFlow();
+                closeSegmentedRangeFlow();
+            }
+
+            function hideBottomSheet() {
+                bottomSheet.classList.remove('sliding-up');
+                bottomSheet.classList.remove('visible');
+                isBottomSheetOpen = false;
+            }
+
+            function openSegmentedRangeFlow() {
+                if (!segmentedRangeContainer || !mainFlow) {
+                    return;
+                }
+
+                if (isSegmentedRangeOpen) {
+                    return;
+                }
+
+                hideBottomSheet();
+                closeModeDetailFlow();
+
+                if (isCustomCookOpen) {
+                    closeCustomCookFlow();
+                }
+
+                segmentedRangeContainer.hidden = false;
+                segmentedRangeContainer.setAttribute('aria-hidden', 'false');
+                mainFlow.hidden = true;
+                mainFlow.setAttribute('aria-hidden', 'true');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = 'none';
+                }
+
+                ensureSegmentedRangeInitialized();
+                resetSegmentedRange();
+
+                isSegmentedRangeOpen = true;
+                segmentedRangeContainer.focus({ preventScroll: true });
+            }
+
+            function closeSegmentedRangeFlow() {
+                if (!segmentedRangeContainer || !mainFlow) {
+                    return;
+                }
+
+                if (!isSegmentedRangeOpen) {
+                    return;
+                }
+
+                isSegmentedRangeOpen = false;
+                segmentedRangeContainer.hidden = true;
+                segmentedRangeContainer.setAttribute('aria-hidden', 'true');
+                mainFlow.hidden = false;
+                mainFlow.setAttribute('aria-hidden', 'false');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = '';
+                }
+
+                updateMainFocus(currentMainIndex);
+            }
+
+            function ensureModeDetailDial() {
+                if (modeDetailDial || !modeDetailDialHost) {
+                    return;
+                }
+
+                modeDetailDial = new CircularTimeDial(modeDetailDialHost, {
+                    idPrefix: 'mode-detail',
+                    autoBindKeys: false
+                });
+
+                if (modeDetailDial?.debugSettings) {
+                    modeDetailDial.debugSettings.autoReset = false;
+                }
+            }
+
+            function configureModeDetailDial(mode) {
+                const usesDial = dialModes.has(mode);
+                const preset = modeDetailPresets[mode] || {};
+
+                if (modeDetailHeading) {
+                    modeDetailHeading.classList.add('text-base');
+                }
+
+                if (modeDetailTitle) {
+                    modeDetailTitle.textContent = mode;
+                    modeDetailTitle.classList.add('text-base-lv2');
+                }
+
+                if (modeDetailIcon) {
+                    const iconClass = modeIconMap[mode] || 'mode-dial';
+                    modeDetailIcon.innerHTML = `<i class="fa-${iconClass} fa-kit"></i>`;
+                    modeDetailIcon.hidden = false;
+                }
+
+                if (modeDetailSubtitle) {
+                    if (usesDial && preset.subtitle) {
+                        modeDetailSubtitle.textContent = preset.subtitle;
+                        modeDetailSubtitle.hidden = false;
+                    } else {
+                        modeDetailSubtitle.textContent = '';
+                        modeDetailSubtitle.hidden = true;
+                    }
+                }
+
+                if (modeDetailDialWrapper) {
+                    modeDetailDialWrapper.hidden = !usesDial;
+                    modeDetailDialWrapper.setAttribute('aria-hidden', usesDial ? 'false' : 'true');
+                }
+
+                if (!usesDial || !modeDetailDial) {
+                    return;
+                }
+
+                const temperature = preset.temperature ?? modeDetailDial.temperature ?? 375;
+                const totalMinutes = preset.totalMinutes ?? modeDetailDial.totalMinutes ?? 20;
+
+                modeDetailDial.temperature = temperature;
+                modeDetailDial.totalMinutes = totalMinutes;
+                modeDetailDial.tempMode = true;
+                modeDetailDial.countdownMode = false;
+                modeDetailDial.cookingComplete = false;
+                modeDetailDial.ringFillAnimation = false;
+                modeDetailDial.preheatPhase = false;
+                modeDetailDial.scalingActive = false;
+                modeDetailDial.selectedButton = 0;
+                modeDetailDial.keyPressHistory = [];
+                modeDetailDial.accelerationMultiplier = 1;
+                modeDetailDial.rapidMode = false;
+                modeDetailDial.hasFlashedAtBoundary = false;
+                modeDetailDial.lastActionTime = Date.now();
+                modeDetailDial.render();
+            }
+
+            function openModeDetailFlow(mode) {
+                if (!modeDetailContainer || !mainFlow) {
+                    return;
+                }
+
+                if (isModeDetailOpen && activeModeDetail === mode) {
+                    return;
+                }
+
+                const usesDial = dialModes.has(mode);
+                if (usesDial) {
+                    ensureModeDetailDial();
+                    if (!modeDetailDial) {
+                        return;
+                    }
+                }
+
+                closeSegmentedRangeFlow();
+                closeCustomCookFlow();
+                hideBottomSheet();
+                qPressStart = null;
+
+                activeModeDetail = mode;
+                configureModeDetailDial(mode);
+
+                modeDetailContainer.hidden = false;
+                modeDetailContainer.setAttribute('aria-hidden', 'false');
+                mainFlow.hidden = true;
+                mainFlow.setAttribute('aria-hidden', 'true');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = 'none';
+                }
+
+                isModeDetailOpen = true;
+
+                requestAnimationFrame(() => {
+                    try {
+                        modeDetailContainer.focus({ preventScroll: true });
+                    } catch (_error) {
+                        /* focus fallback no-op */
+                    }
+                });
+            }
+
+            function closeModeDetailFlow() {
+                if (!modeDetailContainer || !mainFlow) {
+                    return;
+                }
+
+                if (!isModeDetailOpen) {
+                    return;
+                }
+
+                isModeDetailOpen = false;
+                activeModeDetail = null;
+
+                modeDetailContainer.hidden = true;
+                modeDetailContainer.setAttribute('aria-hidden', 'true');
+                mainFlow.hidden = false;
+                mainFlow.setAttribute('aria-hidden', 'false');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = '';
+                }
+
+                updateMainFocus(currentMainIndex);
+            }
+
+            function openCustomCookFlow() {
+                if (!customCookContainer || !mainFlow) {
+                    return;
+                }
+
+                if (isCustomCookOpen) {
+                    return;
+                }
+
+                closeModeDetailFlow();
+                closeSegmentedRangeFlow();
+                isCustomCookOpen = true;
+                customCookContainer.hidden = false;
+                customCookContainer.setAttribute('aria-hidden', 'false');
+                mainFlow.hidden = true;
+                mainFlow.setAttribute('aria-hidden', 'true');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = 'none';
+                }
+                if (customCookFrame && !customCookFrame.src) {
+                    customCookFrame.src = '../custom-cook/index.html?embedded=1';
+                }
+                if (customCookFrame) {
+                    try {
+                        customCookFrame.focus({ preventScroll: true });
+                    } catch (error) {
+                        customCookContainer.focus({ preventScroll: true });
+                    }
+                } else {
+                    customCookContainer.focus({ preventScroll: true });
+                }
+            }
+
+            function closeCustomCookFlow() {
+                if (!customCookContainer || !mainFlow) {
+                    return;
+                }
+                
+                if (!isCustomCookOpen) {
+                    return;
+                }
+                isCustomCookOpen = false;
+                customCookContainer.hidden = true;
+                customCookContainer.setAttribute('aria-hidden', 'true');
+                mainFlow.hidden = false;
+                mainFlow.setAttribute('aria-hidden', 'false');
+                if (instructionsBanner) {
+                    instructionsBanner.style.display = '';
+                }
+                updateMainFocus(currentMainIndex);
+            }
+
+
+            window.addEventListener('message', (event) => {
+                const allowedOrigins = [window.location.origin, 'null'];
+                if (event.origin && !allowedOrigins.includes(event.origin)) {
+                    return;
+                }
+                if (event.data && event.data.type === 'custom-cook-close') {
+                    closeCustomCookFlow();
+                } else if (event.data && event.data.type === 'segmented-range-close') {
+                    closeSegmentedRangeFlow();
+                }
+            });
+
+            function showReorderScreen() {
+                // Set up reorder mode
+                isReorderMode = true;
+                reorderingIndex = currentMainIndex; // Start with the selected item
+                currentReorderModes = [...cookingModes]; // Make a copy of the array
+                
+                // Hide bottom sheet
+                hideBottomSheet();
+                
+                // Update main screen for reorder mode
+                updateMainScreenForReorder();
+                
+                // Update state
+                isBottomSheetOpen = false;
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function updateMainScreenForReorder() {               
+                const listItems = mainScreen.querySelectorAll('list-item');
+                listItems.forEach((item, index) => {
+                    const isBeingReordered = index === reorderingIndex;
+                    
+                    item.classList.remove('reorder-confirmation');
+                    item.state = isBeingReordered ? 'reordered' : 'disabled';
+                    item.classList.toggle('reorder-at-top', isBeingReordered && reorderingIndex === 0);
+                    item.classList.toggle('reorder-at-bottom', isBeingReordered && reorderingIndex === currentReorderModes.length - 1);
+                });
+                
+                scrollReorderingItemIntoView('auto');
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function moveItemUp() {
+                if (reorderingIndex > 0) {
+                    // Swap with previous item
+                    const temp = currentReorderModes[reorderingIndex];
+                    currentReorderModes[reorderingIndex] = currentReorderModes[reorderingIndex - 1];
+                    currentReorderModes[reorderingIndex - 1] = temp;
+                    
+                    // Update reordering index
+                    reorderingIndex--;
+                    
+                    // Refresh the main screen display
+                    refreshMainScreenForReorder('smooth');
+                }
+            }
+
+            function moveItemDown() {
+                if (reorderingIndex < currentReorderModes.length - 1) {
+                    // Swap with next item
+                    const temp = currentReorderModes[reorderingIndex];
+                    currentReorderModes[reorderingIndex] = currentReorderModes[reorderingIndex + 1];
+                    currentReorderModes[reorderingIndex + 1] = temp;
+                    
+                    // Update reordering index
+                    reorderingIndex++;
+                    
+                    // Refresh the main screen display
+                    refreshMainScreenForReorder('smooth');
+                }
+            }
+
+            function confirmReorder() {
+                // Update the main cooking modes array
+                cookingModes.length = 0;
+                cookingModes.push(...currentReorderModes);
+                
+                // Update current index to new position
+                currentMainIndex = reorderingIndex;
+                
+                // Reset reorder mode
+                isReorderMode = false;
+                
+                // Refresh main screen back to normal mode
+                refreshMainScreen('smooth', true);
+                animateReorderFeedback();
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function cancelReorder() {
+                if (!isReorderMode) {
+                    return;
+                }
+
+                isReorderMode = false;
+                reorderingIndex = currentMainIndex;
+                currentReorderModes = [];
+                refreshMainScreen('smooth', true);
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function createListItemElement(mode, iconClass, state = 'default', index = null) {
+                const listItem = document.createElement('list-item');
+                listItem.classList.add('list-item');
+                listItem.setAttribute('label', mode);
+                listItem.dataset.mode = mode;
+                if (index !== null) {
+                    listItem.dataset.index = index;
+                }
+                
+                const trailingIcon = document.createElement('div');
+                trailingIcon.slot = 'trailing';
+                trailingIcon.className = 'cooking-icon';
+                trailingIcon.innerHTML = `<i class="fa-${iconClass} fa-kit"></i>`;
+                listItem.appendChild(trailingIcon);
+                
+                if (state && state !== 'default') {
+                    listItem.state = state;
+                }
+
+                return listItem;
+            }
+
+            function refreshMainScreenForReorder(scrollBehavior = 'auto') {
+                mainScreen.innerHTML = '';
+                
+                currentReorderModes.forEach((mode, index) => {
+                    const iconClass = modeIconMap[mode];
+                    const state = index === reorderingIndex ? 'reordered' : 'disabled';
+                    const listItem = createListItemElement(mode, iconClass, state, index);
+                    listItem.classList.toggle('reorder-at-top', state === 'reordered' && reorderingIndex === 0);
+                    listItem.classList.toggle('reorder-at-bottom', state === 'reordered' && reorderingIndex === currentReorderModes.length - 1);
+                    mainScreen.appendChild(listItem);
+                });
+                
+                scrollReorderingItemIntoView(scrollBehavior);
+                requestAnimationFrame(updateScrollScrims);
+            }
+            
+            function refreshMainScreen(scrollBehavior = 'auto', preserveScroll = false) {
+                const previousScrollTop = preserveScroll ? mainScreen.scrollTop : null;
+
+                mainScreen.innerHTML = '';
+                
+                cookingModes.forEach((mode, index) => {
+                    const iconClass = modeIconMap[mode];
+                    const state = index === currentMainIndex ? 'focused' : 'default';
+                    const listItem = createListItemElement(mode, iconClass, state, index);
+                    mainScreen.appendChild(listItem);
+                });
+
+                if (preserveScroll && previousScrollTop !== null) {
+                    mainScreen.scrollTop = previousScrollTop;
+                }
+
+                const refreshedItems = mainScreen.querySelectorAll('list-item');
+                const focusedItem = refreshedItems[currentMainIndex];
+                if (focusedItem) {
+                    scrollMainSelectionIntoView(focusedItem, scrollBehavior);
+                } else {
+                    requestAnimationFrame(updateScrollScrims);
+                }
+            }
+
+            function scrollReorderingItemIntoView(behavior = 'auto') {
+                if (!isReorderMode) {
+                    return;
+                }
+                
+                const listItems = mainScreen.querySelectorAll('list-item');
+                const targetItem = listItems[reorderingIndex];
+                
+                if (targetItem) {
+                    scrollMainSelectionIntoView(targetItem, behavior);
+                }
+
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            refreshMainScreen();
+            updateBottomSheetTitle();
+            updateScrollScrims();
+
+            function animateReorderFeedback() {
+                const listItems = mainScreen.querySelectorAll('list-item');
+                
+                if (!listItems.length) {
+                    return;
+                }
+                
+                const targetItem = listItems[currentMainIndex];
+                if (!targetItem) {
+                    return;
+                }
+                
+                isReorderFeedbackActive = true;
+                
+                const previousStates = new Map();
+                
+                listItems.forEach((item, index) => {
+                    if (index !== currentMainIndex) {
+                        previousStates.set(item, item.state || 'default');
+                        item.state = 'disabled';
+                    }
+                });
+                
+                targetItem.classList.add('reorder-confirmation');
+                
+                targetItem.addEventListener('animationend', function handleAnimationEnd() {
+                    targetItem.classList.remove('reorder-confirmation');
+                    listItems.forEach((item, index) => {
+                        if (index === currentMainIndex) {
+                            item.state = 'focused';
+                        } else {
+                            const previousState = previousStates.get(item) || 'default';
+                            item.state = previousState;
+                        }
+                    });
+                    isReorderFeedbackActive = false;
+                }, { once: true });
+            }
+
+            function handleBackAction() {
+                if (isReorderFeedbackActive) {
+                    return;
+                }
+
+                if (isModeDetailOpen) {
+                    closeModeDetailFlow();
+                    return;
+                }
+
+                if (isSegmentedRangeOpen) {
+                    closeSegmentedRangeFlow();
+                    return;
+                }
+
+                if (isCustomCookOpen) {
+                    closeCustomCookFlow();
+                    return;
+                }
+
+                if (isReorderMode) {
+                    cancelReorder();
+                    return;
+                }
+
+                if (isBottomSheetOpen || qPressStart !== null) {
+                    if (qPressTimer) {
+                        clearTimeout(qPressTimer);
+                        qPressTimer = null;
+                    }
+
+                    if (qProgressTimer) {
+                        clearInterval(qProgressTimer);
+                        qProgressTimer = null;
+                    }
+
+                    hidePressIndicator();
+                    hideBottomSheet();
+                    qPressStart = null;
+                }
+            }
+
+            document.addEventListener('keydown', function(event) {
+                const key = event.key ? event.key.toLowerCase() : '';
+
+                if (isModeDetailOpen) {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
+                        event.preventDefault();
+                        closeModeDetailFlow();
+                    } else if (key === 'p') {
+                        event.preventDefault();
+                        modeDetailDial?.increaseValue();
+                    } else if (key === 'o') {
+                        event.preventDefault();
+                        modeDetailDial?.decreaseValue();
+                    } else if (key === 'q') {
+                        event.preventDefault();
+                        modeDetailDial?.toggleMode();
+                    } else if (key === 'enter') {
+                        event.preventDefault();
+                        modeDetailDial?.startCooking();
+                    }
+                    return;
+                }
+
+                if (isSegmentedRangeOpen) {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
+                        event.preventDefault();
+                        closeSegmentedRangeFlow();
+                    } else if (handleSegmentedRangeInteraction(key)) {
+                        event.preventDefault();
+                    }
+                    return;
+                }
+
+                if (isCustomCookOpen) {
+                    if (key === 'escape') {
+                        event.preventDefault();
+                        closeCustomCookFlow();
+                    }
+                    return;
+                }
+
+                if (isReorderFeedbackActive) {
+                    event.preventDefault();
+                    return;
+                }
+                
+                if (key === 'q') {
+                    event.preventDefault();
+
+                    const selectedMode = cookingModes[currentMainIndex];
+                    const isCustomCookFocused = selectedMode === 'Custom Cook';
+
+                    if (!isReorderMode && !isBottomSheetOpen && isCustomCookFocused) {
+                        openCustomCookFlow();
+                        return;
+                    }
+
+                    if (isReorderMode) {
+                        // Confirm reorder and return to main screen
+                        confirmReorder();
+                    } else if (isBottomSheetOpen) {
+                        // Check if we're on the Reorganize item
+                        if (reorganizeItemIndex !== -1 && currentBottomIndex === reorganizeItemIndex) {
+                            showReorderScreen();
+                        }
+                    } else if (qPressStart === null) {
+                        qPressStart = Date.now();
+                        
+                        // Show toast after 300ms
+                        qPressTimer = setTimeout(() => {
+                            showPressIndicator();
+                            
+                            // Start bottom sheet animation after 1 second (700ms more)
+                            qPressTimer = setTimeout(() => {
+                                showBottomSheet();
+                                
+                                // Hide toast when sheet reaches the top (after 0.5s animation)
+                                setTimeout(() => {
+                                    hidePressIndicator();
+                                }, 500); // Bottom sheet animation duration
+                            }, 700); // 1000ms total - 300ms already elapsed
+                        }, 300);
+                    }
+                } else if (key === 'p') {
+                    event.preventDefault();
+                    if (isReorderMode) {
+                        // Move item down in reorder mode
+                        moveItemDown();
+                    } else if (isBottomSheetOpen) {
+                        // Navigate bottom sheet items
+                        if (currentBottomIndex < bottomSheetItems.length - 1) {
+                            updateBottomSheetFocus(currentBottomIndex + 1);
+                        }
+                    } else {
+                        // Navigate main list items
+                        const currentMainListItems = mainScreen.querySelectorAll('list-item');
+                        if (currentMainIndex < currentMainListItems.length - 1) {
+                            updateMainFocus(currentMainIndex + 1);
+                        }
+                    }
+                } else if (key === 'o') {
+                    event.preventDefault();
+                    if (isReorderMode) {
+                        // Move item up in reorder mode
+                        moveItemUp();
+                    } else if (isBottomSheetOpen) {
+                        // Navigate bottom sheet items
+                        if (currentBottomIndex > 0) {
+                            updateBottomSheetFocus(currentBottomIndex - 1);
+                        }
+                    } else {
+                        // Navigate main list items
+                        const currentMainListItems = mainScreen.querySelectorAll('list-item');
+                        if (currentMainIndex > 0) {
+                            updateMainFocus(currentMainIndex - 1);
+                        }
+                    }
+                } else if (key === '2' || key === 'numpad2') {
+                    event.preventDefault();
+                    handleBackAction();
+                }
+            });
+
+            document.addEventListener('keyup', function(event) {
+                const key = event.key ? event.key.toLowerCase() : '';
+
+                if (isModeDetailOpen) {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
+                        event.preventDefault();
+                        closeModeDetailFlow();
+                    }
+                    return;
+                }
+
+                if (isSegmentedRangeOpen) {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
+                        event.preventDefault();
+                        closeSegmentedRangeFlow();
+                    }
+                    return;
+                }
+
+                if (isCustomCookOpen) {
+                    if (key === 'escape') {
+                        event.preventDefault();
+                        closeCustomCookFlow();
+                    }
+                    return;
+                }
+
+                if (isReorderFeedbackActive) {
+                    event.preventDefault();
+                    return;
+                }
+                
+                if (key === 'q' && qPressStart !== null) {
+                    event.preventDefault();
+                    const pressDuration = Date.now() - qPressStart;
+                    
+                    // Clear timers
+                    if (qPressTimer) {
+                        clearTimeout(qPressTimer);
+                        qPressTimer = null;
+                    }
+                    
+                    hidePressIndicator();
+                    
+                    // If released before 1.5 seconds, slide back down
+                    if (pressDuration < 1500) {
+                        hideBottomSheet();
+                        const selectedMode = cookingModes[currentMainIndex];
+                        if (selectedMode === 'Toast') {
+                            openSegmentedRangeFlow();
+                        } else if (selectedMode === 'Custom Cook') {
+                            openCustomCookFlow();
+                        } else if (selectedMode) {
+                            openModeDetailFlow(selectedMode);
+                        }
+                    } else {
+                        // If after 1.5 seconds, finish pulling up
+                        showBottomSheet();
+                    }
+                    
+                    qPressStart = null;
+                }
+            });
+
+            // Handle bottom sheet toggles
+            document.querySelectorAll('.bottom-sheet .toggle:not(.disabled)').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

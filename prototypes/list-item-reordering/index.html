@@ -34,6 +34,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            position: relative;
         }
 
         .screen-scroll {
@@ -46,6 +47,31 @@
 
         .screen-scroll::-webkit-scrollbar {
             display: none;
+        }
+
+        .scroll-scrim {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 70px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 5;
+        }
+
+        .scroll-scrim.visible {
+            opacity: 1;
+        }
+
+        .scroll-scrim.top {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+        }
+
+        .scroll-scrim.bottom {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
         list-item,
@@ -214,9 +240,11 @@
     <div class="outer-container">
         <div class="prototype-container">
             <div class="screen-container">
+                <div class="scroll-scrim top" id="topScrollScrim"></div>
                 <div class="screen-scroll" id="mainScreen">
                     <!-- List items populated dynamically -->
                 </div>
+                <div class="scroll-scrim bottom" id="bottomScrollScrim"></div>
             </div>
 
 
@@ -260,11 +288,6 @@
             </div>
         </div>
     </div>
-
-    <div class="instructions">
-        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
-    </div>
-
     <script type="module" src="../list-item/list-item-component.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -275,6 +298,8 @@
             const bottomSheetTitle = document.getElementById('bottomSheetTitle');
             const pressIndicator = document.getElementById('pressIndicator');
             const pressProgress = document.getElementById('pressProgress');
+            const topScrollScrim = document.getElementById('topScrollScrim');
+            const bottomScrollScrim = document.getElementById('bottomScrollScrim');
             
             let currentMainIndex = 0;
             let currentBottomIndex = 0;
@@ -303,6 +328,71 @@
                 'Custom Cook': 'mode-dial'
             };
 
+            function updateScrollScrims() {
+                if (!topScrollScrim || !bottomScrollScrim) {
+                    return;
+                }
+
+                if (!isReorderMode) {
+                    topScrollScrim.classList.remove('visible');
+                    bottomScrollScrim.classList.remove('visible');
+                    return;
+                }
+
+                const scrollableHeight = mainScreen.scrollHeight;
+                const visibleHeight = mainScreen.clientHeight;
+                const maxScrollTop = Math.max(scrollableHeight - visibleHeight, 0);
+                const scrollTop = mainScreen.scrollTop;
+
+                if (maxScrollTop <= 0) {
+                    topScrollScrim.classList.remove('visible');
+                    bottomScrollScrim.classList.remove('visible');
+                    return;
+                }
+
+                const hasContentAbove = scrollTop > 1;
+                const hasContentBelow = scrollTop < maxScrollTop - 1;
+
+                topScrollScrim.classList.toggle('visible', hasContentAbove);
+                bottomScrollScrim.classList.toggle('visible', hasContentBelow);
+            }
+
+            mainScreen.addEventListener('scroll', updateScrollScrims, { passive: true });
+
+            function scrollMainSelectionIntoView(item, behavior = 'smooth') {
+                if (!item) {
+                    return;
+                }
+
+                const container = mainScreen;
+                const containerHeight = container.clientHeight;
+
+                if (containerHeight <= 0) {
+                    return;
+                }
+
+                const itemOffsetTop = item.offsetTop;
+                const itemHeight = item.offsetHeight;
+                const itemCenter = itemOffsetTop + itemHeight / 2;
+                const anchor = containerHeight * 0.5;
+
+                let targetScrollTop = itemCenter - anchor;
+                const maxScrollTop = Math.max(container.scrollHeight - containerHeight, 0);
+
+                if (targetScrollTop < 0) {
+                    targetScrollTop = 0;
+                } else if (targetScrollTop > maxScrollTop) {
+                    targetScrollTop = maxScrollTop;
+                }
+
+                container.scrollTo({
+                    top: targetScrollTop,
+                    behavior,
+                });
+
+                requestAnimationFrame(updateScrollScrims);
+            }
+
             function updateMainFocus(newIndex) {
                 const currentMainListItems = mainScreen.querySelectorAll('list-item');
                 
@@ -314,10 +404,7 @@
                 
                 if (currentMainListItems[currentMainIndex]) {
                     currentMainListItems[currentMainIndex].state = 'focused';
-                    currentMainListItems[currentMainIndex].scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest'
-                    });
+                    scrollMainSelectionIntoView(currentMainListItems[currentMainIndex], 'smooth');
                 }
             }
 
@@ -405,6 +492,7 @@
                 
                 // Update state
                 isBottomSheetOpen = false;
+                requestAnimationFrame(updateScrollScrims);
             }
 
             function updateMainScreenForReorder() {               
@@ -419,6 +507,7 @@
                 });
                 
                 scrollReorderingItemIntoView('auto');
+                requestAnimationFrame(updateScrollScrims);
             }
 
             function moveItemUp() {
@@ -463,8 +552,17 @@
                 isReorderMode = false;
                 
                 // Refresh main screen back to normal mode
-                refreshMainScreen();
+                refreshMainScreen('smooth', true);
                 animateReorderFeedback();
+                requestAnimationFrame(updateScrollScrims);
+            }
+
+            function cancelReorder() {
+                isReorderMode = false;
+                reorderingIndex = currentMainIndex;
+                currentReorderModes = [];
+                refreshMainScreen('smooth', true);
+                requestAnimationFrame(updateScrollScrims);
             }
 
             function createListItemElement(mode, iconClass, state = 'default') {
@@ -498,9 +596,12 @@
                 });
                 
                 scrollReorderingItemIntoView(scrollBehavior);
+                requestAnimationFrame(updateScrollScrims);
             }
             
-            function refreshMainScreen() {
+            function refreshMainScreen(scrollBehavior = 'auto', preserveScroll = false) {
+                const previousScrollTop = preserveScroll ? mainScreen.scrollTop : null;
+
                 mainScreen.innerHTML = '';
                 
                 cookingModes.forEach((mode, index) => {
@@ -509,6 +610,18 @@
                     const listItem = createListItemElement(mode, iconClass, state);
                     mainScreen.appendChild(listItem);
                 });
+
+                if (preserveScroll && previousScrollTop !== null) {
+                    mainScreen.scrollTop = previousScrollTop;
+                }
+
+                const refreshedItems = mainScreen.querySelectorAll('list-item');
+                const focusedItem = refreshedItems[currentMainIndex];
+                if (focusedItem) {
+                    scrollMainSelectionIntoView(focusedItem, scrollBehavior);
+                } else {
+                    requestAnimationFrame(updateScrollScrims);
+                }
             }
 
             function scrollReorderingItemIntoView(behavior = 'auto') {
@@ -520,25 +633,10 @@
                 const targetItem = listItems[reorderingIndex];
                 
                 if (targetItem) {
-                    const container = mainScreen;
-                    const containerRect = container.getBoundingClientRect();
-                    const targetRect = targetItem.getBoundingClientRect();
-                    
-                    const offsetTop = targetRect.top - containerRect.top;
-                    const offsetBottom = targetRect.bottom - containerRect.bottom;
-                    
-                    if (offsetTop < 0) {
-                        container.scrollTo({
-                            top: container.scrollTop + offsetTop,
-                            behavior
-                        });
-                    } else if (offsetBottom > 0) {
-                        container.scrollTo({
-                            top: container.scrollTop + offsetBottom,
-                            behavior
-                        });
-                    }
+                    scrollMainSelectionIntoView(targetItem, behavior);
                 }
+
+                requestAnimationFrame(updateScrollScrims);
             }
 
             refreshMainScreen();
@@ -581,6 +679,27 @@
                     });
                     isReorderFeedbackActive = false;
                 }, { once: true });
+            }
+
+            function handleBackAction() {
+                if (isReorderFeedbackActive) {
+                    return;
+                }
+
+                if (isReorderMode) {
+                    cancelReorder();
+                    return;
+                }
+
+                if (isBottomSheetOpen || qPressStart !== null) {
+                    if (qPressTimer) {
+                        clearTimeout(qPressTimer);
+                        qPressTimer = null;
+                    }
+                    hidePressIndicator();
+                    hideBottomSheet();
+                    qPressStart = null;
+                }
             }
 
             document.addEventListener('keydown', function(event) {
@@ -652,6 +771,9 @@
                             updateMainFocus(currentMainIndex - 1);
                         }
                     }
+                } else if (event.key === '2' || event.key === 'Numpad2') {
+                    event.preventDefault();
+                    handleBackAction();
                 }
             });
 

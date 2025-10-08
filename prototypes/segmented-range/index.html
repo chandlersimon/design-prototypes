@@ -138,13 +138,11 @@
         </div>
     </div>
 
-
-    <div class="instructions">
-        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>R</strong> to restart
-    </div>
-
     <script type="module">
         import { SegmentRange } from '../../shared/components/segment-range.js';
+
+        const params = new URLSearchParams(window.location.search);
+        const isEmbedded = params.get('embedded') === '1';
 
         class SegmentRangeManager {
             constructor() {
@@ -311,6 +309,11 @@
         const debugToggle = document.getElementById('debugToggle');
         const debugPanel = document.getElementById('debugPanel');
 
+        if (isEmbedded) {
+            debugToggle.style.display = 'none';
+            debugPanel.style.display = 'none';
+        }
+
         const toggleDebug = () => {
             debugPanel.classList.toggle('open');
             debugToggle.textContent = debugPanel.classList.contains('open')
@@ -462,6 +465,15 @@
         }
 
         setupDebugControls();
+
+        if (isEmbedded) {
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    window.parent?.postMessage({ type: 'segmented-range-close' }, '*');
+                }
+            });
+        }
     </script>
 </body>
 </html>

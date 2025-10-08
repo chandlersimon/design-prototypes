@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="prototype:description" content="Interactive time and temperature selector with animated scaling and countdown functionality.">
     <title>circular-time-dial</title>
+    <script src="https://kit.fontawesome.com/8dfe425c81.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../../shared/prototype-shell.css">
     <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
     <style>
@@ -158,12 +159,13 @@
             margin: 2px 0 0 0;
             display: flex;
             justify-content: center;
+            align-items: center;
             transition: opacity 300ms ease;
         }
         
-        .rack-icon svg {
-            width: 33px;
-            height: 34px;
+        .rack-icon i {
+            font-size: 34px;
+            line-height: 1;
         }
         
         .rack-label {
@@ -423,11 +425,6 @@
         </div>
         
     </div>
-    
-    <div class="instructions">
-        Instructions: <strong>P</strong> to turn right • <strong>O</strong> to turn left • <strong>Q</strong> to press in • <strong>1</strong> to start • <strong>R</strong> to restart
-    </div>
-
     <script type="module">
         import CircularTimeDial from '../../shared/components/circular-time-dial.js';
 
