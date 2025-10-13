@@ -1,6 +1,52 @@
 const BASE_GRAY = '#434343';
 const DEFAULT_TEMP_TICK_COUNT = 72;
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const parseHexColor = (hex) => {
+    const normalized = typeof hex === 'string' ? hex.trim().replace('#', '') : '';
+    if (normalized.length !== 6) {
+        return { r: 0, g: 0, b: 0 };
+    }
+    const value = parseInt(normalized, 16);
+    return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255
+    };
+};
+
+const parseColorToRgb = (color) => {
+    if (typeof color !== 'string') {
+        return { r: 0, g: 0, b: 0 };
+    }
+
+    if (color.trim().startsWith('#')) {
+        return parseHexColor(color);
+    }
+
+    const match = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (match) {
+        return {
+            r: parseInt(match[1], 10),
+            g: parseInt(match[2], 10),
+            b: parseInt(match[3], 10)
+        };
+    }
+
+    return { r: 0, g: 0, b: 0 };
+};
+
+const lerpChannel = (start, end, t) => start + (end - start) * t;
+
+const lerpRgb = (start, end, t) => ({
+    r: lerpChannel(start.r, end.r, t),
+    g: lerpChannel(start.g, end.g, t),
+    b: lerpChannel(start.b, end.b, t)
+});
+
+const rgbToString = (rgb) => `rgb(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)})`;
+
 const ID_SUFFIXES = {
     dial: 'dial',
     tempDisplay: 'tempDisplay',
@@ -29,7 +75,8 @@ export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     flashCount: 3,
     globalTickMode: '72-continuous',
     trailMode: 'standard',
-    rapidModeThreshold: 30
+    rapidModeThreshold: 30,
+    colorMode: 'default'
 });
 
 export const createCircularTimeDialDebugSettings = (overrides = {}) => ({
@@ -416,9 +463,32 @@ class CircularTimeDial {
         }
     }
 
+    getColorPalette() {
+        const useRedTempPalette = this.debugSettings &&
+            this.debugSettings.colorMode === 'red-temp' &&
+            this.tempMode;
+
+        if (useRedTempPalette) {
+            return {
+                base: '#571004',
+                selected: '#FA4947',
+                trailStart: '#571004',
+                trailEnd: '#FA4947'
+            };
+        }
+
+        return {
+            base: BASE_GRAY,
+            selected: '#FA4947',
+            trailStart: BASE_GRAY,
+            trailEnd: '#ffffff'
+        };
+    }
+
     getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks) {
-        const start = 67;  // BASE_GRAY channel value
-        const end = 255;   // white
+        const palette = this.currentPalette || this.getColorPalette();
+        const highlightRgb = parseColorToRgb(palette.trailEnd);
+        const baseRgb = parseColorToRgb(palette.trailStart);
 
         // Calculate distance from current tick
         let distance;
@@ -441,12 +511,13 @@ class CircularTimeDial {
         // Show trail only within the active trail length
         if (distance > 0 && distance <= activeTrailLength) {
             const trailProgress = distance / this.maxTrailLength;
-            const intensity = Math.round(start + (end - start) * (1 - trailProgress));
-            return `rgb(${intensity}, ${intensity}, ${intensity})`;
+            const clampedProgress = clamp(trailProgress, 0, 1);
+            const color = lerpRgb(highlightRgb, baseRgb, clampedProgress);
+            return rgbToString(color);
         }
 
         // Default: no trail
-        return BASE_GRAY;
+        return palette.base;
     }
 
     getDebugElement(id) {
@@ -550,6 +621,16 @@ class CircularTimeDial {
                 this.render();
             });
         }
+
+        this.bindDebugControl({
+            elementId: 'colorModeSelect',
+            getValue: () => this.debugSettings.colorMode,
+            setValue: (value) => {
+                this.debugSettings.colorMode = value;
+                return this.debugSettings.colorMode;
+            },
+            render: true
+        });
 
         const trailModeSelect = this.getDebugElement('trailModeSelect');
         if (trailModeSelect) {
@@ -1058,6 +1139,9 @@ class CircularTimeDial {
         // Clear canvas
         this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0, 0, 320, 320);
+
+        // Cache palette for this frame based on current mode/settings
+        this.currentPalette = this.getColorPalette();
 
         if (this.cookingComplete) {
             this.renderCompletionMode();
@@ -1985,29 +2069,31 @@ class CircularTimeDial {
         const x2 = this.centerX + Math.cos(angle) * outerRadius;
         const y2 = this.centerY + Math.sin(angle) * outerRadius;
 
+        const palette = this.currentPalette || this.getColorPalette();
+
         // Use standard coloring system
         let strokeColor;
 
         // Handle animated trail mode first
         if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
             const trailColor = this.getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks);
-            strokeColor = isCurrent ? '#FA4947' : trailColor;
+            strokeColor = isCurrent ? palette.selected : trailColor;
         } else if (this.debugSettings.gradientColorMode === 'seamless') {
             // Seamless mode: apply gradient regardless of fill status or showAsGray
             if (isCurrent) {
-                strokeColor = '#FA4947';
+                strokeColor = palette.selected;
             } else {
                 strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
             }
         } else if (showAsGray) {
-            strokeColor = BASE_GRAY;
+            strokeColor = palette.base;
         } else if (this.debugSettings.gradientColorMode === 'standard') {
-            strokeColor = isFilled ? '#FA4947' : BASE_GRAY;
+            strokeColor = isFilled ? palette.selected : palette.base;
         } else {
             // Regular gradient mode: only apply to filled ticks
             strokeColor = isFilled
-                ? (isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode))
-                : BASE_GRAY;
+                ? (isCurrent ? palette.selected : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode))
+                : palette.base;
         }
 
         // Draw the tick
@@ -2025,8 +2111,13 @@ class CircularTimeDial {
     }
 
     getConicGradientColor(angle, currentTickIndex, totalTicks, mode = 'gradient') {
-        // If we don't have a valid current tick, fall back to plain white for that tick only
-        if (currentTickIndex < 0 || totalTicks <= 0) return 'rgb(255,255,255)';
+        const palette = this.currentPalette || this.getColorPalette();
+        const trailStartRgb = parseColorToRgb(palette.trailStart);
+        const trailEndRgb = parseColorToRgb(palette.trailEnd);
+
+        if (currentTickIndex < 0 || totalTicks <= 0) {
+            return rgbToString(trailEndRgb);
+        }
 
         // Normalize: 12 o'clock = 0, increases clockwise [0, 2π)
         let normalizedAngle = (angle + Math.PI / 2) % (2 * Math.PI);
@@ -2141,63 +2232,45 @@ class CircularTimeDial {
             }
 
             if (isInTrail) {
-                // Interpolate within the trail
-                const start = 67;  // BASE_GRAY channel value
-                const end = 255;   // white
+                const normalizedTrailProgress = clamp(trailProgress, 0, 1);
+                const normalColor = lerpRgb(trailStartRgb, trailEndRgb, normalizedTrailProgress);
+                const oppositeColor = lerpRgb(trailEndRgb, trailStartRgb, normalizedTrailProgress);
 
-                let r, g, b;
+                let blendedColor;
                 if (isAnimating && this.debugSettings.trailMode === 'stay') {
-                    // During animation, blend between gradient directions
-                    const normalValue = Math.round(start + (end - start) * trailProgress);
-                    const oppositeValue = Math.round(end - (end - start) * trailProgress);
-
                     if (currentTrailDirection === 'normal' && targetTrailDirection === 'opposite') {
-                        // Blend from normal to opposite
-                        r = Math.round(normalValue + (oppositeValue - normalValue) * animationProgress);
+                        blendedColor = lerpRgb(normalColor, oppositeColor, animationProgress);
                     } else if (currentTrailDirection === 'opposite' && targetTrailDirection === 'normal') {
-                        // Blend from opposite to normal  
-                        r = Math.round(oppositeValue + (normalValue - oppositeValue) * animationProgress);
+                        blendedColor = lerpRgb(oppositeColor, normalColor, animationProgress);
                     } else {
-                        r = shouldRenderOpposite ? oppositeValue : normalValue;
+                        blendedColor = shouldRenderOpposite ? oppositeColor : normalColor;
                     }
-                } else if (shouldRenderOpposite) {
-                    // Opposite trail: white next to current (start), fade to gray (end)
-                    r = Math.round(end - (end - start) * trailProgress);
                 } else {
-                    // Normal trail: gray at start, white near current (end)
-                    r = Math.round(start + (end - start) * trailProgress);
+                    blendedColor = shouldRenderOpposite ? oppositeColor : normalColor;
                 }
-                g = r;
-                b = r;
-                return `rgb(${r}, ${g}, ${b})`;
-            } else {
-                // Outside the trail: unaffected gray
-                return BASE_GRAY;
+
+                return rgbToString(blendedColor);
             }
+            // Outside the trail: unaffected base color
+            return palette.base;
         } else {
             // Original gradient mode logic
             // If current is exactly 12 o'clock, only that tick should be white; others unaffected gray.
             if (currentTickAngle === 0) {
                 // Only the tick at 12 o'clock should be white (current position).
-                return normalizedAngle === 0 ? 'rgb(255,255,255)' : BASE_GRAY;
+                return normalizedAngle === 0 ? rgbToString(trailEndRgb) : palette.base;
             }
 
             // If the tick's angle lies within the sweep [0, currentTickAngle] (clockwise),
-            // map it from BASE_GRAY (start at 12 o'clock) → white (end at current). Outside: unaffected BASE_GRAY.
+            // map it from the palette's trailStart (base) → trailEnd (highlight). Outside: unaffected base color.
             if (normalizedAngle <= currentTickAngle) {
-                const progress = normalizedAngle / currentTickAngle; // 0 → 1
-
-                // Interpolate from BASE_GRAY (#434343 → 67) to white (255)
-                const start = 67;           // #434343 channel value
-                const end = 255;            // white
-                const r = Math.round(start + (end - start) * progress);
-                const g = r;
-                const b = r;
-                return `rgb(${r}, ${g}, ${b})`;
+                const progress = clamp(normalizedAngle / currentTickAngle, 0, 1); // 0 → 1
+                const gradientColor = lerpRgb(trailStartRgb, trailEndRgb, progress);
+                return rgbToString(gradientColor);
             }
 
             // Outside the sweep (i.e., after the current tick): unaffected gray
-            return BASE_GRAY;
+            return palette.base;
         }
     }
 
@@ -2243,22 +2316,25 @@ class CircularTimeDial {
         const x2 = this.centerX + Math.cos(angle) * outerRadius;
         const y2 = this.centerY + Math.sin(angle) * outerRadius;
 
+        const palette = this.currentPalette || this.getColorPalette();
+        const selectedRgb = parseColorToRgb(palette.selected);
+
         // Determine color
         let strokeColor;
 
         // Handle animated trail mode first
         if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
             const trailColor = this.getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks);
-            strokeColor = isCurrent ? '#FA4947' : trailColor;
+            strokeColor = isCurrent ? palette.selected : trailColor;
         } else if (this.debugSettings.gradientColorMode === 'standard') {
             // Standard color mode
             if (isFilled) {
-                strokeColor = '#FA4947'; // Filled ticks are red
+                strokeColor = palette.selected; // Filled ticks use highlight color
             } else if (isNext && isPhaseB && this.debugSettings.tickMode === 'hourly') {
                 // Next tick in hourly mode cycles through opacity based on progress
-                // Starts grey, then progressively becomes red
+                // Starts base, then progressively becomes selected color
                 if (progress === 0) {
-                    strokeColor = BASE_GRAY; // Grey when exactly on the hour
+                    strokeColor = palette.base; // Base color when exactly on the hour
                 } else {
                     // Map progress to 25%, 50%, 75%, 100% opacity at quarter intervals
                     let opacity;
@@ -2273,29 +2349,26 @@ class CircularTimeDial {
                     }
 
                     // Create rgba color with calculated opacity
-                    const red = 255;
-                    const green = 0;
-                    const blue = 0;
-                    strokeColor = `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+                    strokeColor = `rgba(${selectedRgb.r}, ${selectedRgb.g}, ${selectedRgb.b}, ${opacity})`;
                 }
             } else {
-                strokeColor = BASE_GRAY; // Unfilled ticks are gray
+                strokeColor = palette.base; // Unfilled ticks use base color
             }
         } else {
-            // Gradient color modes: current = red, others use conic gradient
+            // Gradient color modes: current = selected, others use conic gradient
             if (this.debugSettings.gradientColorMode === 'seamless') {
                 // Seamless mode: apply gradient regardless of fill status
                 if (isCurrent) {
-                    strokeColor = '#FA4947';
+                    strokeColor = palette.selected;
                 } else {
                     strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
                 }
             } else {
                 // Regular gradient mode: only apply to filled ticks
                 if (isFilled) {
-                    strokeColor = isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                    strokeColor = isCurrent ? palette.selected : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
                 } else {
-                    strokeColor = BASE_GRAY;
+                    strokeColor = palette.base;
                 }
             }
         }

@@ -395,7 +395,7 @@
                         
                         <list-item class="list-item" state="focused" data-action="toggle-visibility">
                             <span slot="label">Hide</span>
-                            <div slot="trailing" class="toggle"></div>
+                            <toggle-switch slot="trailing"></toggle-switch>
                         </list-item>
 
                         <list-item class="list-item" data-action="reorganize">
@@ -458,6 +458,7 @@
     <script type="module">
         import { SegmentRange } from '../../shared/components/segment-range.js';
         import CircularTimeDial from '../../shared/components/circular-time-dial.js';
+        import '../../shared/components/toggle-switch.js';
 
         document.addEventListener('DOMContentLoaded', function() {
             const mainScreen = document.getElementById('mainScreen');
@@ -482,6 +483,8 @@
             const modeDetailIcon = document.getElementById('modeDetailIcon');
             const modeDetailDialHost = document.getElementById('modeDetailDial');
             const modeDetailDialWrapper = document.getElementById('modeDetailDialWrapper');
+            const hideListItem = bottomSheet?.querySelector('list-item[data-action="toggle-visibility"]');
+            const hideToggle = hideListItem?.querySelector('toggle-switch');
             
             let currentMainIndex = 0;
             let currentBottomIndex = 0;
@@ -1392,9 +1395,21 @@
                         // Confirm reorder and return to main screen
                         confirmReorder();
                     } else if (isBottomSheetOpen) {
-                        // Check if we're on the Reorganize item
-                        if (reorganizeItemIndex !== -1 && currentBottomIndex === reorganizeItemIndex) {
+                        const focusedItem = bottomSheetItems[currentBottomIndex];
+                        if (!focusedItem) {
+                            return;
+                        }
+
+                        const action = focusedItem.dataset.action;
+                        if (action === 'toggle-visibility') {
+                            const toggle = focusedItem.querySelector('toggle-switch');
+                            toggle?.toggle();
+                            return;
+                        }
+
+                        if (action === 'reorganize') {
                             showReorderScreen();
+                            return;
                         }
                     } else if (qPressStart === null) {
                         qPressStart = Date.now();
@@ -1518,12 +1533,19 @@
                 }
             });
 
-            // Handle bottom sheet toggles
-            document.querySelectorAll('.bottom-sheet .toggle:not(.disabled)').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    this.classList.toggle('active');
+            if (hideListItem && hideToggle) {
+                const isToggleEvent = (event) => {
+                    if (event.composedPath) {
+                        return event.composedPath().some((node) => node?.tagName === 'TOGGLE-SWITCH');
+                    }
+                    return event.target?.closest?.('toggle-switch');
+                };
+
+                hideListItem.addEventListener('click', (event) => {
+                    if (isToggleEvent(event)) return;
+                    hideToggle.toggle();
                 });
-            });
+            }
         });
     </script>
 </body>

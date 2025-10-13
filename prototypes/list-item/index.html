@@ -74,6 +74,7 @@
     </div>
     <script type="module">
         import './list-item-component.js';
+        import '../../shared/components/toggle-switch.js';
 
         const DEFAULT_LABEL = 'List item';
 
@@ -88,11 +89,32 @@
             return wrapper;
         };
 
-        const createToggle = ({ disabled = false } = {}) => {
-            const toggle = document.createElement('div');
-            toggle.classList.add('toggle');
-            toggle.classList.add(disabled ? 'disabled' : 'active');
+        const createToggle = ({ disabled = false, checked } = {}) => {
+            const toggle = document.createElement('toggle-switch');
+            const isDisabled = Boolean(disabled);
+            const shouldBeChecked = typeof checked === 'boolean' ? checked : !isDisabled;
+            toggle.checked = shouldBeChecked;
+            if (isDisabled) {
+                toggle.disabled = true;
+            }
             return toggle;
+        };
+
+        const attachToggleInteraction = (item) => {
+            const toggle = item.querySelector('toggle-switch');
+            if (!toggle) return;
+
+            const isToggleEvent = (event) => {
+                if (event.composedPath) {
+                    return event.composedPath().some((node) => node?.tagName === 'TOGGLE-SWITCH');
+                }
+                return event.target?.closest?.('toggle-switch');
+            };
+
+            item.addEventListener('click', (event) => {
+                if (isToggleEvent(event)) return;
+                toggle.toggle();
+            });
         };
 
         const createRadio = () => {
@@ -317,6 +339,7 @@
                 appendWithSlot(item, node, 'trailing');
             });
 
+            attachToggleInteraction(item);
             return item;
         };
 
@@ -336,14 +359,6 @@
             });
         };
 
-        const setupToggleInteractions = () => {
-            document.querySelectorAll('.toggle:not(.disabled)').forEach((toggle) => {
-                toggle.addEventListener('click', () => {
-                    toggle.classList.toggle('active');
-                });
-            });
-        };
-
         const setupRadioInteractions = () => {
             document.querySelectorAll('.radio').forEach((radio) => {
                 radio.addEventListener('click', () => {
@@ -357,7 +372,6 @@
         };
 
         populateColumns();
-        setupToggleInteractions();
         setupRadioInteractions();
     </script>
 </body>
