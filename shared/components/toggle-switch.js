@@ -57,9 +57,9 @@ TEMPLATE.innerHTML = `
       box-shadow: none;
     }
 
+    button:focus,
     button:focus-visible {
-      outline: var(--toggle-focus-outline, 2px solid rgba(255, 255, 255, 0.75));
-      outline-offset: var(--toggle-focus-outline-offset, 2px);
+      outline: none;
     }
   </style>
   <button type="button" role="switch" aria-checked="false">

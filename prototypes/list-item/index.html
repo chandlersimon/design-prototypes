@@ -106,14 +106,20 @@
 
             const isToggleEvent = (event) => {
                 if (event.composedPath) {
-                    return event.composedPath().some((node) => node?.tagName === 'TOGGLE-SWITCH');
+                    const path = event.composedPath();
+                    return Array.isArray(path) && path.some((node) => node && node.tagName === 'TOGGLE-SWITCH');
                 }
-                return event.target?.closest?.('toggle-switch');
+                if (event.target && typeof event.target.closest === 'function') {
+                    return Boolean(event.target.closest('toggle-switch'));
+                }
+                return false;
             };
 
             item.addEventListener('click', (event) => {
                 if (isToggleEvent(event)) return;
-                toggle.toggle();
+                if (typeof toggle.toggle === 'function') {
+                    toggle.toggle();
+                }
             });
         };
 
@@ -322,11 +328,13 @@
                 if (cls) item.classList.add(cls);
             });
 
-            ensureArray(variant.leading?.(state)).forEach((node) => {
+            const leadingNodes = typeof variant.leading === 'function' ? variant.leading(state) : null;
+            ensureArray(leadingNodes).forEach((node) => {
                 appendWithSlot(item, node, 'leading');
             });
 
-            const labelNodes = ensureArray(variant.buildLabel?.(state));
+            const labelNodesRaw = typeof variant.buildLabel === 'function' ? variant.buildLabel(state) : null;
+            const labelNodes = ensureArray(labelNodesRaw);
             if (labelNodes.length > 0) {
                 labelNodes.forEach((node) => appendWithSlot(item, node, 'label'));
             } else {
@@ -335,7 +343,8 @@
                 appendWithSlot(item, label, 'label');
             }
 
-            ensureArray(variant.trailing?.(state)).forEach((node) => {
+            const trailingNodes = typeof variant.trailing === 'function' ? variant.trailing(state) : null;
+            ensureArray(trailingNodes).forEach((node) => {
                 appendWithSlot(item, node, 'trailing');
             });
 

@@ -301,8 +301,8 @@
             const pressProgress = document.getElementById('pressProgress');
             const topScrollScrim = document.getElementById('topScrollScrim');
             const bottomScrollScrim = document.getElementById('bottomScrollScrim');
-            const hideListItem = bottomSheet?.querySelector('list-item[data-action="toggle-visibility"]');
-            const hideToggle = hideListItem?.querySelector('toggle-switch');
+            const hideListItem = bottomSheet ? bottomSheet.querySelector('list-item[data-action="toggle-visibility"]') : null;
+            const hideToggle = hideListItem ? hideListItem.querySelector('toggle-switch') : null;
             
             let currentMainIndex = 0;
             let currentBottomIndex = 0;
@@ -726,7 +726,9 @@
                         const action = focusedItem.dataset.action;
                         if (action === 'toggle-visibility') {
                             const toggle = focusedItem.querySelector('toggle-switch');
-                            toggle?.toggle();
+                            if (toggle && typeof toggle.toggle === 'function') {
+                                toggle.toggle();
+                            }
                             return;
                         }
 
@@ -825,14 +827,20 @@
             if (hideListItem && hideToggle) {
                 const isToggleEvent = (event) => {
                     if (event.composedPath) {
-                        return event.composedPath().some((node) => node?.tagName === 'TOGGLE-SWITCH');
+                        const path = event.composedPath();
+                        return Array.isArray(path) && path.some((node) => node && node.tagName === 'TOGGLE-SWITCH');
                     }
-                    return event.target?.closest?.('toggle-switch');
+                    if (event.target && typeof event.target.closest === 'function') {
+                        return Boolean(event.target.closest('toggle-switch'));
+                    }
+                    return false;
                 };
 
                 hideListItem.addEventListener('click', (event) => {
                     if (isToggleEvent(event)) return;
-                    hideToggle.toggle();
+                    if (hideToggle && typeof hideToggle.toggle === 'function') {
+                        hideToggle.toggle();
+                    }
                 });
             }
 

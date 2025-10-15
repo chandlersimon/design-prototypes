@@ -81,9 +81,9 @@
   cursor: pointer;
 }
 
+.heat-slider__heatbar:focus,
 .heat-slider__heatbar:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
-  outline-offset: 4px;
+  outline: none;
 }
 
 .heat-slider__overlay {
@@ -136,8 +136,9 @@
   background: #fa4947;
 }
 
+.heat-slider--off .heat-slider__heatbar:focus,
 .heat-slider--off .heat-slider__heatbar:focus-visible {
-  outline-color: rgba(250, 73, 71, 0.6);
+  outline: none;
 }
 
 .heat-slider--dragging .heat-slider__heatbar {

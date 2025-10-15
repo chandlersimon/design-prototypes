@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../../shared/components/list-item.css">
     <link rel="stylesheet" href="../../shared/components/segment-range.css">
     <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
+    <link rel="stylesheet" href="../../shared/components/heat-slider.css">
     <style>
         body {
             margin: 0;
@@ -23,6 +24,11 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
+        }
+
+        :focus,
+        :focus-visible {
+            outline: none;
         }
 
         .prototype-container {
@@ -46,7 +52,7 @@
 
         #segmentedRangeContainer {
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             --background-dark: #000;
             --text-tertiary: #979797;
             --text-primary: #fff;
@@ -59,6 +65,10 @@
             --segment-range-color-easing: ease;
             --segment-range-minimized-height: 13px;
             --segment-range-normal-height: 51px;
+        }
+
+        #segmentedRangeContainer .mode-detail-content {
+            gap: 24px;
         }
 
         #segmentedRangeContent {
@@ -76,16 +86,79 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            border-radius: 12px;
-            overflow: hidden;
+            align-items: center;
         }
 
-        .custom-cook-frame {
-            flex: 1;
-            border: 0;
+        .custom-cook-content {
             width: 100%;
-            height: 100%;
-            background: black;
+            max-width: 640px;
+            flex: 1;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .custom-cook-body {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            padding: 0 32px 32px;
+        }
+
+        .custom-cook-dial-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #customCookDialHost {
+            width: 320px;
+            height: 320px;
+            position: relative;
+            transition: transform 300ms ease, filter 300ms ease;
+        }
+
+        #customCookDialHost.custom-cook-mode {
+            filter: grayscale(1);
+        }
+
+        #customCookDialHost.custom-cook-mode.scale-none {
+            transform: scale(1);
+        }
+
+        #customCookDialHost.custom-cook-mode.scale-0-9 {
+            transform: scale(0.9);
+        }
+
+        #customCookDialHost.custom-cook-mode.scale-0-8 {
+            transform: scale(0.8);
+        }
+
+        #customCookDialHost.custom-cook-mode.scale-0-7 {
+            transform: scale(0.7);
+        }
+
+        #customCookDialHost.custom-cook-mode.scale-0-6 {
+            transform: scale(0.6);
+        }
+
+        .custom-cook-heat-slider-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        #customCookHeatSlider {
+            width: 272px;
+        }
+
+        .custom-cook-heat-slider-container .heat-slider {
+            width: 100%;
         }
 
         .screen-container {
@@ -282,14 +355,13 @@
         .mode-detail-container {
             display: flex;
             align-items: center;
-            justify-content: center;
         }
 
         .mode-detail-content {
             width: 100%;
             max-width: 520px;
             margin: 0 auto;
-            padding: 48px 32px 32px;
+            padding: 0;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -428,8 +500,19 @@
                 </div>
             </div>
 
-            <div class="flow-view" id="segmentedRangeContainer" hidden aria-hidden="true" tabindex="-1">
-                <div id="segmentedRangeContent"></div>
+            <div class="flow-view mode-detail-container" id="segmentedRangeContainer" hidden aria-hidden="true" tabindex="-1">
+                <div class="mode-detail-content segmented-range-content-wrapper">
+                    <div class="mode-detail-header">
+                        <div class="mode-detail-heading text-base" id="segmentedRangeHeading">
+                            <span class="mode-detail-icon" id="segmentedRangeIcon" aria-hidden="true">
+                                <i class="fa-mode-toast fa-kit"></i>
+                            </span>
+                            <h1 class="mode-detail-title text-base-lv2" id="segmentedRangeTitle">Toast</h1>
+                        </div>
+                        <p class="mode-detail-subtitle" id="segmentedRangeSubtitle" hidden></p>
+                    </div>
+                    <div id="segmentedRangeContent"></div>
+                </div>
             </div>
 
             <div class="flow-view mode-detail-container" id="modeDetailContainer" hidden aria-hidden="true" tabindex="-1">
@@ -450,15 +533,1806 @@
             </div>
 
             <div class="flow-view custom-cook-container" id="customCookContainer" hidden aria-hidden="true" tabindex="-1">
-                <iframe class="custom-cook-frame" id="customCookFrame" title="Custom Cook Flow" loading="lazy"></iframe>
+                <div class="mode-detail-content custom-cook-content">
+                    <div class="mode-detail-header">
+                        <div class="mode-detail-heading text-base" id="customCookHeading">
+                            <span class="mode-detail-icon" id="customCookIcon" aria-hidden="true">
+                                <i class="fa-mode-dial fa-kit"></i>
+                            </span>
+                            <h1 class="mode-detail-title text-base-lv2" id="customCookTitle">Custom Cook</h1>
+                        </div>
+                        <p class="mode-detail-subtitle" id="customCookSubtitle" hidden></p>
+                    </div>
+                    <div class="custom-cook-body">
+                        <div class="custom-cook-dial-wrapper">
+                            <div id="customCookDialHost" tabindex="-1"></div>
+                        </div>
+                        <div class="custom-cook-heat-slider-container" id="customCookHeatSliderContainer">
+                            <div id="customCookHeatSlider"></div>
+                        </div>
+                    </div>
+                    <button class="debug-toggle" id="customCookDebugToggle" type="button">Open animation controls</button>
+                    <div class="debug-panel" id="customCookDebugPanel">
+                        <h3>Debug Controls</h3>
+
+                        <div class="debug-control">
+                            <label for="globalTickModeSelect">Global Tick Mode:</label>
+                            <select id="globalTickModeSelect">
+                                <option value="default">Default (Original tick counts)</option>
+                                <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
+                                <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control">
+                            <label for="customCookScaleSelect">Custom-Cook Scale Mode:</label>
+                            <select id="customCookScaleSelect">
+                                <option value="none">None (no scaling)</option>
+                                <option value="0.9" selected>0.9x Scale</option>
+                                <option value="0.8">0.8x Scale</option>
+                                <option value="0.7">0.7x Scale</option>
+                                <option value="0.6">0.6x Scale</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control">
+                            <label for="rapidModeThreshold">Rapid Mode Threshold:</label>
+                            <input type="number" id="rapidModeThreshold" min="1" max="120" step="1" value="30" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+                            <div class="debug-value" id="rapidModeThresholdValue">30 presses</div>
+                        </div>
+
+                        <div class="debug-control">
+                            <label for="enableScalingSelect">Enable Tick Scaling:</label>
+                            <select id="enableScalingSelect">
+                                <option value="false" selected>Disabled</option>
+                                <option value="true">Enabled</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="currentLength">Current Tick Length:</label>
+                            <input type="range" id="currentLength" min="1.5" max="4" step="0.1" value="2.0">
+                            <div class="debug-value" id="currentLengthValue">2.0x</div>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="adjacentFalloff">Adjacent Falloff %:</label>
+                            <input type="range" id="adjacentFalloff" min="10" max="50" step="5" value="25">
+                            <div class="debug-value" id="adjacentFalloffValue">25%</div>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="radiusPercent">Affected Radius %:</label>
+                            <input type="range" id="radiusPercent" min="5" max="20" step="1" value="10">
+                            <div class="debug-value" id="radiusPercentValue">10%</div>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="autoResetSelect">Auto Reset Scaling:</label>
+                            <select id="autoResetSelect">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="resetDelay">Reset Delay (seconds):</label>
+                            <input type="number" id="resetDelay" min="0.5" max="10" step="0.05" value="0.45" style="width: 100%; padding: 4px; background: #555; color: white; border: 1px solid #666; border-radius: 3px;">
+                            <div class="debug-value" id="resetDelayValue">0.45s</div>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="alignmentSelect">Tick Alignment:</label>
+                            <select id="alignmentSelect">
+                                <option value="center">Centered</option>
+                                <option value="inward" selected>Inward</option>
+                                <option value="outward">Outward</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control scaling-control">
+                            <label for="curveSelect">Falloff Curve:</label>
+                            <select id="curveSelect">
+                                <option value="easeIn">Ease In</option>
+                                <option value="linear">Linear</option>
+                                <option value="easeOut">Ease Out</option>
+                                <option value="sine">Sine Wave</option>
+                                <option value="exponential" selected>Exponential</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <script type="module" src="../list-item/list-item-component.js"></script>
     <script type="module">
         import { SegmentRange } from '../../shared/components/segment-range.js';
-        import CircularTimeDial from '../../shared/components/circular-time-dial.js';
+        import CircularTimeDial, { BASE_GRAY, createCircularTimeDialDebugSettings } from '../../shared/components/circular-time-dial.js';
+        import { HeatSlider } from '../../shared/components/heat-slider.js';
         import '../../shared/components/toggle-switch.js';
+
+        const TEMP_TICK_COUNT = 72;
+
+        
+        class CustomCookCircularTimeDial extends CircularTimeDial {
+            constructor() {
+                const dialHost = document.getElementById('customCookDialHost');
+                if (!dialHost) {
+                    throw new Error('Custom cook dial host not found');
+                }
+
+                super(dialHost, {
+                    idPrefix: 'custom-cook',
+                    useExistingMarkup: false,
+                    autoBindKeys: false,
+                    initialMode: 'time',
+                    debugRoot: document.getElementById('customCookDebugPanel'),
+                    debugSettings: createCircularTimeDialDebugSettings({
+                        customCookScaleMode: '0.9'
+                    })
+                });
+
+                this.heatSliderContainer = document.getElementById('customCookHeatSliderContainer');
+                this.heatSliderElement = document.getElementById('customCookHeatSlider');
+                this.container = dialHost;
+                this.cookingStatus = document.getElementById('custom-cook-cookingStatus');
+
+                this.modeSequence = [1, 0, 2, 0, 1];
+                this.modeLoopStartIndex = 2; // Loop back to heat after index 4
+                this.modeIndex = 0; // Start at time
+                this.currentMode = this.modeSequence[this.modeIndex];
+                this.dialModeBeforeHeat = this.currentMode;
+
+                this.heatDistribution = 75;
+
+                // Create heat slider
+                this.heatSlider = new HeatSlider(this.heatSliderElement, {
+                    initialPosition: this.heatDistribution,
+                    showTitle: true,
+                    titleText: 'HEAT DISTRIBUTION',
+                    enableShortcuts: false,
+                    stepMode: 'preset',
+                    onChange: ({ topPct }) => {
+                        this.heatDistribution = topPct;
+                    }
+                });
+                this.setHeatSliderEnabled(false);
+
+                const customCookScaleSelect = this.getDebugElement('customCookScaleSelect');
+                if (customCookScaleSelect) {
+                    customCookScaleSelect.value = this.debugSettings.customCookScaleMode;
+                    customCookScaleSelect.addEventListener('change', (e) => {
+                        this.debugSettings.customCookScaleMode = e.target.value;
+                        this.updateModeVisuals();
+                    });
+                }
+
+                this.setHeatDistribution(75);
+
+                // Set initial state
+                this.updateModeVisuals();
+                this.render();
+            }
+            ensureStatusElements() {
+                if (!this.cookingStatus) {
+                    this.cookingStatus = document.getElementById('custom-cook-cookingStatus');
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.display = 'none';
+                        this.cookingStatus.textContent = '';
+                    }
+                }
+            }
+
+            // Heat slider functionality
+            clamp01(v) {
+                return Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+            }
+            
+            getHeatDistribution() {
+                if (this.heatSlider) {
+                    return this.heatSlider.getPosition();
+                }
+                return this.heatDistribution;
+            }
+            
+            setHeatDistribution(v) {
+                const topPct = this.clamp01(v);
+                if (this.heatSlider) {
+                    this.heatSlider.setPosition(topPct);
+                }
+                this.heatDistribution = topPct;
+            }
+            
+
+            adjustHeatDistribution(delta) {
+                if (this.currentMode !== 2) return; // Only work in heat mode
+                
+                const current = this.getHeatDistribution();
+                const presets = [0, 25, 50, 75, 100];
+                const currentIndex = presets.findIndex(preset => Math.abs(preset - current) <= 2);
+                
+                let newIndex;
+                if (currentIndex === -1) {
+                    // Not on a preset, find closest
+                    newIndex = delta < 0 
+                        ? presets.findIndex(preset => preset >= current) - 1
+                        : presets.findIndex(preset => preset > current);
+                } else {
+                    newIndex = currentIndex + (delta < 0 ? -1 : 1);
+                }
+                
+                if (newIndex >= 0 && newIndex < presets.length) {
+                    this.setHeatDistribution(presets[newIndex]);
+                }
+            }
+            
+            setupEventListeners() {
+                // Key handling is coordinated by the hosting flow.
+            }
+
+            increaseValue() {
+                if (this.countdownMode) return;
+                
+                if (this.tempMode) {
+                    if (this.temperature >= this.maxTemp) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Reset flash boundary flag when moving away from boundary
+                    this.hasFlashedAtBoundary = false;
+                    
+                    this.lastActionTime = Date.now();
+                    if (!this.scalingActive) {
+                        this.startScalingAnimation(true);
+                    }
+                    this.scalingActive = true;
+                    
+                    // Always increment by 5°F regardless of tick count
+                    this.temperature = Math.min(this.temperature + 5, this.maxTemp);
+                } else {
+                    this.increaseTime();
+                }
+                this.render();
+            }
+            
+            decreaseValue() {
+                if (this.countdownMode) return;
+                
+                if (this.tempMode) {
+                    if (this.temperature <= this.minTemp) {
+                        // Only trigger flash once per boundary hit
+                        if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                            this.startFlashAnimation();
+                            this.hasFlashedAtBoundary = true;
+                        }
+                        return;
+                    }
+                    
+                    // Reset flash boundary flag when moving away from boundary
+                    this.hasFlashedAtBoundary = false;
+                    
+                    this.lastActionTime = Date.now();
+                    if (!this.scalingActive) {
+                        this.startScalingAnimation(true);
+                    }
+                    this.scalingActive = true;
+                    
+                    // Always decrement by 5°F regardless of tick count
+                    this.temperature = Math.max(this.temperature - 5, this.minTemp);
+                } else {
+                    this.decreaseTime();
+                }
+                this.render();
+            }
+            
+            
+            toggleMode() {
+                if (this.countdownMode) return;
+
+                const previousMode = this.currentMode;
+
+                if (this.currentMode === 2) {
+                    const dialReturnMode = this.dialModeBeforeHeat ?? 1;
+                    this.currentMode = dialReturnMode;
+
+                    if (dialReturnMode === 0) {
+                        this.modeIndex = 3;
+                    } else {
+                        this.modeIndex = 0;
+                    }
+                } else {
+                    if (this.modeIndex >= this.modeSequence.length - 1) {
+                        this.modeIndex = this.modeLoopStartIndex;
+                    } else {
+                        this.modeIndex += 1;
+                    }
+
+                    this.currentMode = this.modeSequence[this.modeIndex];
+
+                    if (this.currentMode === 2 && previousMode !== 2) {
+                        this.dialModeBeforeHeat = previousMode;
+                    }
+                }
+
+                this.updateModeVisuals();
+                this.render();
+            }
+
+            updateModeVisuals() {
+                // Clear dial classes
+                this.container.classList.remove('custom-cook-mode', 'scale-none', 'scale-0-9', 'scale-0-8', 'scale-0-7', 'scale-0-6');
+
+                if (this.currentMode === 2) {
+                    // Heat mode: scale and greyscale the dial
+                    this.container.classList.add('custom-cook-mode');
+                    const scaleMode = this.debugSettings.customCookScaleMode || '0.9';
+                    if (scaleMode !== 'none') {
+                        this.container.classList.add('scale-' + scaleMode.replace('.', '-'));
+                    } else {
+                        this.container.classList.add('scale-none');
+                    }
+
+                    // Activate heat slider
+                    this.setHeatSliderEnabled(true);
+
+                    // Mirror the previously active dial mode while the slider is open
+                    const dialMode = this.dialModeBeforeHeat ?? 1;
+                    this.tempMode = (dialMode === 0);
+                } else {
+                    // Dial mode (time or temp): deactivate heat slider
+                    this.setHeatSliderEnabled(false);
+
+                    // Set tempMode based on current dial mode
+                    this.tempMode = (this.currentMode === 0);
+
+                    // Remember the current dial mode so heat mode can reflect it
+                    this.dialModeBeforeHeat = this.currentMode;
+                }
+            }
+            
+            setHeatSliderEnabled(isEnabled) {
+                if (!this.heatSlider) {
+                    return;
+                }
+
+                const isCurrentlyOn = typeof this.heatSlider.isOn === 'function'
+                    ? this.heatSlider.isOn()
+                    : false;
+
+                if (isCurrentlyOn !== isEnabled && typeof this.heatSlider.toggle === 'function') {
+                    this.heatSlider.toggle(isEnabled);
+                }
+
+            }
+            
+            startCooking() {
+                if (this.countdownMode) return;
+                this.startRingFillAnimation();
+            }
+            
+            startScalingAnimation(toActive) {
+                this.animationStartTime = Date.now();
+                this.animatingToState = toActive ? 'active' : 'inactive';
+                this.animateTransition();
+            }
+            
+            startFlashAnimation() {
+                this.isFlashing = true;
+                this.flashStartTime = Date.now();
+                this.flashCount = 0;
+                this.flashVisible = true;
+                this.animateFlash();
+            }
+            
+            animateFlash() {
+                if (!this.isFlashing) return;
+                
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.flashStartTime;
+                const flashDuration = this.debugSettings.flashDuration; // ms per flash (on/off cycle)
+                const totalFlashes = this.debugSettings.flashCount;
+                
+                // Calculate current flash cycle
+                const flashCycle = Math.floor(elapsed / flashDuration);
+                
+                if (flashCycle >= totalFlashes * 2) {
+                    // Animation complete
+                    this.isFlashing = false;
+                    this.flashVisible = true;
+                    this.render();
+                    return;
+                }
+                
+                // Toggle visibility every flash duration
+                this.flashVisible = (flashCycle % 2 === 0);
+                this.render();
+                
+                requestAnimationFrame(() => this.animateFlash());
+            }
+            
+            animateTransition() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.animationStartTime;
+                const progress = Math.min(elapsed / this.animationDuration, 1);
+                
+                // Ease function
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                this.animationProgress = easeProgress;
+                this.render();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => this.animateTransition());
+                } else {
+                    this.animationStartTime = null;
+                    this.animatingToState = null;
+                    this.animationProgress = null;
+                }
+            }
+            
+            startTrailDirectionAnimation(targetDirection) {
+                // Don't start animation if already at target
+                if (this.trailDirection === targetDirection) return;
+                
+                // Don't start animation if at or near boundaries (to prevent glitches)
+                const trailThreshold = 0.2; // 20% threshold for trail interference
+                
+                if (this.tempMode) {
+                    const tempRange = this.maxTemp - this.minTemp;
+                    const tempThresholdRange = tempRange * trailThreshold;
+                    const nearMinTemp = this.temperature <= (this.minTemp + tempThresholdRange);
+                    const nearMaxTemp = this.temperature >= (this.maxTemp - tempThresholdRange);
+                    
+                    if (nearMinTemp || nearMaxTemp) {
+                        // Near boundary - just set direction immediately without animation
+                        this.trailDirection = targetDirection;
+                        this.trailDirectionTarget = targetDirection;
+                        this.render();
+                        return;
+                    }
+                } else {
+                    // For time mode, check both phase A and B boundaries
+                    if (this.totalMinutes <= 60) {
+                        // Phase A: check if near 1 minute or 60 minutes
+                        const phaseARange = 59; // 1 to 60 minutes
+                        const timeThresholdRange = phaseARange * trailThreshold;
+                        const nearMinTime = this.totalMinutes <= (1 + timeThresholdRange);
+                        const nearPhaseTransition = this.totalMinutes >= (60 - timeThresholdRange);
+                        
+                        if (nearMinTime || nearPhaseTransition) {
+                            this.trailDirection = targetDirection;
+                            this.trailDirectionTarget = targetDirection;
+                            this.render();
+                            return;
+                        }
+                    } else {
+                        // Phase B: check if near phase transition or max time
+                        const phaseBRange = this.maxMinutes - 60;
+                        const timeThresholdRange = phaseBRange * trailThreshold;
+                        const nearPhaseTransition = this.totalMinutes <= (60 + timeThresholdRange);
+                        const nearMaxTime = this.totalMinutes >= (this.maxMinutes - timeThresholdRange);
+                        
+                        if (nearPhaseTransition || nearMaxTime) {
+                            this.trailDirection = targetDirection;
+                            this.trailDirectionTarget = targetDirection;
+                            this.render();
+                            return;
+                        }
+                    }
+                }
+                
+                this.trailDirectionTarget = targetDirection;
+                this.trailDirectionAnimationStart = Date.now();
+                this.animateTrailDirection();
+            }
+            
+            animateTrailDirection() {
+                if (!this.trailDirectionAnimationStart) return;
+                
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.trailDirectionAnimationStart;
+                const progress = Math.min(elapsed / this.trailDirectionAnimationDuration, 1);
+                
+                // Ease function for smooth transition
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                this.render();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => this.animateTrailDirection());
+                } else {
+                    // Animation complete - set final direction
+                    this.trailDirection = this.trailDirectionTarget;
+                    this.trailDirectionAnimationStart = null;
+                    this.render();
+                }
+            }
+            
+            startUpdateLoop() {
+                setInterval(() => {
+                    if (!this.debugSettings.autoReset) return;
+                    
+                    const timeSinceLastAction = Date.now() - this.lastActionTime;
+                    const wasScalingActive = this.scalingActive;
+                    
+                    if (timeSinceLastAction > (this.debugSettings.resetDelay * 1000)) {
+                        if (this.scalingActive) {
+                            this.startScalingAnimation(false);
+                        }
+                        this.scalingActive = false;
+                    }
+                }, 100); // Check every 100ms
+                
+                // Countdown update loop
+                setInterval(() => {
+                    if (this.countdownMode) {
+                        this.updateCountdown();
+                    }
+                }, 100); // Update countdown every 100ms
+                
+                // Preheat flash loop
+                setInterval(() => {
+                    if (this.countdownMode && this.preheatPhase) {
+                        this.preheatFlashState = !this.preheatFlashState;
+                        this.render();
+                    }
+                }, 600); // Flash every 600ms
+            }
+            
+            formatTime() {
+                if (this.totalMinutes < 60) {
+                    // Phase A: Show minutes as M:00 (1:00, 2:00, etc.)
+                    return `${this.totalMinutes}:00`;
+                } else {
+                    // Phase B: Show hours and minutes as H:MM
+                    const hours = Math.floor(this.totalMinutes / 60);
+                    const minutes = this.totalMinutes % 60;
+                    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+                }
+            }
+            
+            render() {
+                // Clear canvas
+                this.ctx.fillStyle = 'black';
+                this.ctx.fillRect(0, 0, 320, 320);
+                
+                if (this.cookingComplete) {
+                    this.renderCompletionMode();
+                } else if (this.ringFillAnimation) {
+                    this.renderRingFillAnimation();
+                } else if (this.countdownMode) {
+                    this.renderCountdownMode();
+                } else {
+                    if (this.tempMode) {
+                        this.renderTemperatureMode();
+                    } else {
+                        if (this.totalMinutes < 60) {
+                            this.renderPhaseA();
+                        } else {
+                            this.renderPhaseB();
+                        }
+                    }
+                }
+                
+                // Update display
+                if (this.cookingComplete) {
+                    this.updateCompletionDisplay();
+                } else if (this.ringFillAnimation) {
+                    this.updateStartingDisplay();
+                } else if (this.countdownMode) {
+                    this.updateCountdownDisplay();
+                } else {
+                    this.updateSetupDisplay();
+                }
+            }
+            
+            updateSetupDisplay() {
+                this.ensureStatusElements();
+                // Hide cooking status during setup
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                }
+                
+                // Determine label text based on phase
+                const labelText = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
+                
+                if (this.tempMode) {
+                    // Temperature mode: temperature is active, time is inactive
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                    this.tempDisplay.className = 'temp-display active';
+                    // Apply flash visibility to temperature display
+                    this.tempDisplay.style.opacity = (this.isFlashing && !this.flashVisible) ? '0' : '1';
+                    
+                    this.timeDisplayMain.textContent = this.formatTime();
+                    this.timeDisplayMain.className = 'time-display-main inactive';
+                    this.modeLabel.textContent = labelText;
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
+                    this.modeLabel.style.opacity = 1.0;
+                } else {
+                    // Time mode: time is active, temperature is inactive
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                    this.tempDisplay.className = 'temp-display inactive';
+                    this.timeDisplayMain.textContent = this.formatTime();
+                    this.timeDisplayMain.className = 'time-display-main active';
+                    // Apply flash visibility to time display
+                    this.timeDisplayMain.style.opacity = (this.isFlashing && !this.flashVisible) ? '0' : '1';
+                    
+                    this.modeLabel.textContent = labelText;
+                    this.modeLabel.style.color = 'var(--text-primary)';
+                    this.modeLabel.style.opacity = 1.0;
+                }
+            }
+            
+            updateStartingDisplay() {
+                this.ensureStatusElements();
+                // No completion buttons in this flow
+                // Keep status label hidden (main component no longer surfaces it)
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
+                
+                this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                this.tempDisplay.className = 'temp-display inactive';
+                this.timeDisplayMain.textContent = this.formatTime();
+                this.timeDisplayMain.className = 'time-display-main active';
+                
+                // Show appropriate time label below
+                this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
+                this.modeLabel.style.color = 'var(--text-tertiary)';
+                this.modeLabel.style.opacity = 1.0;
+            }
+            
+            updateCountdownDisplay() {
+                this.ensureStatusElements();
+                // No completion buttons in this flow
+                // Keep status label hidden; rely on dial visuals instead
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
+
+                if (this.preheatPhase && this.debugSettings.preheatEnabled) {
+                    // During preheat: show temperature and time set
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                    this.tempDisplay.className = 'temp-display inactive';
+                    this.timeDisplayMain.textContent = this.formatTime();
+                    this.timeDisplayMain.className = 'time-display-main active';
+                    
+                    // Flash the cooking status above circle
+                    const labelOpacity = this.preheatFlashState ? 1.0 : 0.25;
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.opacity = labelOpacity;
+                    }
+                    
+                    // Keep original label below (HR-MIN since we're in phase B during cooking)
+                    this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
+                    this.modeLabel.style.opacity = 1.0;
+                } else {
+                    // During cooking: show countdown with temperature
+                    this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                    this.tempDisplay.className = 'temp-display inactive';
+                    const { minutes, seconds } = this.getCurrentCountdownTime();
+                    
+                    // Format time like 1:15 for 1hr 15min, 59:00 for 59min
+                    const totalMinutesLeft = minutes;
+                    const isUnderOneHour = totalMinutesLeft < 60;
+                    
+                    if (isUnderOneHour) {
+                        // Show as MM:SS format for under 1 hour
+                        this.timeDisplayMain.textContent = `${totalMinutesLeft.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        // Show as H:MM format for 1+ hours
+                        const hours = Math.floor(totalMinutesLeft / 60);
+                        const mins = totalMinutesLeft % 60;
+                        this.timeDisplayMain.textContent = `${hours}:${mins.toString().padStart(2, '0')}`;
+                    }
+                    
+                    this.timeDisplayMain.className = 'time-display-main active';
+                    
+                    // Show "Actively cooking" above circle
+                    if (this.cookingStatus) {
+                        this.cookingStatus.style.opacity = 1.0;
+                    }
+                
+                // Show appropriate label below based on time remaining
+                    this.modeLabel.textContent = isUnderOneHour ? 'MIN - SEC' : 'HR - MIN';
+                    this.modeLabel.style.color = 'var(--text-tertiary)';
+                    this.modeLabel.style.opacity = 1.0;
+                }
+            }
+            
+            renderTemperatureMode() {
+                // Calculate temperature progress and current tick based on global tick mode
+                const totalTempTicks = this.getTickCountForMode('tempMode');
+                const tempRange = this.maxTemp - this.minTemp; // 180 degrees
+                
+                let currentTempTick, filledTempTicks, tempIncrement;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks' || this.debugSettings.globalTickMode === '72-continuous') {
+                    // In both 72-ticks and 72-continuous modes, we loop through the temperature range
+                    tempIncrement = tempRange / 72;
+                    const tempProgress = (this.temperature - this.minTemp) % tempRange;
+                    currentTempTick = Math.round(tempProgress / tempIncrement);
+                    filledTempTicks = Math.floor((this.temperature - this.minTemp) / tempIncrement) + 1;
+                } else {
+                    // Default mode
+                    tempIncrement = tempRange / TEMP_TICK_COUNT;
+                    currentTempTick = Math.round((this.temperature - this.minTemp) / tempIncrement);
+                    filledTempTicks = currentTempTick + 1;
+                }
+                
+                for (let i = 0; i < totalTempTicks; i++) {
+                    const angle = (i * (360 / totalTempTicks) - 90) * Math.PI / 180;
+                    const isFilled = i < filledTempTicks;
+                    const isCurrent = i === currentTempTick;
+                    
+                    // Calculate proximity to current tick for gradual sizing
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTempTick, totalTempTicks);
+                    
+                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0, i, currentTempTick, totalTempTicks);
+                }
+            }
+            
+            renderRingFillAnimation() {
+                const elapsed = Date.now() - this.ringFillStartTime;
+                const progress = Math.min(elapsed / this.ringFillDuration, 1);
+                
+                // Ease-out animation for smoother filling
+                const easeProgress = 1 - Math.pow(1 - progress, 2);
+                
+                // Calculate gap and segments like in countdown mode
+                const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
+                const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0;
+                const totalGapsAngle = mainGapAngle + preheatGapAngle;
+                const availableAngle = 2 * Math.PI - totalGapsAngle;
+                
+                const topCenter = -Math.PI / 2;
+                
+                if (this.debugSettings.preheatEnabled) {
+                    const preheatPercentage = 0.25;
+                    const cookingPercentage = 0.75;
+                    const preheatAngle = availableAngle * preheatPercentage;
+                    const cookingAngle = availableAngle * cookingPercentage;
+                    
+                    const preheatStartAngle = topCenter - mainGapAngle / 2;
+                    const preheatEndAngle = preheatStartAngle - preheatAngle;
+                    const cookingStartAngle = preheatEndAngle - preheatGapAngle;
+                    const cookingEndAngle = cookingStartAngle - cookingAngle;
+                    
+                    // Draw background segments
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    // Draw animated fill
+                    const totalFillAngle = preheatAngle + cookingAngle;
+                    const currentFillAngle = totalFillAngle * easeProgress;
+                    
+                    if (currentFillAngle > 0) {
+                        if (currentFillAngle <= preheatAngle) {
+                            // Filling preheat segment
+                            const fillEndAngle = preheatStartAngle - currentFillAngle;
+                            this.ctx.beginPath();
+                            this.ctx.arc(this.centerX, this.centerY, this.radius, fillEndAngle, preheatStartAngle);
+                            this.ctx.strokeStyle = '#FA4947';
+                            this.ctx.lineWidth = 20;
+                            this.ctx.lineCap = 'round';
+                            this.ctx.stroke();
+                        } else {
+                            // Preheat full, filling cooking segment
+                            this.ctx.beginPath();
+                            this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+                            this.ctx.strokeStyle = '#FA4947';
+                            this.ctx.lineWidth = 20;
+                            this.ctx.lineCap = 'round';
+                            this.ctx.stroke();
+                            
+                            const cookingFillAngle = currentFillAngle - preheatAngle;
+                            const cookingFillEndAngle = cookingStartAngle - cookingFillAngle;
+                            this.ctx.beginPath();
+                            this.ctx.arc(this.centerX, this.centerY, this.radius, cookingFillEndAngle, cookingStartAngle);
+                            this.ctx.strokeStyle = '#FA4947';
+                            this.ctx.lineWidth = 20;
+                            this.ctx.lineCap = 'round';
+                            this.ctx.stroke();
+                        }
+                    }
+                } else {
+                    // No preheat: simple fill animation
+                    const startAngle = topCenter + mainGapAngle / 2;
+                    const endAngle = startAngle + availableAngle;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    if (easeProgress > 0) {
+                        const fillAngle = availableAngle * easeProgress;
+                        const fillEndAngle = startAngle + fillAngle;
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, fillEndAngle);
+                        this.ctx.strokeStyle = '#FA4947';
+                        this.ctx.lineWidth = 20;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.stroke();
+                    }
+                }
+            }
+            
+            renderCountdownMode() {
+                if (this.countdownDuration === 0) return;
+                
+                const elapsed = this.countdownStartTime ? (Date.now() - this.countdownStartTime) / 1000 : 0;
+                
+                // Calculate gap size (in radians) from debug settings
+                const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
+                const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0; // 10% gap after preheat
+                const totalGapsAngle = mainGapAngle + preheatGapAngle;
+                const availableAngle = 2 * Math.PI - totalGapsAngle;
+                
+                // Calculate preheat and cooking segments
+                const preheatPercentage = this.debugSettings.preheatEnabled ? 0.25 : 0; // 25% for preheat
+                const cookingPercentage = 1 - preheatPercentage;
+                
+                const preheatAngle = availableAngle * preheatPercentage;
+                const cookingAngle = availableAngle * cookingPercentage;
+                
+                // Main gap is centered at top: preheat starts after gap and goes counter-clockwise (left)
+                const topCenter = -Math.PI / 2;
+                const preheatStartAngle = topCenter - mainGapAngle / 2; // Start before main gap (left side)
+                const preheatEndAngle = preheatStartAngle - preheatAngle; // Go further counter-clockwise (left)
+                
+                // Secondary gap and cooking segment start
+                const cookingStartAngle = preheatEndAngle - preheatGapAngle;
+                const cookingEndAngle = cookingStartAngle - cookingAngle;
+                
+                if (this.debugSettings.preheatEnabled) {
+                    // Draw preheat segment background (dark red)
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    // Draw cooking segment background (dark red)
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    if (this.preheatPhase) {
+                        // During preheat: unfill preheat segment CLOCKWISE (from left to right, like in the image)
+                        const preheatProgress = Math.min(elapsed / 10, 1); // 10 seconds preheat
+                        const remainingPreheatProgress = 1 - preheatProgress; // How much is left
+                        const remainingPreheatAngle = preheatAngle * remainingPreheatProgress;
+                        
+                        if (remainingPreheatAngle > 0) {
+                            // Draw from the END, keeping the right portion (near the gap)
+                            const currentPreheatStartAngle = preheatEndAngle + remainingPreheatAngle;
+                            this.ctx.beginPath();
+                            this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, currentPreheatStartAngle);
+                            this.ctx.strokeStyle = '#FA4947';
+                            this.ctx.lineWidth = 20;
+                            this.ctx.lineCap = 'round';
+                            this.ctx.stroke();
+                        }
+                        
+                        // Keep cooking segment full during preheat
+                        this.ctx.beginPath();
+                        this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+                        this.ctx.strokeStyle = '#FA4947';
+                        this.ctx.lineWidth = 20;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.stroke();
+                    } else {
+                        // During cooking: cooking segment unfills CLOCKWISE (same direction as preheat)
+                        const cookingProgress = 1 - Math.min(elapsed / this.countdownDuration, 1);
+                        const remainingCookingAngle = cookingAngle * cookingProgress;
+                        
+                        if (remainingCookingAngle > 0) {
+                            // Draw from the END, keeping the right portion (clockwise unfilling)
+                            const currentCookingStartAngle = cookingEndAngle + remainingCookingAngle;
+                            this.ctx.beginPath();
+                            this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, currentCookingStartAngle);
+                            this.ctx.strokeStyle = '#FA4947';
+                            this.ctx.lineWidth = 20;
+                            this.ctx.lineCap = 'round';
+                            this.ctx.stroke();
+                        }
+                    }
+                } else {
+                    // No preheat: standard behavior - starts from top and goes clockwise
+                    const remaining = Math.max(0, this.countdownDuration - elapsed);
+                    const progress = 1 - Math.min(elapsed / this.countdownDuration, 1);
+                    
+                    const startAngle = topCenter + mainGapAngle / 2;
+                    const endAngle = startAngle + availableAngle;
+                    
+                    // Draw dark red background ring
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+                    this.ctx.strokeStyle = '#5a060a';
+                    this.ctx.lineWidth = 20;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.stroke();
+                    
+                    // Draw bright red progress ring
+                    if (progress > 0) {
+                        const progressAngle = progress * availableAngle;
+                        const progressEndAngle = startAngle + progressAngle;
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, progressEndAngle);
+                        this.ctx.strokeStyle = '#FA4947';
+                        this.ctx.lineWidth = 20;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.stroke();
+                    }
+                }
+            }
+            
+            renderPhaseA() {
+                const totalTicks = this.getTickCountForMode('phaseA');
+                
+                let filledTicks, currentTickIndex;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    // In 72-ticks mode, map 1-59 minutes to 72 ticks with looping
+                    const minuteProgress = Math.max(1, Math.min(this.totalMinutes, 59));
+                    filledTicks = Math.ceil(minuteProgress * 72 / 59);
+                    currentTickIndex = filledTicks - 1;
+                } else if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, use first 59 ticks for minutes 1-59 (1:1 mapping)
+                    const minuteProgress = Math.max(1, Math.min(this.totalMinutes, 59));
+                    filledTicks = minuteProgress;
+                    currentTickIndex = filledTicks - 1;
+                } else {
+                    // Default mode - 59 ticks for minutes 1-59
+                    filledTicks = Math.max(1, Math.min(this.totalMinutes, 59)); 
+                    currentTickIndex = filledTicks - 1;
+                }
+                
+                for (let i = 0; i < totalTicks; i++) {
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
+                    const isFilled = i < filledTicks;
+                    const isCurrent = i === currentTickIndex;
+                    
+                    // Calculate proximity to current tick for gradual sizing
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
+                    
+                    this.drawTick(angle, isFilled, isCurrent, false, lengthMultiplier, false, 0, i, currentTickIndex, totalTicks);
+                }
+            }
+            
+            renderPhaseB() {
+                if (this.debugSettings.tickMode === 'hourly') {
+                    this.renderPhaseBHourly();
+                } else if (this.debugSettings.tickMode === 'wrap') {
+                    this.renderPhaseBWrap();
+                } else {
+                    this.renderPhaseB15Min();
+                }
+            }
+            
+            renderPhaseB15Min() {
+                const totalTicks = this.getTickCountForMode('phaseB15Min');
+                const minutesInPhaseB = this.totalMinutes - 60;
+                const ticksInPhaseB = Math.max(1, Math.floor(minutesInPhaseB / 15) + 1); // +1 for 1:00 tick, always at least 1
+                const currentTickIndex = ticksInPhaseB - 1;
+                
+                for (let i = 0; i < totalTicks; i++) {
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
+                    const isFilled = i < ticksInPhaseB;
+                    const isCurrent = i === currentTickIndex;
+                    
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
+                    
+                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, false, 0, i, currentTickIndex, totalTicks);
+                }
+            }
+            
+            renderPhaseBWrap() {
+                const totalTicks = this.getTickCountForMode('phaseBWrap');
+                const minutesInPhaseB = this.totalMinutes - 60;
+                
+                let currentLap, ticksInCurrentLap, currentTickIndex, incrementsCompleted;
+                
+                if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, continue from tick 59, then wrap after tick 72
+                    incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 increment at 1:00
+                    const maxContinuousSlots = 13; // Ticks 60-72 = 13 slots for 15-minute increments
+                    
+                    if (incrementsCompleted <= maxContinuousSlots) {
+                        // First 13 increments: continue from minutes to ticks 60-72
+                        currentLap = 0; // Still on the "continuous" progression
+                        currentTickIndex = 59 + (incrementsCompleted - 1); // 1st increment -> index 59 (tick 60)
+                        ticksInCurrentLap = 59 + incrementsCompleted; // Fill minute ticks + increment ticks
+                    } else {
+                        // After 13 increments, start wrapping from tick 0
+                        const wrappedIncrements = incrementsCompleted - maxContinuousSlots;
+                        currentLap = Math.floor((wrappedIncrements - 1) / totalTicks) + 1; // Start lap counting from 1
+                        ticksInCurrentLap = ((wrappedIncrements - 1) % totalTicks) + 1; // 1-72
+                        currentTickIndex = ticksInCurrentLap - 1; // 0-71
+                    }
+                } else {
+                    // Default wrap mode logic
+                    // Each increment is 15 minutes
+                    // At 60 min (1:00), we want the first tick filled
+                    // At 75 min (1:15), we want the second tick filled, etc.
+                    incrementsCompleted = Math.floor(minutesInPhaseB / 15) + 1; // +1 to start with 1 tick at 1:00
+                    currentLap = Math.floor((incrementsCompleted - 1) / totalTicks); // Adjust for the +1
+                    ticksInCurrentLap = ((incrementsCompleted - 1) % totalTicks) + 1; // Always 1-72
+                    currentTickIndex = ticksInCurrentLap - 1;
+                }
+
+                for (let i = 0; i < totalTicks; i++) {
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
+                    
+                    let isFilled, showAsGray;
+                    
+                    if (this.debugSettings.globalTickMode === '72-continuous') {
+                        if (currentLap === 0) {
+                            // Still in continuous mode: show filled up to current position
+                            isFilled = i < ticksInCurrentLap;
+                            showAsGray = false; // No gray ticks in continuous mode
+                        } else {
+                            // In wrap mode after continuous: normal wrap behavior
+                            isFilled = i < ticksInCurrentLap;
+                            showAsGray = currentLap > 1 && i >= ticksInCurrentLap; // Show gray for previous laps
+                        }
+                    } else {
+                        // Default wrap mode logic
+                        isFilled = i < ticksInCurrentLap;
+                        showAsGray = currentLap > 0 && i >= ticksInCurrentLap;
+                    }
+                    
+                    const isCurrent = i === currentTickIndex;
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
+                    this.drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier, showAsGray, i, currentTickIndex, totalTicks);
+                }
+            }
+            
+            renderPhaseBHourly() {
+                const totalTicks = this.getTickCountForMode('phaseBHourly');
+                const minutesInPhaseB = this.totalMinutes - 60;
+                
+                let hoursCompleted, currentTickIndex, filledTicks;
+                
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    // In 72-ticks mode, loop through the max time range
+                    const maxHours = 72; // Maximum hours in Phase B
+                    const hourProgress = Math.floor(minutesInPhaseB / 60) % maxHours;
+                    hoursCompleted = Math.max(1, hourProgress + 1);
+                    currentTickIndex = (hoursCompleted - 1) % 72;
+                    filledTicks = hoursCompleted;
+                } else if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // In 72-continuous mode, continue seamlessly from minutes to hours
+                    // At 1:00 (totalMinutes = 60), we want to be at tick 60 (index 59)
+                    // At 2:00 (totalMinutes = 120), we want to be at tick 61 (index 60), etc.
+                    
+                    const hoursFromStart = Math.floor(this.totalMinutes / 60); // 1, 2, 3, etc.
+                    const maxAvailableHours = 13; // Ticks 60-72 = 13 slots
+                    
+                    if (hoursFromStart > maxAvailableHours) {
+                        // Loop when exceeding available slots
+                        const loopedHour = ((hoursFromStart - 1) % maxAvailableHours) + 1;
+                        currentTickIndex = 58 + loopedHour; // 58 + 1 = 59 (tick 60)
+                        filledTicks = 72; // Show all ticks filled when looping
+                    } else {
+                        // Direct mapping: 1:00 -> tick 60 (index 59), 2:00 -> tick 61 (index 60), etc.
+                        currentTickIndex = 59 + (hoursFromStart - 1); // 59 + 0 = 59 (tick 60)
+                        filledTicks = 59 + hoursFromStart; // All minute ticks + hour ticks
+                    }
+                } else {
+                    // Default mode
+                    hoursCompleted = Math.max(1, Math.floor(minutesInPhaseB / 60) + 1); 
+                    currentTickIndex = hoursCompleted - 1;
+                    filledTicks = hoursCompleted;
+                }
+                
+                // Calculate progress within current hour for next tick animation
+                const minutesInCurrentHour = minutesInPhaseB % 60;
+                const hourProgress = minutesInCurrentHour / 60; // 0 to 1
+                
+                for (let i = 0; i < totalTicks; i++) {
+                    const angle = (i * (360 / totalTicks) - 90) * Math.PI / 180;
+                    
+                    let isFilled;
+                    if (this.debugSettings.globalTickMode === '72-continuous') {
+                        // In continuous mode: fill first 59 ticks (minutes) + hour ticks
+                        isFilled = i < filledTicks;
+                    } else {
+                        isFilled = i < hoursCompleted;
+                    }
+                    
+                    const isCurrent = i === currentTickIndex;
+                    const isNext = i === currentTickIndex + 1 && currentTickIndex + 1 < totalTicks;
+                    
+                    const lengthMultiplier = this.getTickLengthMultiplier(i, currentTickIndex, totalTicks);
+                    
+                    this.drawTick(angle, isFilled, isCurrent, true, lengthMultiplier, isNext, hourProgress, i, currentTickIndex, totalTicks);
+                }
+            }
+            
+            // Helper methods to get tick counts based on global tick mode setting
+            getTickCountForMode(mode) {
+                if (this.debugSettings.globalTickMode === '72-ticks') {
+                    return 72; // All modes use 72 ticks
+                }
+                
+                if (this.debugSettings.globalTickMode === '72-continuous') {
+                    // 72-continuous mode uses 72 ticks for all modes but with different logic
+                    return 72;
+                }
+                
+                // Default mode - use original tick counts
+                switch(mode) {
+                    case 'phaseA': return 59; // Minute mode (1-59 minutes)
+                    case 'tempMode': return TEMP_TICK_COUNT + 1; // Temperature + 1 for endpoint
+                    case 'phaseBHourly': return 72; // Hourly mode
+                    case 'phaseBWrap': return 72; // Wrap mode  
+                    case 'phaseB15Min': return 285; // 15-minute mode (71 hours * 4 + 1)
+                    default: return 72;
+                }
+            }
+            
+            restart() {
+                // Reset all values to initial defaults
+                this.totalMinutes = 10; // Start with 10 minutes
+                this.temperature = 400; // Start with 400°F
+                this.tempMode = true; // Start in temperature mode
+
+                this.modeIndex = 0;
+                this.currentMode = this.modeSequence[this.modeIndex];
+                this.dialModeBeforeHeat = this.currentMode;
+                this.dialVisualMode = this.currentMode;
+                this.stepsToHeat = this.heatCycleLength;
+                this.setHeatSliderEnabled(false);
+
+                // Reset timer and scaling properties
+                this.lastActionTime = Date.now();
+                this.scalingActive = false;
+                
+                // Reset trail direction and animation
+                this.trailDirection = 'normal';
+                this.trailDirectionTarget = 'normal';
+                this.trailDirectionAnimationStart = null;
+                
+                // Reset animation properties
+                this.animationStartTime = null;
+                this.animatingToState = null;
+                this.animationProgress = null;
+                this.previousMultipliers = new Map();
+                
+                // Reset ring fill animation properties
+                this.ringFillAnimation = false;
+                this.ringFillStartTime = null;
+                
+                // Reset countdown mode properties
+                this.countdownMode = false;
+                this.countdownStartTime = null;
+                this.countdownDuration = 0;
+                this.colonBlinkState = true;
+                this.preheatPhase = false;
+                this.preheatFlashState = true;
+
+                // Reset completion state
+                this.cookingComplete = false;
+
+                // Reset flash animation
+                this.isFlashing = false;
+                this.flashStartTime = null;
+                this.flashCount = 0;
+                this.flashVisible = true;
+                this.hasFlashedAtBoundary = false;
+
+                this.updateModeVisuals();
+                this.render();
+            }
+            
+            renderCompletionMode() {
+                // Draw a full green circle
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = '#2BB671';
+                this.ctx.lineWidth = 20;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+            }
+            
+            updateCompletionDisplay() {
+                if (this.cookingStatus) {
+                    this.cookingStatus.style.display = 'none';
+                    this.cookingStatus.textContent = '';
+                }
+
+                this.tempDisplay.querySelector('.temp-number').textContent = this.temperature;
+                this.tempDisplay.className = 'temp-display inactive';
+                this.timeDisplayMain.textContent = '00:00';
+                this.timeDisplayMain.className = 'time-display-main active';
+                
+                // Change label to "Enjoy"
+                this.modeLabel.textContent = 'Enjoy';
+                this.modeLabel.style.color = '#2BB671';
+                this.modeLabel.style.opacity = 1.0;
+            }
+            
+            increaseTime() {
+                if (this.totalMinutes >= this.maxMinutes) {
+                    // Only trigger flash once per boundary hit
+                    if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                        this.startFlashAnimation();
+                        this.hasFlashedAtBoundary = true;
+                    }
+                    return;
+                }
+                
+                // Reset flash boundary flag when moving away from boundary
+                this.hasFlashedAtBoundary = false;
+                
+                this.lastActionTime = Date.now();
+                if (!this.scalingActive) {
+                    this.startScalingAnimation(true);
+                }
+                this.scalingActive = true;
+                
+                if (this.totalMinutes < 60) {
+                    this.totalMinutes += 1;
+                } else {
+                    this.totalMinutes = Math.min(this.totalMinutes + 15, this.maxMinutes);
+                }
+                
+                this.render();
+            }
+            
+            decreaseTime() {
+                if (this.totalMinutes <= 1) {
+                    // Only trigger flash once per boundary hit
+                    if (!this.hasFlashedAtBoundary && !this.isFlashing) {
+                        this.startFlashAnimation();
+                        this.hasFlashedAtBoundary = true;
+                    }
+                    return;
+                }
+                
+                // Reset flash boundary flag when moving away from boundary
+                this.hasFlashedAtBoundary = false;
+                
+                this.lastActionTime = Date.now();
+                if (!this.scalingActive) {
+                    this.startScalingAnimation(true);
+                }
+                this.scalingActive = true;
+                
+                if (this.totalMinutes <= 60) {
+                    this.totalMinutes = Math.max(this.totalMinutes - 1, 1); // Stop at 1 minute
+                } else {
+                    this.totalMinutes = Math.max(this.totalMinutes - 15, 60);
+                    if (this.totalMinutes === 60) {
+                        this.totalMinutes = 59;
+                    }
+                }
+                
+                this.render();
+            }
+            
+            startRingFillAnimation() {
+                this.ringFillAnimation = true;
+                this.ringFillStartTime = Date.now();
+                this.animateRingFill();
+            }
+            
+            animateRingFill() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - this.ringFillStartTime;
+                const progress = Math.min(elapsed / this.ringFillDuration, 1);
+                
+                this.render();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => this.animateRingFill());
+                } else {
+                    // Animation complete, start actual countdown
+                    this.ringFillAnimation = false;
+                    this.countdownMode = true;
+                    this.countdownDuration = this.totalMinutes * 60;
+                    this.countdownStartTime = Date.now();
+                    this.colonBlinkState = true;
+                    this.preheatFlashState = true;
+                    this.preheatPhase = this.debugSettings.preheatEnabled;
+                    this.render();
+                }
+            }
+            
+            updateCountdown() {
+                if (!this.countdownMode || this.countdownStartTime === null) return;
+                
+                const elapsed = (Date.now() - this.countdownStartTime) / 1000; // seconds
+                
+                // Handle preheat phase (10 seconds) - only if preheat is enabled
+                if (this.preheatPhase && this.debugSettings.preheatEnabled && elapsed >= 10) {
+                    this.preheatPhase = false;
+                    this.countdownStartTime = Date.now(); // Reset timer for cooking phase
+                    this.render();
+                    return;
+                }
+                
+                // Handle cooking phase (or immediate cooking if no preheat)
+                if (!this.preheatPhase || !this.debugSettings.preheatEnabled) {
+                    const remaining = Math.max(0, this.countdownDuration - elapsed);
+                    
+                    if (remaining <= 0) {
+                        // Countdown finished
+                        this.countdownMode = false;
+                        this.cookingComplete = true;
+                        this.totalMinutes = 0;
+                    }
+                }
+                
+                this.render();
+            }
+            
+            getCurrentCountdownTime() {
+                if (!this.countdownMode || this.countdownStartTime === null) {
+                    return { minutes: 0, seconds: 0 };
+                }
+                
+                const elapsed = (Date.now() - this.countdownStartTime) / 1000;
+                const remaining = Math.max(0, this.countdownDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60);
+                const seconds = Math.floor(remaining % 60);
+                
+                return { minutes, seconds };
+            }
+            
+            applyCurve(normalizedDistance) {
+                // normalizedDistance is 0-1, where 0 is current tick, 1 is edge of affected radius
+                switch (this.debugSettings.curve) {
+                    case 'linear':
+                        return 1 - normalizedDistance;
+                    case 'easeOut':
+                        return 1 - (normalizedDistance * normalizedDistance);
+                    case 'easeIn':
+                        return 1 - Math.sqrt(normalizedDistance);
+                    case 'sine':
+                        return Math.cos(normalizedDistance * Math.PI / 2);
+                    case 'exponential':
+                        return Math.pow(1 - normalizedDistance, 3);
+                    default:
+                        return 1 - normalizedDistance;
+                }
+            }
+            
+            getTickLengthMultiplier(tickIndex, currentTickIndex, totalTicks) {
+                // If scaling is disabled, always return 1.0
+                if (!this.debugSettings.scalingEnabled) return 1.0;
+                
+                if (currentTickIndex === -1) return 1.0; // No current tick
+                
+                // Calculate base multipliers for active state
+                const affectedRadius = Math.floor(totalTicks * (this.debugSettings.radiusPercent / 100));
+                let distance = Math.abs(tickIndex - currentTickIndex);
+                const wrapDistance = totalTicks - distance;
+                distance = Math.min(distance, wrapDistance);
+                
+                let activeMultiplier = 1.0;
+                if (distance === 0) {
+                    activeMultiplier = this.debugSettings.currentLength;
+                } else if (distance <= affectedRadius) {
+                    const falloffAmount = (this.debugSettings.currentLength - 1.0) * (this.debugSettings.adjacentFalloff / 100);
+                    const adjacentLength = this.debugSettings.currentLength - falloffAmount;
+                    const normalizedDistance = (distance - 1) / (affectedRadius - 1);
+                    const curveValue = this.applyCurve(normalizedDistance);
+                    const falloffRange = adjacentLength - 1.0;
+                    activeMultiplier = 1.0 + (falloffRange * curveValue);
+                }
+                
+                // Handle auto reset and animation states
+                if (!this.debugSettings.autoReset) {
+                    // No auto reset - use active multiplier if scaling is active, otherwise 1.0
+                    return this.scalingActive ? activeMultiplier : 1.0;
+                }
+                
+                // Auto reset is enabled
+                if (!this.scalingActive && this.animationStartTime === null) {
+                    return 1.0; // Inactive and not animating
+                }
+                
+                if (this.scalingActive && this.animationStartTime === null) {
+                    return activeMultiplier; // Active and not animating
+                }
+                
+                // Currently animating
+                if (this.animationStartTime !== null && this.animationProgress !== null) {
+                    if (this.animatingToState === 'active') {
+                        // Animating from 1.0 to activeMultiplier
+                        return 1.0 + (activeMultiplier - 1.0) * this.animationProgress;
+                    } else {
+                        // Animating from activeMultiplier to 1.0
+                        return activeMultiplier + (1.0 - activeMultiplier) * this.animationProgress;
+                    }
+                }
+                
+                return activeMultiplier;
+            }
+            
+            drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0, showAsGray = false, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
+                // Base tick dimensions
+                const baseLength = 15;
+                const actualLength = baseLength * lengthMultiplier;
+                
+                let innerRadius, outerRadius;
+                const lineWidth = 3;
+                
+                // Calculate positions based on alignment
+                switch (this.debugSettings.alignment) {
+                    case 'inward':
+                        innerRadius = this.radius - 5 - actualLength;
+                        outerRadius = this.radius - 5;
+                        break;
+                    case 'outward':
+                        innerRadius = this.radius - 20;
+                        outerRadius = this.radius - 20 + actualLength;
+                        break;
+                    case 'center':
+                        const centerPoint = this.radius - 12.5;
+                        const halfLength = actualLength / 2;
+                        innerRadius = centerPoint - halfLength;
+                        outerRadius = centerPoint + halfLength;
+                        break;
+                }
+                
+                // Calculate positions
+                const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                const y2 = this.centerY + Math.sin(angle) * outerRadius;
+                
+                // Use standard coloring system
+                let strokeColor;
+                
+                if (this.debugSettings.gradientColorMode === 'seamless') {
+                    // Seamless mode: apply gradient regardless of fill status or showAsGray
+                    if (isCurrent) {
+                        strokeColor = '#FA4947';
+                    } else {
+                        strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                    }
+                } else if (showAsGray) {
+                    strokeColor = BASE_GRAY;
+                } else if (this.debugSettings.gradientColorMode === 'standard') {
+                    strokeColor = isFilled ? '#FA4947' : BASE_GRAY;
+                } else {
+                    // Regular gradient mode: only apply to filled ticks
+                    strokeColor = isFilled
+                        ? (isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode))
+                        : BASE_GRAY;
+                }
+                
+                // Draw the tick
+                this.ctx.save();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+            
+            getConicGradientColor(angle, currentTickIndex, totalTicks, mode = 'gradient') {
+                // If we don't have a valid current tick, fall back to plain white for that tick only
+                if (currentTickIndex < 0 || totalTicks <= 0) return 'rgb(255,255,255)';
+
+                // Normalize: 12 o'clock = 0, increases clockwise [0, 2π)
+                let normalizedAngle = (angle + Math.PI / 2) % (2 * Math.PI);
+                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+
+                // Current tick position in radians, 12 o'clock = 0, clockwise
+                const currentTickAngle = (currentTickIndex * 2 * Math.PI) / totalTicks;
+
+                if (mode === 'seamless') {
+                    // Seamless mode: 20% gradient trail that follows the current position
+                    const trailLength = 2 * Math.PI * 0.2; // 20% of full circle
+                    
+                    // Calculate the start of the gradient trail with animation support
+                    const isAnimating = this.trailDirectionAnimationStart !== null;
+                    const currentTrailDirection = this.trailDirection;
+                    const targetTrailDirection = this.trailDirectionTarget;
+                    
+                    let animationProgress = 0;
+                    if (isAnimating && this.debugSettings.trailMode === 'stay') {
+                        const elapsed = Date.now() - this.trailDirectionAnimationStart;
+                        animationProgress = Math.min(elapsed / this.trailDirectionAnimationDuration, 1);
+                        // Ease function for smooth transition
+                        animationProgress = 1 - Math.pow(1 - animationProgress, 3);
+                    }
+                    
+                    const shouldRenderOpposite = this.debugSettings.trailMode === 'stay' && 
+                        (currentTrailDirection === 'opposite' || 
+                         (isAnimating && targetTrailDirection === 'opposite'));
+                    
+                    // Calculate both trail positions for potential blending
+                    const normalTrailStart = currentTickAngle - trailLength;
+                    const oppositeTrailStart = currentTickAngle;
+                    
+                    let trailStartAngle;
+                    if (isAnimating && this.debugSettings.trailMode === 'stay') {
+                        // Animate between normal and opposite positions
+                        if (currentTrailDirection === 'normal' && targetTrailDirection === 'opposite') {
+                            // Animating from normal to opposite
+                            trailStartAngle = normalTrailStart + (oppositeTrailStart - normalTrailStart) * animationProgress;
+                        } else if (currentTrailDirection === 'opposite' && targetTrailDirection === 'normal') {
+                            // Animating from opposite to normal
+                            trailStartAngle = oppositeTrailStart + (normalTrailStart - oppositeTrailStart) * animationProgress;
+                        } else {
+                            trailStartAngle = shouldRenderOpposite ? oppositeTrailStart : normalTrailStart;
+                        }
+                    } else if (shouldRenderOpposite) {
+                        // Trail on opposite side: 20% after current position
+                        trailStartAngle = oppositeTrailStart;
+                    } else {
+                        // Normal trail: 20% before current position
+                        trailStartAngle = normalTrailStart;
+                    }
+                    
+                    // Normalize angle
+                    if (trailStartAngle < 0) trailStartAngle += 2 * Math.PI;
+                    if (trailStartAngle > 2 * Math.PI) trailStartAngle -= 2 * Math.PI;
+                    
+                    
+                    // Check if this tick is within the 20% trail
+                    let isInTrail = false;
+                    let trailProgress = 0;
+                    
+                    const tolerance = 0.001; // Small tolerance for floating point comparisons
+                    
+                    // Calculate trail end angle based on current configuration
+                    let trailEndAngle;
+                    if (isAnimating && this.debugSettings.trailMode === 'stay') {
+                        // During animation, calculate the appropriate end angle
+                        if (currentTrailDirection === 'normal' && targetTrailDirection === 'opposite') {
+                            // Transitioning from normal (ending at current) to opposite (ending at current + length)
+                            const normalEnd = currentTickAngle;
+                            const oppositeEnd = (currentTickAngle + trailLength) % (2 * Math.PI);
+                            trailEndAngle = normalEnd + (oppositeEnd - normalEnd) * animationProgress;
+                        } else if (currentTrailDirection === 'opposite' && targetTrailDirection === 'normal') {
+                            // Transitioning from opposite (ending at current + length) to normal (ending at current)
+                            const oppositeEnd = (currentTickAngle + trailLength) % (2 * Math.PI);
+                            const normalEnd = currentTickAngle;
+                            trailEndAngle = oppositeEnd + (normalEnd - oppositeEnd) * animationProgress;
+                        } else {
+                            trailEndAngle = shouldRenderOpposite ? 
+                                (trailStartAngle + trailLength) % (2 * Math.PI) : 
+                                currentTickAngle;
+                        }
+                    } else {
+                        trailEndAngle = shouldRenderOpposite ? 
+                            (trailStartAngle + trailLength) % (2 * Math.PI) : 
+                            currentTickAngle;
+                    }
+                    
+                    // Normalize trail end angle
+                    if (trailEndAngle < 0) trailEndAngle += 2 * Math.PI;
+                    if (trailEndAngle > 2 * Math.PI) trailEndAngle -= 2 * Math.PI;
+                    
+                    // Check if this tick is within the trail
+                    if (trailStartAngle <= trailEndAngle) {
+                        // Normal case: trail doesn't wrap around
+                        isInTrail = normalizedAngle >= trailStartAngle - tolerance && normalizedAngle <= trailEndAngle + tolerance;
+                        if (isInTrail) {
+                            trailProgress = Math.max(0, Math.min(1, (normalizedAngle - trailStartAngle) / trailLength));
+                        }
+                    } else {
+                        // Wrap case: trail wraps around 0/2π boundary
+                        isInTrail = normalizedAngle >= trailStartAngle - tolerance || normalizedAngle <= trailEndAngle + tolerance;
+                        if (isInTrail) {
+                            if (normalizedAngle >= trailStartAngle - tolerance) {
+                                trailProgress = Math.max(0, Math.min(1, (normalizedAngle - trailStartAngle) / trailLength));
+                            } else {
+                                trailProgress = Math.max(0, Math.min(1, (normalizedAngle + 2 * Math.PI - trailStartAngle) / trailLength));
+                            }
+                        }
+                    }
+                    
+                    if (isInTrail) {
+                        // Interpolate within the trail
+                        const start = 67;  // BASE_GRAY channel value
+                        const end = 255;   // white
+                        
+                        let r, g, b;
+                        if (isAnimating && this.debugSettings.trailMode === 'stay') {
+                            // During animation, blend between gradient directions
+                            const normalValue = Math.round(start + (end - start) * trailProgress);
+                            const oppositeValue = Math.round(end - (end - start) * trailProgress);
+                            
+                            if (currentTrailDirection === 'normal' && targetTrailDirection === 'opposite') {
+                                // Blend from normal to opposite
+                                r = Math.round(normalValue + (oppositeValue - normalValue) * animationProgress);
+                            } else if (currentTrailDirection === 'opposite' && targetTrailDirection === 'normal') {
+                                // Blend from opposite to normal  
+                                r = Math.round(oppositeValue + (normalValue - oppositeValue) * animationProgress);
+                            } else {
+                                r = shouldRenderOpposite ? oppositeValue : normalValue;
+                            }
+                        } else if (shouldRenderOpposite) {
+                            // Opposite trail: white next to current (start), fade to gray (end)
+                            r = Math.round(end - (end - start) * trailProgress);
+                        } else {
+                            // Normal trail: gray at start, white near current (end)
+                            r = Math.round(start + (end - start) * trailProgress);
+                        }
+                        g = r;
+                        b = r;
+                        return `rgb(${r}, ${g}, ${b})`;
+                    } else {
+                        // Outside the trail: unaffected gray
+                        return BASE_GRAY;
+                    }
+                } else {
+                    // Original gradient mode logic
+                    // If current is exactly 12 o'clock, only that tick should be white; others unaffected gray.
+                    if (currentTickAngle === 0) {
+                        // Only the tick at 12 o'clock should be white (current position).
+                        return normalizedAngle === 0 ? 'rgb(255,255,255)' : BASE_GRAY;
+                    }
+
+                    // If the tick's angle lies within the sweep [0, currentTickAngle] (clockwise),
+                    // map it from BASE_GRAY (start at 12 o'clock) → white (end at current). Outside: unaffected BASE_GRAY.
+                    if (normalizedAngle <= currentTickAngle) {
+                        const progress = normalizedAngle / currentTickAngle; // 0 → 1
+
+                        // Interpolate from BASE_GRAY (#434343 → 67) to white (255)
+                        const start = 67;           // #434343 channel value
+                        const end = 255;            // white
+                        const r = Math.round(start + (end - start) * progress);
+                        const g = r;
+                        const b = r;
+                        return `rgb(${r}, ${g}, ${b})`;
+                    }
+
+                    // Outside the sweep (i.e., after the current tick): unaffected gray
+                    return BASE_GRAY;
+                }
+            }
+            
+            drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0, isNext = false, progress = 0, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
+                // Base tick dimensions
+                const baseLength = 15; // Base tick length
+                const actualLength = baseLength * lengthMultiplier;
+                
+                let innerRadius, outerRadius;
+                
+                // Set line width based on phase and tick mode
+                let lineWidth;
+                if (isPhaseB && this.debugSettings.tickMode === '15min') {
+                    lineWidth = 1.5; // Thinner for 15-min mode (285 ticks)
+                } else {
+                    lineWidth = 3; // Normal thickness for other modes
+                }
+                
+                // Calculate positions based on alignment
+                switch (this.debugSettings.alignment) {
+                    case 'inward':
+                        // Grows inward from outer edge
+                        innerRadius = this.radius - 5 - actualLength;
+                        outerRadius = this.radius - 5;
+                        break;
+                    case 'outward':
+                        // Grows outward from inner edge
+                        innerRadius = this.radius - 20;
+                        outerRadius = this.radius - 20 + actualLength;
+                        break;
+                    case 'center':
+                        // Grows from center point
+                        const centerPoint = this.radius - 12.5; // Middle of normal tick
+                        const halfLength = actualLength / 2;
+                        innerRadius = centerPoint - halfLength;
+                        outerRadius = centerPoint + halfLength;
+                        break;
+                }
+                
+                // Calculate positions
+                const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                const y2 = this.centerY + Math.sin(angle) * outerRadius;
+                
+                // Determine color
+                let strokeColor;
+                
+                if (this.debugSettings.gradientColorMode === 'standard') {
+                    // Standard color mode
+                    if (isFilled) {
+                        strokeColor = '#FA4947'; // Filled ticks are red
+                    } else if (isNext && isPhaseB && this.debugSettings.tickMode === 'hourly') {
+                        // Next tick in hourly mode cycles through opacity based on progress
+                        // Starts grey, then progressively becomes red
+                        if (progress === 0) {
+                            strokeColor = BASE_GRAY; // Grey when exactly on the hour
+                        } else {
+                            // Map progress to 25%, 50%, 75%, 100% opacity at quarter intervals
+                            let opacity;
+                            if (progress < 0.25) {
+                                opacity = 0.25 * (progress / 0.25); // 0 to 25%
+                            } else if (progress < 0.5) {
+                                opacity = 0.25 + 0.25 * ((progress - 0.25) / 0.25); // 25% to 50%
+                            } else if (progress < 0.75) {
+                                opacity = 0.5 + 0.25 * ((progress - 0.5) / 0.25); // 50% to 75%
+                            } else {
+                                opacity = 0.75 + 0.25 * ((progress - 0.75) / 0.25); // 75% to 100%
+                            }
+                            
+                            // Create rgba color with calculated opacity
+                            const red = 255;
+                            const green = 0;
+                            const blue = 0;
+                            strokeColor = `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+                        }
+                    } else {
+                        strokeColor = BASE_GRAY; // Unfilled ticks are gray
+                    }
+                } else {
+                    // Gradient color modes: current = red, others use conic gradient
+                    if (this.debugSettings.gradientColorMode === 'seamless') {
+                        // Seamless mode: apply gradient regardless of fill status
+                        if (isCurrent) {
+                            strokeColor = '#FA4947';
+                        } else {
+                            strokeColor = this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                        }
+                    } else {
+                        // Regular gradient mode: only apply to filled ticks
+                        if (isFilled) {
+                            strokeColor = isCurrent ? '#FA4947' : this.getConicGradientColor(angle, currentTickIndex, totalTicks, this.debugSettings.gradientColorMode);
+                        } else {
+                            strokeColor = BASE_GRAY;
+                        }
+                    }
+                }
+                
+                // Draw the tick with smooth transition
+                this.ctx.save();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.lineCap = 'round';
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }}
 
         document.addEventListener('DOMContentLoaded', function() {
             const mainScreen = document.getElementById('mainScreen');
@@ -470,9 +2344,17 @@
             const pressProgress = document.getElementById('pressProgress');
             const mainFlow = document.getElementById('mainFlow');
             const customCookContainer = document.getElementById('customCookContainer');
-            const customCookFrame = document.getElementById('customCookFrame');
+            const customCookDialHost = document.getElementById('customCookDialHost');
+            const customCookHeatSliderContainer = document.getElementById('customCookHeatSliderContainer');
+            const customCookHeatSliderElement = document.getElementById('customCookHeatSlider');
+            const customCookDebugToggle = document.getElementById('customCookDebugToggle');
+            const customCookDebugPanel = document.getElementById('customCookDebugPanel');
             const segmentedRangeContainer = document.getElementById('segmentedRangeContainer');
             const segmentedRangeContent = document.getElementById('segmentedRangeContent');
+            const segmentedRangeHeading = document.getElementById('segmentedRangeHeading');
+            const segmentedRangeTitle = document.getElementById('segmentedRangeTitle');
+            const segmentedRangeSubtitle = document.getElementById('segmentedRangeSubtitle');
+            const segmentedRangeIcon = document.getElementById('segmentedRangeIcon');
             const instructionsBanner = document.querySelector('.instructions');
             const topScrollScrim = document.getElementById('topScrollScrim');
             const bottomScrollScrim = document.getElementById('bottomScrollScrim');
@@ -483,8 +2365,12 @@
             const modeDetailIcon = document.getElementById('modeDetailIcon');
             const modeDetailDialHost = document.getElementById('modeDetailDial');
             const modeDetailDialWrapper = document.getElementById('modeDetailDialWrapper');
-            const hideListItem = bottomSheet?.querySelector('list-item[data-action="toggle-visibility"]');
-            const hideToggle = hideListItem?.querySelector('toggle-switch');
+            const customCookHeading = document.getElementById('customCookHeading');
+            const customCookTitle = document.getElementById('customCookTitle');
+            const customCookSubtitle = document.getElementById('customCookSubtitle');
+            const customCookIcon = document.getElementById('customCookIcon');
+            const hideListItem = bottomSheet ? bottomSheet.querySelector('list-item[data-action="toggle-visibility"]') : null;
+            const hideToggle = hideListItem ? hideListItem.querySelector('toggle-switch') : null;
             
             let currentMainIndex = 0;
             let currentBottomIndex = 0;
@@ -501,18 +2387,8 @@
             let isModeDetailOpen = false;
             let activeModeDetail = null;
             let modeDetailDial = null;
-
-            if (customCookFrame) {
-                customCookFrame.addEventListener('load', () => {
-                    if (isCustomCookOpen) {
-                        try {
-                            customCookFrame.focus({ preventScroll: true });
-                        } catch (error) {
-                            customCookContainer?.focus({ preventScroll: true });
-                        }
-                    }
-                });
-            }
+            let customCookDial = null;
+            let customCookDebugBound = false;
 
             const cookingModes = [
                 'Toast', 'Bagel', 'Bake', 'Air Fry', 'Broil', 'Roast', 'Proof', 'Reheat',
@@ -661,10 +2537,14 @@
 
                 switch (key) {
                     case 'p':
-                        activeRange?.increment();
+                        if (activeRange && typeof activeRange.increment === 'function') {
+                            activeRange.increment();
+                        }
                         return true;
                     case 'o':
-                        activeRange?.decrement();
+                        if (activeRange && typeof activeRange.decrement === 'function') {
+                            activeRange.decrement();
+                        }
                         return true;
                     case 'q':
                         toggleSegmentedRangeActiveKey();
@@ -823,7 +2703,33 @@
                 isBottomSheetOpen = false;
             }
 
-            function openSegmentedRangeFlow() {
+            function toggleCustomCookDebug() {
+                if (!customCookDebugPanel || !customCookDebugToggle) {
+                    return;
+                }
+
+                customCookDebugPanel.classList.toggle('open');
+                const isOpen = customCookDebugPanel.classList.contains('open');
+                customCookDebugToggle.textContent = isOpen ? 'Close' : 'Open animation controls';
+            }
+
+            const ensureCustomCookDial = () => {
+                if (customCookDial || !customCookDialHost) {
+                    return;
+                }
+
+                customCookDial = new CustomCookCircularTimeDial();
+
+                if (!customCookDebugBound && customCookDebugToggle) {
+                    customCookDebugToggle.addEventListener('click', toggleCustomCookDebug);
+                    customCookDebugBound = true;
+                }
+                if (customCookDebugToggle) {
+                    customCookDebugToggle.textContent = 'Open animation controls';
+                }
+            };
+
+            function openSegmentedRangeFlow(mode = 'Toast') {
                 if (!segmentedRangeContainer || !mainFlow) {
                     return;
                 }
@@ -839,6 +2745,24 @@
                     closeCustomCookFlow();
                 }
 
+                const headerMode = mode || 'Toast';
+                if (segmentedRangeHeading) {
+                    segmentedRangeHeading.classList.add('text-base');
+                }
+                if (segmentedRangeTitle) {
+                    segmentedRangeTitle.textContent = headerMode;
+                    segmentedRangeTitle.classList.add('text-base-lv2');
+                }
+                if (segmentedRangeIcon) {
+                    const iconClass = modeIconMap[headerMode] || 'mode-toast';
+                    segmentedRangeIcon.innerHTML = `<i class="fa-${iconClass} fa-kit"></i>`;
+                    segmentedRangeIcon.hidden = false;
+                }
+                if (segmentedRangeSubtitle) {
+                    segmentedRangeSubtitle.textContent = '';
+                    segmentedRangeSubtitle.hidden = true;
+                }
+
                 segmentedRangeContainer.hidden = false;
                 segmentedRangeContainer.setAttribute('aria-hidden', 'false');
                 mainFlow.hidden = true;
@@ -851,7 +2775,11 @@
                 resetSegmentedRange();
 
                 isSegmentedRangeOpen = true;
-                segmentedRangeContainer.focus({ preventScroll: true });
+                try {
+                    segmentedRangeContainer.focus({ preventScroll: true });
+                } catch (_error) {
+                    segmentedRangeContainer.focus();
+                }
             }
 
             function closeSegmentedRangeFlow() {
@@ -885,7 +2813,7 @@
                     autoBindKeys: false
                 });
 
-                if (modeDetailDial?.debugSettings) {
+                if (modeDetailDial && modeDetailDial.debugSettings) {
                     modeDetailDial.debugSettings.autoReset = false;
                 }
             }
@@ -1026,6 +2954,25 @@
 
                 closeModeDetailFlow();
                 closeSegmentedRangeFlow();
+
+                const mode = 'Custom Cook';
+                if (customCookHeading) {
+                    customCookHeading.classList.add('text-base');
+                }
+                if (customCookTitle) {
+                    customCookTitle.textContent = mode;
+                    customCookTitle.classList.add('text-base-lv2');
+                }
+                if (customCookIcon) {
+                    const iconClass = modeIconMap[mode] || 'mode-dial';
+                    customCookIcon.innerHTML = `<i class="fa-${iconClass} fa-kit"></i>`;
+                    customCookIcon.hidden = false;
+                }
+                if (customCookSubtitle) {
+                    customCookSubtitle.textContent = '';
+                    customCookSubtitle.hidden = true;
+                }
+
                 isCustomCookOpen = true;
                 customCookContainer.hidden = false;
                 customCookContainer.setAttribute('aria-hidden', 'false');
@@ -1034,18 +2981,19 @@
                 if (instructionsBanner) {
                     instructionsBanner.style.display = 'none';
                 }
-                if (customCookFrame && !customCookFrame.src) {
-                    customCookFrame.src = '../custom-cook/index.html?embedded=1';
+                ensureCustomCookDial();
+                if (customCookDial && typeof customCookDial.restart === 'function') {
+                    customCookDial.restart();
                 }
-                if (customCookFrame) {
+                requestAnimationFrame(() => {
                     try {
-                        customCookFrame.focus({ preventScroll: true });
-                    } catch (error) {
+                        if (customCookDialHost && typeof customCookDialHost.focus === 'function') {
+                            customCookDialHost.focus({ preventScroll: true });
+                        }
+                    } catch (_error) {
                         customCookContainer.focus({ preventScroll: true });
                     }
-                } else {
-                    customCookContainer.focus({ preventScroll: true });
-                }
+                });
             }
 
             function closeCustomCookFlow() {
@@ -1064,6 +3012,12 @@
                 if (instructionsBanner) {
                     instructionsBanner.style.display = '';
                 }
+                if (customCookDebugPanel) {
+                    customCookDebugPanel.classList.remove('open');
+                }
+                if (customCookDebugToggle) {
+                    customCookDebugToggle.textContent = 'Open animation controls';
+                }
                 updateMainFocus(currentMainIndex);
             }
 
@@ -1073,9 +3027,7 @@
                 if (event.origin && !allowedOrigins.includes(event.origin)) {
                     return;
                 }
-                if (event.data && event.data.type === 'custom-cook-close') {
-                    closeCustomCookFlow();
-                } else if (event.data && event.data.type === 'segmented-range-close') {
+                if (event.data && event.data.type === 'segmented-range-close') {
                     closeSegmentedRangeFlow();
                 }
             });
@@ -1343,16 +3295,24 @@
                         closeModeDetailFlow();
                     } else if (key === 'p') {
                         event.preventDefault();
-                        modeDetailDial?.increaseValue();
+                        if (modeDetailDial && typeof modeDetailDial.increaseValue === 'function') {
+                            modeDetailDial.increaseValue();
+                        }
                     } else if (key === 'o') {
                         event.preventDefault();
-                        modeDetailDial?.decreaseValue();
+                        if (modeDetailDial && typeof modeDetailDial.decreaseValue === 'function') {
+                            modeDetailDial.decreaseValue();
+                        }
                     } else if (key === 'q') {
                         event.preventDefault();
-                        modeDetailDial?.toggleMode();
+                        if (modeDetailDial && typeof modeDetailDial.toggleMode === 'function') {
+                            modeDetailDial.toggleMode();
+                        }
                     } else if (key === 'enter') {
                         event.preventDefault();
-                        modeDetailDial?.startCooking();
+                        if (modeDetailDial && typeof modeDetailDial.startCooking === 'function') {
+                            modeDetailDial.startCooking();
+                        }
                     }
                     return;
                 }
@@ -1368,9 +3328,29 @@
                 }
 
                 if (isCustomCookOpen) {
-                    if (key === 'escape') {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
                         event.preventDefault();
                         closeCustomCookFlow();
+                    } else if (key === 'p') {
+                        event.preventDefault();
+                        if (customCookDial && typeof customCookDial.increaseValue === 'function') {
+                            customCookDial.increaseValue();
+                        }
+                    } else if (key === 'o') {
+                        event.preventDefault();
+                        if (customCookDial && typeof customCookDial.decreaseValue === 'function') {
+                            customCookDial.decreaseValue();
+                        }
+                    } else if (key === 'q') {
+                        event.preventDefault();
+                        if (customCookDial && typeof customCookDial.toggleMode === 'function') {
+                            customCookDial.toggleMode();
+                        }
+                    } else if (key === 'enter') {
+                        event.preventDefault();
+                        if (customCookDial && typeof customCookDial.startCooking === 'function') {
+                            customCookDial.startCooking();
+                        }
                     }
                     return;
                 }
@@ -1403,7 +3383,9 @@
                         const action = focusedItem.dataset.action;
                         if (action === 'toggle-visibility') {
                             const toggle = focusedItem.querySelector('toggle-switch');
-                            toggle?.toggle();
+                            if (toggle && typeof toggle.toggle === 'function') {
+                                toggle.toggle();
+                            }
                             return;
                         }
 
@@ -1489,7 +3471,7 @@
                 }
 
                 if (isCustomCookOpen) {
-                    if (key === 'escape') {
+                    if (key === 'escape' || key === '2' || key === 'numpad2') {
                         event.preventDefault();
                         closeCustomCookFlow();
                     }
@@ -1518,7 +3500,7 @@
                         hideBottomSheet();
                         const selectedMode = cookingModes[currentMainIndex];
                         if (selectedMode === 'Toast') {
-                            openSegmentedRangeFlow();
+                            openSegmentedRangeFlow(selectedMode);
                         } else if (selectedMode === 'Custom Cook') {
                             openCustomCookFlow();
                         } else if (selectedMode) {
@@ -1536,14 +3518,20 @@
             if (hideListItem && hideToggle) {
                 const isToggleEvent = (event) => {
                     if (event.composedPath) {
-                        return event.composedPath().some((node) => node?.tagName === 'TOGGLE-SWITCH');
+                        const path = event.composedPath();
+                        return Array.isArray(path) && path.some((node) => node && node.tagName === 'TOGGLE-SWITCH');
                     }
-                    return event.target?.closest?.('toggle-switch');
+                    if (event.target && typeof event.target.closest === 'function') {
+                        return Boolean(event.target.closest('toggle-switch'));
+                    }
+                    return false;
                 };
 
                 hideListItem.addEventListener('click', (event) => {
                     if (isToggleEvent(event)) return;
-                    hideToggle.toggle();
+                    if (typeof hideToggle.toggle === 'function') {
+                        hideToggle.toggle();
+                    }
                 });
             }
         });

@@ -889,7 +889,8 @@
             }
 
             function updateBottomSheetTitle() {
-                const selectedMode = favoriteModes[currentMainIndex]?.name || 'Favorite';
+                const currentFavorite = favoriteModes[currentMainIndex];
+                const selectedMode = currentFavorite && currentFavorite.name ? currentFavorite.name : 'Favorite';
                 bottomSheetTitle.textContent = `Edit ${selectedMode}`;
                 if (renameCurrentName) {
                     renameCurrentName.textContent = selectedMode;

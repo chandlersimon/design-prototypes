@@ -470,7 +470,9 @@
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
                     event.preventDefault();
-                    window.parent?.postMessage({ type: 'segmented-range-close' }, '*');
+                    if (window.parent && window.parent !== window && typeof window.parent.postMessage === 'function') {
+                        window.parent.postMessage({ type: 'segmented-range-close' }, '*');
+                    }
                 }
             });
         }

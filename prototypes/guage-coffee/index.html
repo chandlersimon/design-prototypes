@@ -258,13 +258,21 @@
         }
         
         .temp-unit {
-            font-size: 24px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-feature-settings: "ss01" 1, "ss02" 1;
-            letter-spacing: 0.08em;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding-top: 3%;
             transition: padding-top 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .temp-unit .fa-kit {
+            width: 24px;
+            height: 24px;
+            font-size: 24px;
+            line-height: 1;
+            color: inherit;
         }
         
         .temp-display.inactive .temp-unit {
@@ -426,8 +434,8 @@
         <div class="debug-control">
             <label>Enable Tick Scaling:</label>
             <select id="enableScalingSelect">
-                <option value="false">Disabled</option>
-                <option value="true" selected>Enabled</option>
+                <option value="false" selected>Disabled</option>
+                <option value="true">Enabled</option>
             </select>
         </div>
         
@@ -473,8 +481,8 @@
         <div class="debug-control">
             <label>Red Dial:</label>
             <select id="redDialSelect">
-                <option value="false" selected>Off</option>
-                <option value="true">On</option>
+                <option value="false">Off</option>
+                <option value="true" selected>On</option>
             </select>
         </div>
         
@@ -562,7 +570,7 @@
                 
                 // Debug settings
                 this.debugSettings = {
-                    scalingEnabled: true, // Enabled for scaling
+                    scalingEnabled: false, // Tick scaling off by default
                     gradientColorMode: true, // Always use white-to-grey gradient
                     currentLength: 2.7,
                     adjacentFalloff: 40, // Percentage falloff from current
@@ -573,7 +581,7 @@
                     gapAngle: 60, // 60 degree gap at bottom (default)
                     pressureTickCount: 60, // Number of pressure ticks (5 per bar × 12 bars = 60, +5 for 13th bar = 65 total)
                     doubleTicks: true, // Toggle for double tick density - DEFAULT ON
-                    redDial: false, // Red dial toggle - DEFAULT OFF
+                    redDial: true, // Red/grey dial enabled by default
                     numberDisplay: '1-13', // Number display option - DEFAULT ALL
                     numberPosition: 'inside', // Number position - DEFAULT INSIDE
                     mode: 'time' // Mode: 'time' or 'scale' - DEFAULT TIME
