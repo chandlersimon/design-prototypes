@@ -9,52 +9,17 @@
     <link rel="stylesheet" href="../../shared/prototype-shell.css">
     <link rel="stylesheet" href="../../shared/components/circular-time-dial.css">
     <style>
-        @font-face {
-            font-family: 'JaffleNeue';
-            src: url('../../fonts/JaffleNeue-SemiBoldSemiCondensed.otf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
         :root {
-            /* Color Variables */
             --text-primary: #fff;
             --text-tertiary: #979797;
-            --accent: #FA4947;
-            
-            /* Text Variables */
-            --number-5xl-lv2: 84px;
-            --number-5xl-lv2-line-height: 0.8;
-            --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-5xl-lv2-weight: 500;
-            --number-5xl-lv2-spacing: 0;
-            
-            --number-2xl-lv2: 43px;
-            --number-2xl-lv2-line-height: 0.8;
-            --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-2xl-lv2-weight: 500;
-            --number-2xl-lv2-spacing: 0;
-            
-            --label-sm-lv2: 18px;
-            --label-sm-lv2-line-height: 23px;
-            --label-sm-lv2-font: 'Inter', sans-serif;
-            --label-sm-lv2-weight: 500;
-            --label-sm-lv2-spacing: 0.08em;
-            --label-sm-lv2-features: "ss01" 1, "ss02" 1;
-            
-            --label-xs-lv2: 14px;
-            --label-xs-lv2-line-height: 18px;
-            --label-xs-lv2-font: 'Inter', sans-serif;
-            --label-xs-lv2-weight: 500;
-            --label-xs-lv2-spacing: 0.08em;
-            --label-xs-lv2-features: "ss01" 1, "ss02" 1;
+            --accent: #fa4947;
         }
         body {
             margin: 0;
             padding: 0;
-            background: black;
-            color: white;
-            font-family: 'JaffleNeue', Arial, sans-serif;
+            background: #000;
+            color: var(--text-primary);
+            font-family: var(--num-lv2-family);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -85,8 +50,8 @@
             transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1), 
                        color 300ms ease,
                        opacity 300ms ease;
-            font-weight: var(--number-5xl-lv2-weight);
-            line-height: 0.8;
+            font-weight: var(--num-lv2-weight);
+            line-height: var(--num-5xl-line);
         }
         
         .temp-display {
@@ -104,52 +69,52 @@
         }
         
         .temp-display.active {
-            font-size: var(--number-5xl-lv2);
-            line-height: var(--number-5xl-lv2-line-height);
-            font-family: var(--number-5xl-lv2-font);
-            font-weight: var(--number-5xl-lv2-weight);
-            letter-spacing: var(--number-5xl-lv2-spacing);
+            font-size: var(--num-5xl-size);
+            line-height: var(--num-5xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-5xl-track);
             color: var(--text-primary);
             opacity: 1;
         }
         
         .temp-display.inactive {
-            font-size: var(--number-2xl-lv2);
-            line-height: var(--number-2xl-lv2-line-height);
-            font-family: var(--number-2xl-lv2-font);
-            font-weight: var(--number-2xl-lv2-weight);
-            letter-spacing: var(--number-2xl-lv2-spacing);
+            font-size: var(--num-2xl-size);
+            line-height: var(--num-2xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-2xl-track);
             color: var(--text-tertiary);
             opacity: 1;
         }
         
         .time-display-main.active {
-            font-size: var(--number-5xl-lv2);
-            line-height: var(--number-5xl-lv2-line-height);
-            font-family: var(--number-5xl-lv2-font);
-            font-weight: var(--number-5xl-lv2-weight);
-            letter-spacing: var(--number-5xl-lv2-spacing);
+            font-size: var(--num-5xl-size);
+            line-height: var(--num-5xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-5xl-track);
             color: var(--text-primary);
             opacity: 1;
         }
         
         .time-display-main.inactive {
-            font-size: var(--number-2xl-lv2);
-            line-height: var(--number-2xl-lv2-line-height);
-            font-family: var(--number-2xl-lv2-font);
-            font-weight: var(--number-2xl-lv2-weight);
-            letter-spacing: var(--number-2xl-lv2-spacing);
+            font-size: var(--num-2xl-size);
+            line-height: var(--num-2xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-2xl-track);
             color: var(--text-tertiary);
             opacity: 1;
         }
         
         .mode-label {
-            font-size: var(--label-sm-lv2);
-            line-height: var(--label-sm-lv2-line-height);
-            font-family: var(--label-sm-lv2-font);
-            font-weight: var(--label-sm-lv2-weight);
-            font-feature-settings: var(--label-sm-lv2-features);
-            letter-spacing: var(--label-sm-lv2-spacing);
+            font-size: var(--label-sm-size);
+            line-height: var(--label-sm-line);
+            font-family: var(--font-inter);
+            font-weight: var(--label-lv2-weight);
+            font-feature-settings: 'ss01' 1, 'ss02' 1;
+            letter-spacing: var(--label-sm-track);
             margin: 0;
             color: var(--text-tertiary);
             transition: opacity 300ms ease;
@@ -169,12 +134,12 @@
         }
         
         .rack-label {
-            font-size: var(--label-xs-lv2);
-            line-height: var(--label-xs-lv2-line-height);
-            font-family: var(--label-xs-lv2-font);
-            font-weight: var(--label-xs-lv2-weight);
-            font-feature-settings: var(--label-xs-lv2-features);
-            letter-spacing: var(--label-xs-lv2-spacing);
+            font-size: var(--label-xs-size);
+            line-height: var(--label-xs-line);
+            font-family: var(--font-inter);
+            font-weight: var(--label-lv2-weight);
+            font-feature-settings: 'ss01' 1, 'ss02' 1;
+            letter-spacing: var(--label-xs-track);
             margin: 0 0 8px 0;
             color: var(--text-primary);
             transition: opacity 300ms ease;
@@ -207,12 +172,12 @@
             top: -75px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: var(--label-sm-lv2);
-            line-height: var(--label-sm-lv2-line-height);
-            font-family: var(--label-sm-lv2-font);
-            font-weight: var(--label-sm-lv2-weight);
-            font-feature-settings: var(--label-sm-lv2-features);
-            letter-spacing: var(--label-sm-lv2-spacing);
+            font-size: var(--label-sm-size);
+            line-height: var(--label-sm-line);
+            font-family: var(--font-inter);
+            font-weight: var(--label-lv2-weight);
+            font-feature-settings: 'ss01' 1, 'ss02' 1;
+            letter-spacing: var(--label-sm-track);
             color: #ccc;
             text-align: center;
             display: none;
@@ -235,7 +200,7 @@
             border: 2px solid #555;
             padding: 12px 24px;
             border-radius: 8px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-inter);
             font-size: 1em;
             cursor: pointer;
             transition: all 300ms ease;
@@ -271,7 +236,7 @@
             border-radius: 8px;
             color: white;
             font-size: 1em;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-inter);
             z-index: 1000;
             min-width: 200px;
         }
@@ -345,8 +310,18 @@
             <select id="colorModeSelect">
                 <option value="default">Default</option>
                 <option value="red-temp">Red for temp</option>
-                <option value="red-grey-temp" selected>Red &amp; Grey for Temp</option>
+                <option value="red-grey-temp">Red &amp; Grey for Temp</option>
                 <option value="solid-temp">Solid in Temp</option>
+                <option value="solid-temp-red" selected>Solid in Temp - Red</option>
+            </select>
+        </div>
+
+        <div class="debug-control">
+            <label>Number Font Mode:</label>
+            <select id="fontModeSelect">
+                <option value="default" selected>5xl active / 2xl inactive</option>
+                <option value="uniformLarge">Lock at 4xl</option>
+                <option value="largeMedium">5xl active / 4xl inactive</option>
             </select>
         </div>
 
@@ -355,6 +330,14 @@
             <select id="lineCapSelect">
                 <option value="false" selected>Off</option>
                 <option value="true">On</option>
+            </select>
+        </div>
+        
+        <div class="debug-control">
+            <label>Show Rack:</label>
+            <select id="rackDisplaySelect">
+                <option value="true">Visible</option>
+                <option value="false">Hidden</option>
             </select>
         </div>
         
@@ -374,8 +357,8 @@
         
         <div class="debug-control">
             <label>Ring Gap (degrees):</label>
-            <input type="range" id="gapAngle" min="0" max="30" step="1" value="20">
-            <div class="debug-value" id="gapAngleValue">20°</div>
+            <input type="range" id="gapAngle" min="0" max="30" step="0.1" value="2">
+            <div class="debug-value" id="gapAngleValue">2°</div>
         </div>
         
         <div class="debug-control">

@@ -6,52 +6,17 @@
     <meta name="prototype:description" content="Interactive coffee brewing gauge with pressure tracking, time control, and animated dial visualization.">
     <title>guage-coffee</title>
     <style>
-        @font-face {
-            font-family: 'JaffleNeue';
-            src: url('../../fonts/JaffleNeue-SemiBoldSemiCondensed.otf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
         :root {
-            /* Color Variables */
             --text-primary: #fff;
             --text-tertiary: #979797;
-            --accent: #FA4947;
-            
-            /* Text Variables */
-            --number-5xl-lv2: 84px;
-            --number-5xl-lv2-line-height: 0.8;
-            --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-5xl-lv2-weight: 500;
-            --number-5xl-lv2-spacing: 0;
-            
-            --number-2xl-lv2: 43px;
-            --number-2xl-lv2-line-height: 0.8;
-            --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-            --number-2xl-lv2-weight: 500;
-            --number-2xl-lv2-spacing: 0;
-            
-            --label-sm-lv2: 18px;
-            --label-sm-lv2-line-height: 23px;
-            --label-sm-lv2-font: 'Inter', sans-serif;
-            --label-sm-lv2-weight: 500;
-            --label-sm-lv2-spacing: 0.08em;
-            --label-sm-lv2-features: "ss01" 1, "ss02" 1;
-            
-            --label-xs-lv2: 14px;
-            --label-xs-lv2-line-height: 18px;
-            --label-xs-lv2-font: 'Inter', sans-serif;
-            --label-xs-lv2-weight: 500;
-            --label-xs-lv2-spacing: 0.08em;
-            --label-xs-lv2-features: "ss01" 1, "ss02" 1;
+            --accent: #fa4947;
         }
         body {
             margin: 0;
             padding: 0;
-            background: black;
-            color: white;
-            font-family: 'JaffleNeue', Arial, sans-serif;
+            background: #000;
+            color: var(--text-primary);
+            font-family: var(--num-lv2-family);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -89,9 +54,11 @@
         
         .bar-number-label {
             position: absolute;
-            font-size: 18px;
-            font-family: 'JaffleNeue', Arial, sans-serif;
-            font-weight: 600;
+            font-size: var(--num-sm-size);
+            line-height: var(--num-sm-line);
+            letter-spacing: var(--num-sm-track);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
             color: #444444;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -121,8 +88,8 @@
             transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1), 
                        color 300ms ease,
                        opacity 300ms ease;
-            font-weight: var(--number-5xl-lv2-weight);
-            line-height: 0.8;
+            font-weight: var(--num-lv2-weight);
+            line-height: var(--num-5xl-line);
         }
         
         .temp-display {
@@ -139,52 +106,52 @@
         }
         
         .temp-display.active {
-            font-size: var(--number-5xl-lv2);
-            line-height: var(--number-5xl-lv2-line-height);
-            font-family: var(--number-5xl-lv2-font);
-            font-weight: var(--number-5xl-lv2-weight);
-            letter-spacing: var(--number-5xl-lv2-spacing);
+            font-size: var(--num-5xl-size);
+            line-height: var(--num-5xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-5xl-track);
             color: var(--text-primary);
             opacity: 1;
         }
         
         .temp-display.inactive {
-            font-size: var(--number-2xl-lv2);
-            line-height: var(--number-2xl-lv2-line-height);
-            font-family: var(--number-2xl-lv2-font);
-            font-weight: var(--number-2xl-lv2-weight);
-            letter-spacing: var(--number-2xl-lv2-spacing);
+            font-size: var(--num-2xl-size);
+            line-height: var(--num-2xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-2xl-track);
             color: var(--text-tertiary);
             opacity: 1;
         }
         
         .time-display-main.active {
-            font-size: var(--number-5xl-lv2);
-            line-height: var(--number-5xl-lv2-line-height);
-            font-family: var(--number-5xl-lv2-font);
-            font-weight: var(--number-5xl-lv2-weight);
-            letter-spacing: var(--number-5xl-lv2-spacing);
+            font-size: var(--num-5xl-size);
+            line-height: var(--num-5xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-5xl-track);
             color: var(--text-primary);
             opacity: 1;
         }
         
         .time-display-main.inactive {
-            font-size: var(--number-2xl-lv2);
-            line-height: var(--number-2xl-lv2-line-height);
-            font-family: var(--number-2xl-lv2-font);
-            font-weight: var(--number-2xl-lv2-weight);
-            letter-spacing: var(--number-2xl-lv2-spacing);
+            font-size: var(--num-2xl-size);
+            line-height: var(--num-2xl-line);
+            font-family: var(--num-lv2-family);
+            font-weight: var(--num-lv2-weight);
+            letter-spacing: var(--num-2xl-track);
             color: var(--text-tertiary);
             opacity: 1;
         }
         
         .mode-label {
-            font-size: var(--label-sm-lv2);
-            line-height: var(--label-sm-lv2-line-height);
-            font-family: var(--label-sm-lv2-font);
-            font-weight: var(--label-sm-lv2-weight);
-            font-feature-settings: var(--label-sm-lv2-features);
-            letter-spacing: var(--label-sm-lv2-spacing);
+            font-size: var(--label-sm-size);
+            line-height: var(--label-sm-line);
+            font-family: var(--font-inter);
+            font-weight: var(--label-lv2-weight);
+            font-feature-settings: 'ss01' 1, 'ss02' 1;
+            letter-spacing: var(--label-sm-track);
             margin: 0;
             color: var(--text-tertiary);
             transition: opacity 300ms ease;
@@ -246,7 +213,7 @@
             border: 2px solid #555;
             padding: 8px 16px;
             border-radius: 6px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-inter);
             font-size: 0.9em;
             cursor: pointer;
             transition: all 200ms ease;
@@ -284,12 +251,12 @@
             top: -75px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: var(--label-sm-lv2);
-            line-height: var(--label-sm-lv2-line-height);
-            font-family: var(--label-sm-lv2-font);
-            font-weight: var(--label-sm-lv2-weight);
-            font-feature-settings: var(--label-sm-lv2-features);
-            letter-spacing: var(--label-sm-lv2-spacing);
+            font-size: var(--label-sm-size);
+            line-height: var(--label-sm-line);
+            font-family: var(--font-inter);
+            font-weight: var(--label-lv2-weight);
+            font-feature-settings: 'ss01' 1, 'ss02' 1;
+            letter-spacing: var(--label-sm-track);
             color: #ccc;
             text-align: center;
             display: none;
@@ -308,7 +275,7 @@
             width: 200px;
             transition: right 0.3s ease;
             z-index: 1000;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-inter);
         }
         
         .debug-panel.open {
@@ -327,7 +294,7 @@
             cursor: pointer;
             font-size: 0.8em;
             z-index: 1001;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-inter);
         }
         
         .debug-panel h3 {
@@ -1099,7 +1066,7 @@
                 
                 // Draw pressure value text (same size as main bar text)
                 this.ctx.fillStyle = '#ffffff';
-                this.ctx.font = '600 28px JaffleNeue, Arial, sans-serif'; // Slightly smaller to fit curved shape
+                this.ctx.font = '600 28px \"Jaffle Neue SemiCondensed\", \"Jaffle Neue\", Arial, sans-serif'; // Slightly smaller to fit curved shape
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText(this.pressure.toFixed(1), textX, textY);

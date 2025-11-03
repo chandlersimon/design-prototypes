@@ -1,111 +1,71 @@
-/* Shared design tokens for design prototypes */
+/* ============================================================
+   TYPOGRAPHY TOKENS & UTILITIES
+   ------------------------------------------------------------
+   Text & Labels → Inter
+     lv1 = Regular (400)
+     lv2 = Medium (500)
+     lv3 = Bold (700)
+
+   Numbers → Jaffle Neue
+     lv1 = Condensed Regular (400)
+     lv2 = SemiCondensed SemiBold (600)
+     lv3 = SemiCondensed Bold (700)
+
+   All line-heights are unitless ratios
+   Letter-spacing uses em units
+   ============================================================ */
+
+/* ---------- TOKENS ---------- */
 :root {
-  /* Typography */
-  --font-sans: 'Inter', 'JaffleNeue', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-sans-strong: 'JaffleNeue', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Font stacks */
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-jaffle-condensed: 'Jaffle Neue Condensed', 'Jaffle Neue', Arial, sans-serif;
+  --font-jaffle-semicondensed: 'Jaffle Neue SemiCondensed', 'Jaffle Neue', Arial, sans-serif;
 
-  /* Text styles */
-  --text-2xs-size: 11px;
-  --text-2xs-line-height: 14px;
-  --text-2xs-letter-spacing: 0px;
-  --text-2xs-paragraph-spacing: 13px;
-  --text-2xs-case: none;
-  --text-2xs-lv1: 400;
-  --text-2xs-lv2: 500;
-  --text-2xs-lv3: 600;
+  /* ---------- TEXT (Inter) ---------- */
+  --text-2xs-size: 11px; --text-2xs-line: 1.27; --text-2xs-track: 0em; --text-2xs-gap: 13px; --text-2xs-case: none;
+  --text-xs-size: 14px;  --text-xs-line: 1.29;  --text-xs-track: 0em;  --text-xs-gap: 16px;  --text-xs-case: none;
+  --text-sm-size: 18px;  --text-sm-line: 1.28;  --text-sm-track: 0em;  --text-sm-gap: 21px;  --text-sm-case: none;
+  --text-base-size: 22px;--text-base-line:1.27; --text-base-track:0em;  --text-base-gap:25px; --text-base-case: none;
+  --text-lg-size: 28px;  --text-lg-line: 1.25;  --text-lg-track: 0em;  --text-lg-gap: 32px;  --text-lg-case: none;
+  --text-xl-size: 34px;  --text-xl-line: 1.26;  --text-xl-track: 0em;  --text-xl-gap: 39px;  --text-xl-case: none;
+  --text-2xl-size:43px;  --text-2xl-line:1.26;  --text-2xl-track:0em;  --text-2xl-gap:49px; --text-2xl-case: none;
 
-  --text-xs-size: 14px;
-  --text-xs-line-height: 18px;
-  --text-xs-letter-spacing: 0px;
-  --text-xs-paragraph-spacing: 16px;
-  --text-xs-case: none;
-  --text-xs-lv1: 400;
-  --text-xs-lv2: 500;
-  --text-xs-lv3: 600;
+  --text-lv1-weight: 400;
+  --text-lv2-weight: 500;
+  --text-lv3-weight: 700;
 
-  --text-sm-size: 18px;
-  --text-sm-line-height: 23px;
-  --text-sm-letter-spacing: 0px;
-  --text-sm-paragraph-spacing: 21px;
-  --text-sm-case: none;
-  --text-sm-lv1: 400;
-  --text-sm-lv2: 500;
-  --text-sm-lv3: 600;
+  /* ---------- LABELS (Inter) ---------- */
+  --label-2xs-size: 11px; --label-2xs-line: 1.27; --label-2xs-track: 0.08em; --label-2xs-gap: 13px; --label-2xs-case: uppercase;
+  --label-xs-size: 14px;  --label-xs-line: 1.29; --label-xs-track: 0.08em; --label-xs-gap: 16px; --label-xs-case: uppercase;
+  --label-sm-size: 18px;  --label-sm-line: 1.28; --label-sm-track: 0.08em; --label-sm-gap: 21px; --label-sm-case: uppercase;
+  --label-base-size:22px; --label-base-line:1.27; --label-base-track:0.08em; --label-base-gap:25px; --label-base-case: uppercase;
 
-  --text-base-size: 22px;
-  --text-base-line-height: 28px;
-  --text-base-letter-spacing: 0px;
-  --text-base-paragraph-spacing: 25px;
-  --text-base-case: none;
-  --text-base-lv1: 400;
-  --text-base-lv2: 500;
-  --text-base-lv3: 600;
+  --label-lv1-weight: 400;
+  --label-lv2-weight: 500;
+  --label-lv3-weight: 700;
 
-  --text-lg-size: 28px;
-  --text-lg-line-height: 35px;
-  --text-lg-letter-spacing: 0px;
-  --text-lg-paragraph-spacing: 33px;
-  --text-lg-case: none;
-  --text-lg-lv1: 400;
-  --text-lg-lv2: 500;
-  --text-lg-lv3: 600;
+  /* ---------- NUMBERS (Jaffle) ---------- */
+  --num-2xs-size: 11px; --num-2xs-line: 0.8; --num-2xs-track: 0em; --num-2xs-gap: 13px;
+  --num-xs-size:  14px; --num-xs-line:  0.8; --num-xs-track:  0em; --num-xs-gap:  16px;
+  --num-sm-size:  18px; --num-sm-line:  0.8; --num-sm-track:  0em; --num-sm-gap:  21px;
+  --num-base-size:22px; --num-base-line:0.8; --num-base-track:0em; --num-base-gap:25px;
+  --num-lg-size:  28px; --num-lg-line:  0.8; --num-lg-track:  0em; --num-lg-gap:  32px;
+  --num-xl-size:  34px; --num-xl-line:  0.8; --num-xl-track:  0em; --num-xl-gap:  39px;
+  --num-2xl-size: 43px; --num-2xl-line: 0.8; --num-2xl-track: 0em; --num-2xl-gap: 49px;
+  --num-3xl-size: 54px; --num-3xl-line: 0.8; --num-3xl-track: 0em; --num-3xl-gap: 62px;
+  --num-4xl-size: 67px; --num-4xl-line: 0.8; --num-4xl-track: 0em; --num-4xl-gap: 77px;
+  --num-5xl-size: 84px; --num-5xl-line: 0.8; --num-5xl-track: 0em; --num-5xl-gap: 77px;
+  --num-6xl-size:105px; --num-6xl-line:0.8; --num-6xl-track:0em; --num-6xl-gap:77px;
 
-  --text-xl-size: 34px;
-  --text-xl-line-height: 42px;
-  --text-xl-letter-spacing: 0px;
-  --text-xl-paragraph-spacing: 39px;
-  --text-xl-case: none;
-  --text-xl-lv1: 400;
-  --text-xl-lv2: 500;
-  --text-xl-lv3: 600;
+  --num-lv1-family: var(--font-jaffle-condensed);
+  --num-lv2-family: var(--font-jaffle-semicondensed);
+  --num-lv3-family: var(--font-jaffle-semicondensed);
+  --num-lv1-weight: 400;
+  --num-lv2-weight: 600;
+  --num-lv3-weight: 700;
 
-  --text-2xl-size: 43px;
-  --text-2xl-line-height: 54px;
-  --text-2xl-letter-spacing: 0px;
-  --text-2xl-paragraph-spacing: 48px;
-  --text-2xl-case: none;
-  --text-2xl-lv1: 400;
-  --text-2xl-lv2: 500;
-  --text-2xl-lv3: 600;
-
-  /* Label styles */
-  --label-2xs-size: 11px;
-  --label-2xs-line-height: 14px;
-  --label-2xs-letter-spacing: 0.08em;
-  --label-2xs-paragraph-spacing: 13px;
-  --label-2xs-case: uppercase;
-  --label-2xs-lv1: 400;
-  --label-2xs-lv2: 500;
-  --label-2xs-lv3: 600;
-
-  --label-xs-size: 14px;
-  --label-xs-line-height: 18px;
-  --label-xs-letter-spacing: 0.08em;
-  --label-xs-paragraph-spacing: 16px;
-  --label-xs-case: uppercase;
-  --label-xs-lv1: 400;
-  --label-xs-lv2: 500;
-  --label-xs-lv3: 600;
-
-  --label-sm-size: 18px;
-  --label-sm-line-height: 23px;
-  --label-sm-letter-spacing: 0.08em;
-  --label-sm-paragraph-spacing: 21px;
-  --label-sm-case: uppercase;
-  --label-sm-lv1: 400;
-  --label-sm-lv2: 500;
-  --label-sm-lv3: 600;
-
-  --label-base-size: 22px;
-  --label-base-line-height: 28px;
-  --label-base-letter-spacing: 0.08em;
-  --label-base-paragraph-spacing: 25px;
-  --label-base-case: uppercase;
-  --label-base-lv1: 400;
-  --label-base-lv2: 500;
-  --label-base-lv3: 600;
-
-  /* Color palette */
+  /* ---------- COLORS & EFFECTS ---------- */
   --color-bg-default: #0b0b0b;
   --color-surface: #1a1a1a;
   --color-surface-muted: rgba(255, 255, 255, 0.05);
@@ -113,7 +73,6 @@
   --color-text-muted: #888888;
   --color-accent: #fa4947;
 
-  /* Tomato scale */
   --tomato-50: #faeae8;
   --tomato-100: #f9cbc5;
   --tomato-200: #faa69d;
@@ -125,7 +84,6 @@
   --tomato-800: #7a0b11;
   --tomato-900: #5a060a;
 
-  /* Heat slider defaults */
   --heat-cool: #490307;
   --heat-hot-r: 255;
   --heat-hot-g: 95;
@@ -133,142 +91,272 @@
   --heat-intensity: 0.85;
   --heat-animation-ms: 80ms;
 
-  /* Radii */
   --radius-pill: 16px;
   --radius-indicator: 2px;
 
-  /* Shadows */
   --shadow-inset-subtle: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-:where(.text-2xs-lv1, .text-2xs-lv2, .text-2xs-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-2xs-size);
-  line-height: var(--text-2xs-line-height);
-  letter-spacing: var(--text-2xs-letter-spacing);
-  margin-block-end: var(--text-2xs-paragraph-spacing);
-  text-transform: var(--text-2xs-case);
-}
-.text-2xs-lv1 { font-weight: var(--text-2xs-lv1); }
-.text-2xs-lv2 { font-weight: var(--text-2xs-lv2); }
-.text-2xs-lv3 { font-weight: var(--text-2xs-lv3); }
+/* ---------- TEXT CLASSES ---------- */
+:where([class*="text-"]) { text-decoration: none; }
 
-:where(.text-xs-lv1, .text-xs-lv2, .text-xs-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-xs-size);
-  line-height: var(--text-xs-line-height);
-  letter-spacing: var(--text-xs-letter-spacing);
-  margin-block-end: var(--text-xs-paragraph-spacing);
-  text-transform: var(--text-xs-case);
-}
-.text-xs-lv1 { font-weight: var(--text-xs-lv1); }
-.text-xs-lv2 { font-weight: var(--text-xs-lv2); }
-.text-xs-lv3 { font-weight: var(--text-xs-lv3); }
+@layer text {
+  /* generate all text size + levels */
+  @for $sizes from 2xs, xs, sm, base, lg, xl, 2xl {}
 
-:where(.text-sm-lv1, .text-sm-lv2, .text-sm-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-sm-size);
-  line-height: var(--text-sm-line-height);
-  letter-spacing: var(--text-sm-letter-spacing);
-  margin-block-end: var(--text-sm-paragraph-spacing);
-  text-transform: var(--text-sm-case);
-}
-.text-sm-lv1 { font-weight: var(--text-sm-lv1); }
-.text-sm-lv2 { font-weight: var(--text-sm-lv2); }
-.text-sm-lv3 { font-weight: var(--text-sm-lv3); }
+  /* 2XS */
+  :where(.text-2xs-lv1, .text-2xs-lv2, .text-2xs-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-2xs-size);
+    line-height: var(--text-2xs-line);
+    letter-spacing: var(--text-2xs-track);
+    margin-block-end: var(--text-2xs-gap);
+    text-transform: var(--text-2xs-case);
+  }
+  .text-2xs-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-2xs-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-2xs-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.text-base-lv1, .text-base-lv2, .text-base-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-base-size);
-  line-height: var(--text-base-line-height);
-  letter-spacing: var(--text-base-letter-spacing);
-  margin-block-end: var(--text-base-paragraph-spacing);
-  text-transform: var(--text-base-case);
-}
-.text-base-lv1 { font-weight: var(--text-base-lv1); }
-.text-base-lv2 { font-weight: var(--text-base-lv2); }
-.text-base-lv3 { font-weight: var(--text-base-lv3); }
+  /* XS */
+  :where(.text-xs-lv1, .text-xs-lv2, .text-xs-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-xs-size);
+    line-height: var(--text-xs-line);
+    letter-spacing: var(--text-xs-track);
+    margin-block-end: var(--text-xs-gap);
+    text-transform: var(--text-xs-case);
+  }
+  .text-xs-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-xs-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-xs-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.text-lg-lv1, .text-lg-lv2, .text-lg-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-lg-size);
-  line-height: var(--text-lg-line-height);
-  letter-spacing: var(--text-lg-letter-spacing);
-  margin-block-end: var(--text-lg-paragraph-spacing);
-  text-transform: var(--text-lg-case);
-}
-.text-lg-lv1 { font-weight: var(--text-lg-lv1); }
-.text-lg-lv2 { font-weight: var(--text-lg-lv2); }
-.text-lg-lv3 { font-weight: var(--text-lg-lv3); }
+  /* SM */
+  :where(.text-sm-lv1, .text-sm-lv2, .text-sm-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-sm-size);
+    line-height: var(--text-sm-line);
+    letter-spacing: var(--text-sm-track);
+    margin-block-end: var(--text-sm-gap);
+    text-transform: var(--text-sm-case);
+  }
+  .text-sm-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-sm-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-sm-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.text-xl-lv1, .text-xl-lv2, .text-xl-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-xl-size);
-  line-height: var(--text-xl-line-height);
-  letter-spacing: var(--text-xl-letter-spacing);
-  margin-block-end: var(--text-xl-paragraph-spacing);
-  text-transform: var(--text-xl-case);
-}
-.text-xl-lv1 { font-weight: var(--text-xl-lv1); }
-.text-xl-lv2 { font-weight: var(--text-xl-lv2); }
-.text-xl-lv3 { font-weight: var(--text-xl-lv3); }
+  /* BASE */
+  :where(.text-base-lv1, .text-base-lv2, .text-base-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-base-size);
+    line-height: var(--text-base-line);
+    letter-spacing: var(--text-base-track);
+    margin-block-end: var(--text-base-gap);
+    text-transform: var(--text-base-case);
+  }
+  .text-base-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-base-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-base-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.text-2xl-lv1, .text-2xl-lv2, .text-2xl-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--text-2xl-size);
-  line-height: var(--text-2xl-line-height);
-  letter-spacing: var(--text-2xl-letter-spacing);
-  margin-block-end: var(--text-2xl-paragraph-spacing);
-  text-transform: var(--text-2xl-case);
-}
-.text-2xl-lv1 { font-weight: var(--text-2xl-lv1); }
-.text-2xl-lv2 { font-weight: var(--text-2xl-lv2); }
-.text-2xl-lv3 { font-weight: var(--text-2xl-lv3); }
+  /* LG */
+  :where(.text-lg-lv1, .text-lg-lv2, .text-lg-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-lg-size);
+    line-height: var(--text-lg-line);
+    letter-spacing: var(--text-lg-track);
+    margin-block-end: var(--text-lg-gap);
+    text-transform: var(--text-lg-case);
+  }
+  .text-lg-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-lg-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-lg-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.label-2xs-lv1, .label-2xs-lv2, .label-2xs-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--label-2xs-size);
-  line-height: var(--label-2xs-line-height);
-  letter-spacing: var(--label-2xs-letter-spacing);
-  margin-block-end: var(--label-2xs-paragraph-spacing);
-  text-transform: var(--label-2xs-case);
-}
-.label-2xs-lv1 { font-weight: var(--label-2xs-lv1); }
-.label-2xs-lv2 { font-weight: var(--label-2xs-lv2); }
-.label-2xs-lv3 { font-weight: var(--label-2xs-lv3); }
+  /* XL */
+  :where(.text-xl-lv1, .text-xl-lv2, .text-xl-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-xl-size);
+    line-height: var(--text-xl-line);
+    letter-spacing: var(--text-xl-track);
+    margin-block-end: var(--text-xl-gap);
+    text-transform: var(--text-xl-case);
+  }
+  .text-xl-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-xl-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-xl-lv3 { font-weight: var(--text-lv3-weight); }
 
-:where(.label-xs-lv1, .label-xs-lv2, .label-xs-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--label-xs-size);
-  line-height: var(--label-xs-line-height);
-  letter-spacing: var(--label-xs-letter-spacing);
-  margin-block-end: var(--label-xs-paragraph-spacing);
-  text-transform: var(--label-xs-case);
+  /* 2XL */
+  :where(.text-2xl-lv1, .text-2xl-lv2, .text-2xl-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--text-2xl-size);
+    line-height: var(--text-2xl-line);
+    letter-spacing: var(--text-2xl-track);
+    margin-block-end: var(--text-2xl-gap);
+    text-transform: var(--text-2xl-case);
+  }
+  .text-2xl-lv1 { font-weight: var(--text-lv1-weight); }
+  .text-2xl-lv2 { font-weight: var(--text-lv2-weight); }
+  .text-2xl-lv3 { font-weight: var(--text-lv3-weight); }
 }
-.label-xs-lv1 { font-weight: var(--label-xs-lv1); }
-.label-xs-lv2 { font-weight: var(--label-xs-lv2); }
-.label-xs-lv3 { font-weight: var(--label-xs-lv3); }
 
-:where(.label-sm-lv1, .label-sm-lv2, .label-sm-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--label-sm-size);
-  line-height: var(--label-sm-line-height);
-  letter-spacing: var(--label-sm-letter-spacing);
-  margin-block-end: var(--label-sm-paragraph-spacing);
-  text-transform: var(--label-sm-case);
-}
-.label-sm-lv1 { font-weight: var(--label-sm-lv1); }
-.label-sm-lv2 { font-weight: var(--label-sm-lv2); }
-.label-sm-lv3 { font-weight: var(--label-sm-lv3); }
+/* ---------- LABEL CLASSES ---------- */
+@layer label {
+  :where(.label-2xs-lv1, .label-2xs-lv2, .label-2xs-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--label-2xs-size);
+    line-height: var(--label-2xs-line);
+    letter-spacing: var(--label-2xs-track);
+    margin-block-end: var(--label-2xs-gap);
+    text-transform: var(--label-2xs-case);
+  }
+  .label-2xs-lv1 { font-weight: var(--label-lv1-weight); }
+  .label-2xs-lv2 { font-weight: var(--label-lv2-weight); }
+  .label-2xs-lv3 { font-weight: var(--label-lv3-weight); }
 
-:where(.label-base-lv1, .label-base-lv2, .label-base-lv3) {
-  font-family: 'Inter', sans-serif;
-  font-size: var(--label-base-size);
-  line-height: var(--label-base-line-height);
-  letter-spacing: var(--label-base-letter-spacing);
-  margin-block-end: var(--label-base-paragraph-spacing);
-  text-transform: var(--label-base-case);
+  :where(.label-xs-lv1, .label-xs-lv2, .label-xs-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--label-xs-size);
+    line-height: var(--label-xs-line);
+    letter-spacing: var(--label-xs-track);
+    margin-block-end: var(--label-xs-gap);
+    text-transform: var(--label-xs-case);
+  }
+  .label-xs-lv1 { font-weight: var(--label-lv1-weight); }
+  .label-xs-lv2 { font-weight: var(--label-lv2-weight); }
+  .label-xs-lv3 { font-weight: var(--label-lv3-weight); }
+
+  :where(.label-sm-lv1, .label-sm-lv2, .label-sm-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--label-sm-size);
+    line-height: var(--label-sm-line);
+    letter-spacing: var(--label-sm-track);
+    margin-block-end: var(--label-sm-gap);
+    text-transform: var(--label-sm-case);
+  }
+  .label-sm-lv1 { font-weight: var(--label-lv1-weight); }
+  .label-sm-lv2 { font-weight: var(--label-lv2-weight); }
+  .label-sm-lv3 { font-weight: var(--label-lv3-weight); }
+
+  :where(.label-base-lv1, .label-base-lv2, .label-base-lv3) {
+    font-family: var(--font-inter);
+    font-size: var(--label-base-size);
+    line-height: var(--label-base-line);
+    letter-spacing: var(--label-base-track);
+    margin-block-end: var(--label-base-gap);
+    text-transform: var(--label-base-case);
+  }
+  .label-base-lv1 { font-weight: var(--label-lv1-weight); }
+  .label-base-lv2 { font-weight: var(--label-lv2-weight); }
+  .label-base-lv3 { font-weight: var(--label-lv3-weight); }
 }
-.label-base-lv1 { font-weight: var(--label-base-lv1); }
-.label-base-lv2 { font-weight: var(--label-base-lv2); }
-.label-base-lv3 { font-weight: var(--label-base-lv3); }
+
+/* ---------- NUMBER CLASSES ---------- */
+@layer number {
+  /* every size explicit */
+  :where(.number-2xs-lv1, .number-2xs-lv2, .number-2xs-lv3) {
+    font-size: var(--num-2xs-size);
+    line-height: var(--num-2xs-line);
+    letter-spacing: var(--num-2xs-track);
+    margin-block-end: var(--num-2xs-gap);
+  }
+  .number-2xs-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-2xs-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-2xs-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-xs-lv1, .number-xs-lv2, .number-xs-lv3) {
+    font-size: var(--num-xs-size);
+    line-height: var(--num-xs-line);
+    letter-spacing: var(--num-xs-track);
+    margin-block-end: var(--num-xs-gap);
+  }
+  .number-xs-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-xs-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-xs-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-sm-lv1, .number-sm-lv2, .number-sm-lv3) {
+    font-size: var(--num-sm-size);
+    line-height: var(--num-sm-line);
+    letter-spacing: var(--num-sm-track);
+    margin-block-end: var(--num-sm-gap);
+  }
+  .number-sm-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-sm-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-sm-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-base-lv1, .number-base-lv2, .number-base-lv3) {
+    font-size: var(--num-base-size);
+    line-height: var(--num-base-line);
+    letter-spacing: var(--num-base-track);
+    margin-block-end: var(--num-base-gap);
+  }
+  .number-base-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-base-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-base-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-lg-lv1, .number-lg-lv2, .number-lg-lv3) {
+    font-size: var(--num-lg-size);
+    line-height: var(--num-lg-line);
+    letter-spacing: var(--num-lg-track);
+    margin-block-end: var(--num-lg-gap);
+  }
+  .number-lg-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-lg-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-lg-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-xl-lv1, .number-xl-lv2, .number-xl-lv3) {
+    font-size: var(--num-xl-size);
+    line-height: var(--num-xl-line);
+    letter-spacing: var(--num-xl-track);
+    margin-block-end: var(--num-xl-gap);
+  }
+  .number-xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-2xl-lv1, .number-2xl-lv2, .number-2xl-lv3) {
+    font-size: var(--num-2xl-size);
+    line-height: var(--num-2xl-line);
+    letter-spacing: var(--num-2xl-track);
+    margin-block-end: var(--num-2xl-gap);
+  }
+  .number-2xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-2xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-2xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-3xl-lv1, .number-3xl-lv2, .number-3xl-lv3) {
+    font-size: var(--num-3xl-size);
+    line-height: var(--num-3xl-line);
+    letter-spacing: var(--num-3xl-track);
+    margin-block-end: var(--num-3xl-gap);
+  }
+  .number-3xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-3xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-3xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-4xl-lv1, .number-4xl-lv2, .number-4xl-lv3) {
+    font-size: var(--num-4xl-size);
+    line-height: var(--num-4xl-line);
+    letter-spacing: var(--num-4xl-track);
+    margin-block-end: var(--num-4xl-gap);
+  }
+  .number-4xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-4xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-4xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-5xl-lv1, .number-5xl-lv2, .number-5xl-lv3) {
+    font-size: var(--num-5xl-size);
+    line-height: var(--num-5xl-line);
+    letter-spacing: var(--num-5xl-track);
+    margin-block-end: var(--num-5xl-gap);
+  }
+  .number-5xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-5xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-5xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+
+  :where(.number-6xl-lv1, .number-6xl-lv2, .number-6xl-lv3) {
+    font-size: var(--num-6xl-size);
+    line-height: var(--num-6xl-line);
+    letter-spacing: var(--num-6xl-track);
+    margin-block-end: var(--num-6xl-gap);
+  }
+  .number-6xl-lv1 { font-family: var(--num-lv1-family); font-weight: var(--num-lv1-weight); }
+  .number-6xl-lv2 { font-family: var(--num-lv2-family); font-weight: var(--num-lv2-weight); }
+  .number-6xl-lv3 { font-family: var(--num-lv3-family); font-weight: var(--num-lv3-weight); }
+}

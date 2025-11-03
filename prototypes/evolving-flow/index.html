@@ -410,9 +410,9 @@
 
         .mode-detail-title.text-base-lv2 {
             font-size: var(--text-base-size);
-            line-height: var(--text-base-line-height);
-            font-weight: var(--text-base-lv2);
-            letter-spacing: var(--text-base-letter-spacing);
+            line-height: var(--text-base-line);
+            font-weight: var(--text-lv2-weight);
+            letter-spacing: var(--text-base-track);
             margin: 0;
         }
 
@@ -561,6 +561,15 @@
                                 <option value="default">Default (Original tick counts)</option>
                                 <option value="72-ticks">72 Ticks (All modes use 72 ticks)</option>
                                 <option value="72-continuous" selected>72 Continuous (59 min ticks + 13 hour ticks)</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-control">
+                            <label for="fontModeSelect">Number Font Mode:</label>
+                            <select id="fontModeSelect">
+                                <option value="default" selected>5xl active / 2xl inactive</option>
+                                <option value="uniformLarge">Lock at 4xl</option>
+                                <option value="largeMedium">5xl active / 4xl inactive</option>
                             </select>
                         </div>
 
@@ -1167,6 +1176,8 @@
                     this.modeLabel.style.color = 'var(--text-primary)';
                     this.modeLabel.style.opacity = 1.0;
                 }
+
+                this.updateDisplayFonts();
             }
             
             updateStartingDisplay() {
@@ -1187,6 +1198,8 @@
                 this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
                 this.modeLabel.style.color = 'var(--text-tertiary)';
                 this.modeLabel.style.opacity = 1.0;
+
+                this.updateDisplayFonts();
             }
             
             updateCountdownDisplay() {
@@ -1247,6 +1260,8 @@
                     this.modeLabel.style.color = 'var(--text-tertiary)';
                     this.modeLabel.style.opacity = 1.0;
                 }
+
+                this.updateDisplayFonts();
             }
             
             renderTemperatureMode() {
@@ -1290,7 +1305,7 @@
                 
                 // Calculate gap and segments like in countdown mode
                 const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
-                const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0;
+                const preheatGapAngle = this.debugSettings.preheatEnabled ? (this.debugSettings.gapAngle * Math.PI) / 180 : 0;
                 const totalGapsAngle = mainGapAngle + preheatGapAngle;
                 const availableAngle = 2 * Math.PI - totalGapsAngle;
                 
@@ -1388,7 +1403,7 @@
                 
                 // Calculate gap size (in radians) from debug settings
                 const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
-                const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0; // 10% gap after preheat
+                const preheatGapAngle = this.debugSettings.preheatEnabled ? (this.debugSettings.gapAngle * Math.PI) / 180 : 0;
                 const totalGapsAngle = mainGapAngle + preheatGapAngle;
                 const availableAngle = 2 * Math.PI - totalGapsAngle;
                 
@@ -1780,6 +1795,8 @@
                 this.modeLabel.textContent = 'Enjoy';
                 this.modeLabel.style.color = '#2BB671';
                 this.modeLabel.style.opacity = 1.0;
+
+                this.updateDisplayFonts();
             }
             
             increaseTime() {

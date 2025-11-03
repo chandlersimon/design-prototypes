@@ -18,12 +18,12 @@
 
 .heat-slider__title {
   text-align: center;
-  font-size: var(--label-xs-lv2);
-  line-height: var(--label-xs-lv2-line-height);
-  font-family: var(--label-xs-lv2-font);
-  font-weight: var(--label-xs-lv2-weight);
-  font-feature-settings: var(--label-xs-lv2-features);
-  letter-spacing: var(--label-xs-lv2-spacing);
+  font-size: var(--label-xs-size);
+  line-height: var(--label-xs-line);
+  font-family: var(--font-inter);
+  font-weight: var(--label-lv2-weight);
+  font-feature-settings: 'ss01' 1, 'ss02' 1;
+  letter-spacing: var(--label-xs-track);
   text-transform: uppercase;
   color: #f6f6f6;
   opacity: 0;

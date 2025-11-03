@@ -1,5 +1,18 @@
 const BASE_GRAY = '#434343';
 const DEFAULT_TEMP_TICK_COUNT = 72;
+const BASE_TICK_LENGTH = 15;
+const BASE_TICK_STROKE_WIDTH = 3;
+const SOLID_TEMP_GRADIENTS = Object.freeze({
+    'solid-temp': [
+        { ratio: 0, color: '#2e2e2e' },
+        { ratio: 1, color: '#ffffff' }
+    ],
+    'solid-temp-red': [
+        { ratio: 0, color: '#2e2e2e' },
+        { ratio: 0.6, color: '#5A060A' },
+        { ratio: 1, color: '#FB7E75' }
+    ]
+});
 
 const TAU = Math.PI * 2;
 
@@ -64,11 +77,57 @@ const lerpRgb = (start, end, t) => ({
 
 const rgbToString = (rgb) => `rgb(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)})`;
 
+const NUMBER_STYLE_TOKENS = Object.freeze({
+    '2xl': {
+        size: 'var(--num-2xl-size)',
+        line: 'var(--num-2xl-line)',
+        track: 'var(--num-2xl-track)'
+    },
+    '3xl': {
+        size: 'var(--num-3xl-size)',
+        line: 'var(--num-3xl-line)',
+        track: 'var(--num-3xl-track)'
+    },
+    '4xl': {
+        size: 'var(--num-4xl-size)',
+        line: 'var(--num-4xl-line)',
+        track: 'var(--num-4xl-track)'
+    },
+    '5xl': {
+        size: 'var(--num-5xl-size)',
+        line: 'var(--num-5xl-line)',
+        track: 'var(--num-5xl-track)'
+    }
+});
+
+const FONT_MODES = Object.freeze({
+    default: {
+        tempActive: '5xl',
+        tempInactive: '2xl',
+        timeActive: '5xl',
+        timeInactive: '2xl'
+    },
+    uniformLarge: {
+        tempActive: '4xl',
+        tempInactive: '4xl',
+        timeActive: '4xl',
+        timeInactive: '4xl'
+    },
+    largeMedium: {
+        tempActive: '5xl',
+        tempInactive: '4xl',
+        timeActive: '5xl',
+        timeInactive: '4xl'
+    }
+});
+
 const ID_SUFFIXES = {
     dial: 'dial',
     tempDisplay: 'tempDisplay',
     timeDisplayMain: 'timeDisplayMain',
     modeLabel: 'modeLabel',
+    rackIcon: 'rackIcon',
+    rackLabel: 'rackLabel',
     cookingStatus: 'cookingStatus',
     completionButtons: 'completionButtons',
     bitMoreBtn: 'bitMoreBtn',
@@ -86,15 +145,17 @@ export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     tickMode: 'wrap',
     autoReset: true,
     resetDelay: 0.45,
-    gapAngle: 20,
+    gapAngle: 2,
     preheatEnabled: true,
     flashDuration: 150,
     flashCount: 3,
     globalTickMode: '72-continuous',
     trailMode: 'standard',
     rapidModeThreshold: 30,
-    colorMode: 'red-grey-temp',
-    roundedCaps: false
+    colorMode: 'solid-temp-red',
+    roundedCaps: false,
+    showRack: false,
+    fontMode: 'default'
 });
 
 export const createCircularTimeDialDebugSettings = (overrides = {}) => ({
@@ -120,10 +181,10 @@ const buildTemplate = (idPrefix) => {
         </div>
         <div class="time-display-main" id="${withPrefix(ID_SUFFIXES.timeDisplayMain)}">10:00</div>
         <div class="mode-label" id="${withPrefix(ID_SUFFIXES.modeLabel)}">MIN - SEC</div>
-        <div class="rack-icon" id="${withPrefix('rackIcon')}" aria-hidden="true">
+        <div class="rack-icon" id="${withPrefix(ID_SUFFIXES.rackIcon)}" aria-hidden="true">
             <i class="fa-rack-3-bottom fa-kit"></i>
         </div>
-        <div class="rack-label">RACK</div>
+        <div class="rack-label" id="${withPrefix(ID_SUFFIXES.rackLabel)}">RACK</div>
     </div>
     <div class="completion-buttons" id="${withPrefix(ID_SUFFIXES.completionButtons)}">
         <button class="completion-btn active" id="${withPrefix(ID_SUFFIXES.bitMoreBtn)}">A bit more</button>
@@ -173,6 +234,8 @@ class CircularTimeDial {
         this.tempDisplay = document.getElementById(this.ids.tempDisplay);
         this.timeDisplayMain = document.getElementById(this.ids.timeDisplayMain);
         this.modeLabel = document.getElementById(this.ids.modeLabel);
+        this.rackIcon = document.getElementById(this.ids.rackIcon);
+        this.rackLabel = document.getElementById(this.ids.rackLabel);
         this.cookingStatus = document.getElementById(this.ids.cookingStatus);
         this.completionButtons = document.getElementById(this.ids.completionButtons);
         this.bitMoreBtn = document.getElementById(this.ids.bitMoreBtn);
@@ -263,6 +326,8 @@ class CircularTimeDial {
             this.setupEventListeners();
         }
         this.setupDebugControls();
+        this.updateRackDisplay();
+        this.applyFontMode();
         this.startUpdateLoop();
         this.render();
     }
@@ -512,6 +577,17 @@ class CircularTimeDial {
             };
         }
 
+        if (this.debugSettings &&
+            this.debugSettings.colorMode === 'solid-temp-red' &&
+            this.tempMode) {
+            return {
+                base: '#2e2e2e',
+                selected: '#FB7E75',
+                trailStart: '#2e2e2e',
+                trailEnd: '#FB7E75'
+            };
+        }
+
         return {
             base: BASE_GRAY,
             selected: '#FA4947',
@@ -681,6 +757,26 @@ class CircularTimeDial {
             render: true
         });
 
+        this.bindDebugControl({
+            elementId: 'fontModeSelect',
+            getValue: () => this.debugSettings.fontMode || 'default',
+            setValue: (value) => {
+                this.debugSettings.fontMode = value;
+                this.applyFontMode();
+                return this.debugSettings.fontMode;
+            }
+        });
+
+        this.bindDebugControl({
+            elementId: 'rackDisplaySelect',
+            getValue: () => (this.debugSettings.showRack ? 'true' : 'false'),
+            setValue: (value) => {
+                this.debugSettings.showRack = value === 'true';
+                this.updateRackDisplay();
+                return value;
+            }
+        });
+
         const trailModeSelect = this.getDebugElement('trailModeSelect');
         if (trailModeSelect) {
             trailModeSelect.value = this.debugSettings.trailMode;
@@ -788,7 +884,7 @@ class CircularTimeDial {
             eventType: 'input',
             getValue: () => this.debugSettings.gapAngle,
             setValue: (value) => {
-                this.debugSettings.gapAngle = parseInt(value, 10);
+                this.debugSettings.gapAngle = parseFloat(value);
                 return this.debugSettings.gapAngle;
             },
             formatValue: (value) => `${value}°`,
@@ -1256,6 +1352,8 @@ class CircularTimeDial {
             this.modeLabel.style.color = 'var(--text-primary)';
             this.modeLabel.style.opacity = 1.0;
         }
+
+        this.updateDisplayFonts();
     }
 
     updateStartingDisplay() {
@@ -1275,6 +1373,8 @@ class CircularTimeDial {
         this.modeLabel.textContent = this.totalMinutes < 60 ? 'MIN - SEC' : 'HR - MIN';
         this.modeLabel.style.color = 'var(--text-tertiary)';
         this.modeLabel.style.opacity = 1.0;
+
+        this.updateDisplayFonts();
     }
 
     updateCountdownDisplay() {
@@ -1330,10 +1430,104 @@ class CircularTimeDial {
             this.modeLabel.style.color = 'var(--text-tertiary)';
             this.modeLabel.style.opacity = 1.0;
         }
+
+        this.updateDisplayFonts();
+    }
+
+    updateRackDisplay() {
+        if (!this.tempDisplay) {
+            return;
+        }
+
+        const shouldShowRack = this.debugSettings.showRack !== false;
+
+        if (this.rackIcon) {
+            this.rackIcon.style.display = shouldShowRack ? '' : 'none';
+        }
+
+        if (this.rackLabel) {
+            this.rackLabel.style.display = shouldShowRack ? '' : 'none';
+        }
+
+        if (shouldShowRack) {
+            this.tempDisplay.style.removeProperty('margin');
+        } else {
+            this.tempDisplay.style.margin = '4px 0 4px 0';
+        }
+    }
+
+    applyFontMode() {
+        this.updateDisplayFonts();
+    }
+
+    getFontModeConfig() {
+        const key = this.debugSettings.fontMode || 'default';
+        return FONT_MODES[key] || FONT_MODES.default;
+    }
+
+    applyNumberStyle(element, tokenKey) {
+        const tokens = NUMBER_STYLE_TOKENS[tokenKey] || NUMBER_STYLE_TOKENS['5xl'];
+        element.style.fontSize = tokens.size;
+        element.style.lineHeight = tokens.line;
+        element.style.letterSpacing = tokens.track;
+        element.style.fontFamily = 'var(--num-lv2-family)';
+        element.style.fontWeight = 'var(--num-lv2-weight)';
+    }
+
+    updateDisplayFonts() {
+        const config = this.getFontModeConfig();
+
+        if (this.tempDisplay) {
+            const isActive = this.tempDisplay.classList.contains('active') || !this.tempDisplay.classList.contains('inactive');
+            const token = isActive ? config.tempActive : config.tempInactive;
+            this.applyNumberStyle(this.tempDisplay, token);
+        }
+
+        if (this.timeDisplayMain) {
+            const isActive = this.timeDisplayMain.classList.contains('active') || !this.timeDisplayMain.classList.contains('inactive');
+            const token = isActive ? config.timeActive : config.timeInactive;
+            this.applyNumberStyle(this.timeDisplayMain, token);
+        }
+    }
+
+    getRingGeometry() {
+        const baseLength = BASE_TICK_LENGTH;
+        let innerRadius;
+        let outerRadius;
+
+        switch (this.debugSettings.alignment) {
+            case 'inward': {
+                outerRadius = this.radius - 5;
+                innerRadius = outerRadius - baseLength;
+                break;
+            }
+            case 'outward': {
+                innerRadius = this.radius - 20;
+                outerRadius = innerRadius + baseLength;
+                break;
+            }
+            case 'center':
+            default: {
+                const centerPoint = this.radius - 5 - (baseLength / 2);
+                innerRadius = centerPoint - (baseLength / 2);
+                outerRadius = centerPoint + (baseLength / 2);
+                break;
+            }
+        }
+
+        const lineWidth = outerRadius - innerRadius;
+        const radius = innerRadius + (lineWidth / 2);
+
+        return { innerRadius, outerRadius, lineWidth, radius };
+    }
+
+    isSolidTemperatureMode() {
+        const mode = this.debugSettings.colorMode;
+        return mode === 'solid-temp' || mode === 'solid-temp-red';
     }
 
     renderTemperatureMode() {
-        if (this.debugSettings.colorMode === 'solid-temp') {
+        if (this.isSolidTemperatureMode()) {
             this.drawSolidTemperatureRing();
             return;
         }
@@ -1369,12 +1563,24 @@ class CircularTimeDial {
         }
     }
 
-    createArcGradient(radius, startAngle, endAngle, startColor, endColor) {
+    createArcGradient(radius, startAngle, endAngle, startColorOrStops, endColor) {
         const ctx = this.ctx;
         const deltaAngle = getClockwiseDelta(startAngle, endAngle);
 
-        if (deltaAngle <= 0.0001 || !ctx.createLinearGradient) {
+        const stops = Array.isArray(startColorOrStops)
+            ? startColorOrStops
+            : [
+                { offset: 0, color: startColorOrStops },
+                { offset: 1, color: endColor }
+            ];
+
+        if (!stops.length) {
             return endColor;
+        }
+
+        if (deltaAngle <= 0.0001 || !ctx.createLinearGradient) {
+            const lastStop = stops[stops.length - 1];
+            return lastStop ? lastStop.color : endColor;
         }
 
         const midAngle = startAngle - deltaAngle / 2;
@@ -1393,15 +1599,19 @@ class CircularTimeDial {
         const endY = midY + tangentY * halfLength;
 
         const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
-        gradient.addColorStop(0, startColor);
-        gradient.addColorStop(1, endColor);
+        stops.forEach((stop) => {
+            if (!stop || typeof stop.offset !== 'number' || typeof stop.color !== 'string') {
+                return;
+            }
+            const boundedOffset = clamp(stop.offset, 0, 1);
+            gradient.addColorStop(boundedOffset, stop.color);
+        });
         return gradient;
     }
 
     drawSolidTemperatureRing() {
         const ctx = this.ctx;
-        const radius = this.radius;
-        const lineWidth = 20;
+        const { innerRadius, outerRadius, lineWidth, radius } = this.getRingGeometry();
         const progress = clamp((this.temperature - this.minTemp) / (this.maxTemp - this.minTemp), 0, 1);
         const startAngle = -Math.PI / 2;
         const endAngle = startAngle + (TAU * progress);
@@ -1417,9 +1627,57 @@ class CircularTimeDial {
         ctx.stroke();
 
         if (progress > 0) {
-            ctx.strokeStyle = '#FFFFFF';
+            const mode = this.debugSettings.colorMode || 'solid-temp';
+            const baseStops = SOLID_TEMP_GRADIENTS[mode] || SOLID_TEMP_GRADIENTS['solid-temp'];
+            const scaledStops = baseStops.map((stop) => ({
+                offset: progress >= 1 ? stop.ratio : stop.ratio * progress,
+                color: stop.color
+            }));
+
+            const lastColor = baseStops[baseStops.length - 1]?.color || '#ffffff';
+
+            if (progress < 1) {
+                const cutoff = Math.min(progress + 0.0001, 1);
+                scaledStops.push({ offset: cutoff, color: lastColor });
+                scaledStops.push({ offset: 1, color: lastColor });
+            } else if (scaledStops[scaledStops.length - 1]?.offset < 1) {
+                scaledStops.push({ offset: 1, color: lastColor });
+            }
+
+            let strokeStyle;
+            if (typeof ctx.createConicGradient === 'function') {
+                const gradient = ctx.createConicGradient(-Math.PI / 2, this.centerX, this.centerY);
+                scaledStops.forEach((stop) => {
+                    if (typeof stop.offset === 'number' && typeof stop.color === 'string') {
+                        gradient.addColorStop(clamp(stop.offset, 0, 1), stop.color);
+                    }
+                });
+                strokeStyle = gradient;
+            } else {
+                strokeStyle = this.createArcGradient(radius, startAngle, endAngle, scaledStops);
+            }
+
+            ctx.strokeStyle = strokeStyle;
             ctx.beginPath();
             ctx.arc(this.centerX, this.centerY, radius, startAngle, endAngle);
+            ctx.stroke();
+
+            // Draw accent tick at the leading edge of the fill
+            const palette = this.currentPalette || this.getColorPalette();
+            const tickAngle = endAngle;
+            const tickInnerRadius = innerRadius;
+            const tickOuterRadius = outerRadius;
+            const x1 = this.centerX + Math.cos(tickAngle) * tickInnerRadius;
+            const y1 = this.centerY + Math.sin(tickAngle) * tickInnerRadius;
+            const x2 = this.centerX + Math.cos(tickAngle) * tickOuterRadius;
+            const y2 = this.centerY + Math.sin(tickAngle) * tickOuterRadius;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = palette.selected;
+            ctx.lineWidth = BASE_TICK_STROKE_WIDTH;
+            ctx.lineCap = this.getLineCap();
             ctx.stroke();
         }
 
@@ -1430,12 +1688,14 @@ class CircularTimeDial {
         const elapsed = Date.now() - this.ringFillStartTime;
         const progress = Math.min(elapsed / this.ringFillDuration, 1);
 
+        const { radius, lineWidth } = this.getRingGeometry();
+
         // Ease-out animation for smoother filling
         const easeProgress = 1 - Math.pow(1 - progress, 2);
 
         // Calculate gap and segments like in countdown mode
         const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
-        const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0;
+        const preheatGapAngle = this.debugSettings.preheatEnabled ? (this.debugSettings.gapAngle * Math.PI) / 180 : 0;
         const totalGapsAngle = mainGapAngle + preheatGapAngle;
         const availableAngle = 2 * Math.PI - totalGapsAngle;
 
@@ -1454,16 +1714,16 @@ class CircularTimeDial {
 
             // Draw background segments
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, preheatEndAngle, preheatStartAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, cookingEndAngle, cookingStartAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
@@ -1476,26 +1736,26 @@ class CircularTimeDial {
                     // Filling preheat segment
                     const fillEndAngle = preheatStartAngle - currentFillAngle;
                     this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.radius, fillEndAngle, preheatStartAngle);
+                    this.ctx.arc(this.centerX, this.centerY, radius, fillEndAngle, preheatStartAngle);
                     this.ctx.strokeStyle = '#FA4947';
-                    this.ctx.lineWidth = 20;
+                    this.ctx.lineWidth = lineWidth;
                     this.ctx.lineCap = this.getLineCap();
                     this.ctx.stroke();
                 } else {
                     // Preheat full, filling cooking segment
                     this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+                    this.ctx.arc(this.centerX, this.centerY, radius, preheatEndAngle, preheatStartAngle);
                     this.ctx.strokeStyle = '#FA4947';
-                    this.ctx.lineWidth = 20;
+                    this.ctx.lineWidth = lineWidth;
                     this.ctx.lineCap = this.getLineCap();
                     this.ctx.stroke();
 
                     const cookingFillAngle = currentFillAngle - preheatAngle;
                     const cookingFillEndAngle = cookingStartAngle - cookingFillAngle;
                     this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.radius, cookingFillEndAngle, cookingStartAngle);
+                    this.ctx.arc(this.centerX, this.centerY, radius, cookingFillEndAngle, cookingStartAngle);
                     this.ctx.strokeStyle = '#FA4947';
-                    this.ctx.lineWidth = 20;
+                    this.ctx.lineWidth = lineWidth;
                     this.ctx.lineCap = this.getLineCap();
                     this.ctx.stroke();
                 }
@@ -1506,9 +1766,9 @@ class CircularTimeDial {
             const endAngle = startAngle + availableAngle;
 
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, startAngle, endAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
@@ -1517,9 +1777,9 @@ class CircularTimeDial {
                 const fillEndAngle = startAngle + fillAngle;
 
                 this.ctx.beginPath();
-                this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, fillEndAngle);
+                this.ctx.arc(this.centerX, this.centerY, radius, startAngle, fillEndAngle);
                 this.ctx.strokeStyle = '#FA4947';
-                this.ctx.lineWidth = 20;
+                this.ctx.lineWidth = lineWidth;
                 this.ctx.lineCap = this.getLineCap();
                 this.ctx.stroke();
             }
@@ -1531,14 +1791,16 @@ class CircularTimeDial {
 
         const elapsed = this.countdownStartTime ? (Date.now() - this.countdownStartTime) / 1000 : 0;
 
+        const { radius, lineWidth } = this.getRingGeometry();
+
         // Calculate gap size (in radians) from debug settings
         const mainGapAngle = (this.debugSettings.gapAngle * Math.PI) / 180;
-        const preheatGapAngle = this.debugSettings.preheatEnabled ? (10 * Math.PI) / 180 : 0; // 10% gap after preheat
+        const preheatGapAngle = this.debugSettings.preheatEnabled ? (this.debugSettings.gapAngle * Math.PI) / 180 : 0;
         const totalGapsAngle = mainGapAngle + preheatGapAngle;
         const availableAngle = 2 * Math.PI - totalGapsAngle;
 
         // Calculate preheat and cooking segments
-        const preheatPercentage = this.debugSettings.preheatEnabled ? 0.25 : 0; // 25% for preheat
+        const preheatPercentage = this.debugSettings.preheatEnabled ? 0.25 : 0;
         const cookingPercentage = 1 - preheatPercentage;
 
         const preheatAngle = availableAngle * preheatPercentage;
@@ -1556,17 +1818,17 @@ class CircularTimeDial {
         if (this.debugSettings.preheatEnabled) {
             // Draw preheat segment background (dark red)
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, preheatStartAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, preheatEndAngle, preheatStartAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
             // Draw cooking segment background (dark red)
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, cookingEndAngle, cookingStartAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
@@ -1580,18 +1842,18 @@ class CircularTimeDial {
                     // Draw from the END, keeping the right portion (near the gap)
                     const currentPreheatStartAngle = preheatEndAngle + remainingPreheatAngle;
                     this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.radius, preheatEndAngle, currentPreheatStartAngle);
+                    this.ctx.arc(this.centerX, this.centerY, radius, preheatEndAngle, currentPreheatStartAngle);
                     this.ctx.strokeStyle = '#FA4947';
-                    this.ctx.lineWidth = 20;
+                    this.ctx.lineWidth = lineWidth;
                     this.ctx.lineCap = this.getLineCap();
                     this.ctx.stroke();
                 }
 
                 // Keep cooking segment full during preheat
                 this.ctx.beginPath();
-                this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, cookingStartAngle);
+                this.ctx.arc(this.centerX, this.centerY, radius, cookingEndAngle, cookingStartAngle);
                 this.ctx.strokeStyle = '#FA4947';
-                this.ctx.lineWidth = 20;
+                this.ctx.lineWidth = lineWidth;
                 this.ctx.lineCap = this.getLineCap();
                 this.ctx.stroke();
             } else {
@@ -1603,9 +1865,9 @@ class CircularTimeDial {
                     // Draw from the END, keeping the right portion (clockwise unfilling)
                     const currentCookingStartAngle = cookingEndAngle + remainingCookingAngle;
                     this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.radius, cookingEndAngle, currentCookingStartAngle);
+                    this.ctx.arc(this.centerX, this.centerY, radius, cookingEndAngle, currentCookingStartAngle);
                     this.ctx.strokeStyle = '#FA4947';
-                    this.ctx.lineWidth = 20;
+                    this.ctx.lineWidth = lineWidth;
                     this.ctx.lineCap = this.getLineCap();
                     this.ctx.stroke();
                 }
@@ -1620,9 +1882,9 @@ class CircularTimeDial {
 
             // Draw dark red background ring
             this.ctx.beginPath();
-            this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+            this.ctx.arc(this.centerX, this.centerY, radius, startAngle, endAngle);
             this.ctx.strokeStyle = '#5a060a';
-            this.ctx.lineWidth = 20;
+            this.ctx.lineWidth = lineWidth;
             this.ctx.lineCap = this.getLineCap();
             this.ctx.stroke();
 
@@ -1632,9 +1894,9 @@ class CircularTimeDial {
                 const progressEndAngle = startAngle + progressAngle;
 
                 this.ctx.beginPath();
-                this.ctx.arc(this.centerX, this.centerY, this.radius, startAngle, progressEndAngle);
+                this.ctx.arc(this.centerX, this.centerY, radius, startAngle, progressEndAngle);
                 this.ctx.strokeStyle = '#FA4947';
-                this.ctx.lineWidth = 20;
+                this.ctx.lineWidth = lineWidth;
                 this.ctx.lineCap = this.getLineCap();
                 this.ctx.stroke();
             }
@@ -1918,11 +2180,12 @@ class CircularTimeDial {
     }
 
     renderCompletionMode() {
+        const { radius, lineWidth } = this.getRingGeometry();
         // Draw a full green circle
         this.ctx.beginPath();
-        this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+        this.ctx.arc(this.centerX, this.centerY, radius, 0, 2 * Math.PI);
         this.ctx.strokeStyle = '#2BB671';
-        this.ctx.lineWidth = 20;
+        this.ctx.lineWidth = lineWidth;
         this.ctx.lineCap = this.getLineCap();
         this.ctx.stroke();
     }
@@ -1947,6 +2210,8 @@ class CircularTimeDial {
 
         // Update button selection
         this.updateButtonSelection();
+
+        this.updateDisplayFonts();
     }
 
     increaseTime() {
@@ -2151,11 +2416,11 @@ class CircularTimeDial {
 
     drawWrapTick(angle, isFilled, isCurrent, currentLap, lengthMultiplier = 1.0, showAsGray = false, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
         // Base tick dimensions
-        const baseLength = 15;
+        const baseLength = BASE_TICK_LENGTH;
         const actualLength = baseLength * lengthMultiplier;
 
         let innerRadius, outerRadius;
-        const lineWidth = 3;
+        const lineWidth = BASE_TICK_STROKE_WIDTH;
 
         // Calculate positions based on alignment
         switch (this.debugSettings.alignment) {
@@ -2168,7 +2433,7 @@ class CircularTimeDial {
                 outerRadius = this.radius - 20 + actualLength;
                 break;
             case 'center':
-                const centerPoint = this.radius - 12.5;
+                const centerPoint = this.radius - 5 - (BASE_TICK_LENGTH / 2);
                 const halfLength = actualLength / 2;
                 innerRadius = centerPoint - halfLength;
                 outerRadius = centerPoint + halfLength;
@@ -2388,7 +2653,7 @@ class CircularTimeDial {
 
     drawTick(angle, isFilled, isCurrent, isPhaseB, lengthMultiplier = 1.0, isNext = false, progress = 0, tickIndex = -1, currentTickIndex = -1, totalTicks = 0) {
         // Base tick dimensions
-        const baseLength = 15; // Base tick length
+        const baseLength = BASE_TICK_LENGTH; // Base tick length
         const actualLength = baseLength * lengthMultiplier;
 
         let innerRadius, outerRadius;
@@ -2398,7 +2663,7 @@ class CircularTimeDial {
         if (isPhaseB && this.debugSettings.tickMode === '15min') {
             lineWidth = 1.5; // Thinner for 15-min mode (285 ticks)
         } else {
-            lineWidth = 3; // Normal thickness for other modes
+            lineWidth = BASE_TICK_STROKE_WIDTH; // Normal thickness for other modes
         }
 
         // Calculate positions based on alignment
@@ -2415,7 +2680,7 @@ class CircularTimeDial {
                 break;
             case 'center':
                 // Grows from center point
-                const centerPoint = this.radius - 12.5; // Middle of normal tick
+                const centerPoint = this.radius - 5 - (BASE_TICK_LENGTH / 2); // Middle of normal tick
                 const halfLength = actualLength / 2;
                 innerRadius = centerPoint - halfLength;
                 outerRadius = centerPoint + halfLength;

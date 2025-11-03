@@ -1,7 +1,7 @@
 @font-face {
-  font-family: 'JaffleNeue';
-  src: url('../../fonts/JaffleNeue-SemiBoldSemiCondensed.otf') format('truetype');
-  font-weight: normal;
+  font-family: 'Jaffle Neue SemiCondensed';
+  src: url('../../fonts/JaffleNeue-SemiBoldSemiCondensed.otf') format('opentype');
+  font-weight: 600;
   font-style: normal;
 }
 
@@ -10,32 +10,10 @@
   width: 320px;
   height: 320px;
   display: block;
-  font-family: 'JaffleNeue', Arial, sans-serif;
+  font-family: var(--num-lv2-family);
   --text-primary: #fff;
   --text-tertiary: #979797;
-  --accent: #FA4947;
-  --number-5xl-lv2: 84px;
-  --number-5xl-lv2-line-height: 0.8;
-  --number-5xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-  --number-5xl-lv2-weight: 500;
-  --number-5xl-lv2-spacing: 0;
-  --number-2xl-lv2: 43px;
-  --number-2xl-lv2-line-height: 0.8;
-  --number-2xl-lv2-font: 'JaffleNeue', Arial, sans-serif;
-  --number-2xl-lv2-weight: 500;
-  --number-2xl-lv2-spacing: 0;
-  --label-sm-lv2: 18px;
-  --label-sm-lv2-line-height: 23px;
-  --label-sm-lv2-font: 'Inter', sans-serif;
-  --label-sm-lv2-weight: 500;
-  --label-sm-lv2-spacing: 0.08em;
-  --label-sm-lv2-features: 'ss01' 1, 'ss02' 1;
-  --label-xs-lv2: 14px;
-  --label-xs-lv2-line-height: 18px;
-  --label-xs-lv2-font: 'Inter', sans-serif;
-  --label-xs-lv2-weight: 500;
-  --label-xs-lv2-spacing: 0.08em;
-  --label-xs-lv2-features: 'ss01' 1, 'ss02' 1;
+  --accent: #fa4947;
 }
 
 .circular-time-dial canvas {
@@ -57,7 +35,14 @@
   transition: font-size 400ms cubic-bezier(0.4, 0, 0.2, 1),
     color 300ms ease,
     opacity 300ms ease;
-  font-weight: var(--number-5xl-lv2-weight);
+  font-weight: var(--num-lv2-weight);
+  line-height: var(--num-5xl-line);
+}
+
+.circular-time-dial .time-display-main,
+.circular-time-dial .time-display-main.active,
+.circular-time-dial .time-display-main.inactive {
+  font-weight: 500;
   line-height: 0.8;
 }
 
@@ -70,58 +55,45 @@
   margin: 34px 0 4px 0;
 }
 
+.circular-time-dial .temp-display .temp-unit {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 3%;
+  transition: padding-top 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .circular-time-dial .time-display-main {
   font-size: 3.2em;
   margin: 0;
 }
 
-.circular-time-dial .temp-display.active {
-  font-size: var(--number-5xl-lv2);
-  line-height: var(--number-5xl-lv2-line-height);
-  font-family: var(--number-5xl-lv2-font);
-  font-weight: var(--number-5xl-lv2-weight);
-  letter-spacing: var(--number-5xl-lv2-spacing);
-  color: var(--text-primary);
+.circular-time-dial .temp-display,
+.circular-time-dial .time-display-main {
+  font-family: var(--num-lv2-family);
+  font-weight: var(--num-lv2-weight);
   opacity: 1;
 }
 
-.circular-time-dial .temp-display.inactive {
-  font-size: var(--number-2xl-lv2);
-  line-height: var(--number-2xl-lv2-line-height);
-  font-family: var(--number-2xl-lv2-font);
-  font-weight: var(--number-2xl-lv2-weight);
-  letter-spacing: var(--number-2xl-lv2-spacing);
-  color: var(--text-tertiary);
-  opacity: 1;
-}
-
+.circular-time-dial .temp-display.active,
 .circular-time-dial .time-display-main.active {
-  font-size: var(--number-5xl-lv2);
-  line-height: var(--number-5xl-lv2-line-height);
-  font-family: var(--number-5xl-lv2-font);
-  font-weight: var(--number-5xl-lv2-weight);
-  letter-spacing: var(--number-5xl-lv2-spacing);
   color: var(--text-primary);
-  opacity: 1;
 }
 
+.circular-time-dial .temp-display.inactive,
 .circular-time-dial .time-display-main.inactive {
-  font-size: var(--number-2xl-lv2);
-  line-height: var(--number-2xl-lv2-line-height);
-  font-family: var(--number-2xl-lv2-font);
-  font-weight: var(--number-2xl-lv2-weight);
-  letter-spacing: var(--number-2xl-lv2-spacing);
   color: var(--text-tertiary);
-  opacity: 1;
 }
 
 .circular-time-dial .mode-label {
-  font-size: var(--label-sm-lv2);
-  line-height: var(--label-sm-lv2-line-height);
-  font-family: var(--label-sm-lv2-font);
-  font-weight: var(--label-sm-lv2-weight);
-  font-feature-settings: var(--label-sm-lv2-features);
-  letter-spacing: var(--label-sm-lv2-spacing);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-family: var(--font-inter);
+  font-weight: var(--label-lv2-weight);
+  font-feature-settings: 'ss01' 1, 'ss02' 1;
+  letter-spacing: var(--label-sm-track);
   margin: 0;
   color: var(--text-tertiary);
   transition: opacity 300ms ease;
@@ -153,12 +125,12 @@
 }
 
 .circular-time-dial .rack-label {
-  font-size: var(--label-xs-lv2);
-  line-height: var(--label-xs-lv2-line-height);
-  font-family: var(--label-xs-lv2-font);
-  font-weight: var(--label-xs-lv2-weight);
-  font-feature-settings: var(--label-xs-lv2-features);
-  letter-spacing: var(--label-xs-lv2-spacing);
+  font-size: var(--label-xs-size);
+  line-height: var(--label-xs-line);
+  font-family: var(--font-inter);
+  font-weight: var(--label-lv2-weight);
+  font-feature-settings: 'ss01' 1, 'ss02' 1;
+  letter-spacing: var(--label-xs-track);
   margin: 0 0 8px 0;
   color: var(--text-primary);
   transition: opacity 300ms ease;
@@ -191,12 +163,12 @@
   top: -75px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: var(--label-sm-lv2);
-  line-height: var(--label-sm-lv2-line-height);
-  font-family: var(--label-sm-lv2-font);
-  font-weight: var(--label-sm-lv2-weight);
-  font-feature-settings: var(--label-sm-lv2-features);
-  letter-spacing: var(--label-sm-lv2-spacing);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-family: var(--font-inter);
+  font-weight: var(--label-lv2-weight);
+  font-feature-settings: 'ss01' 1, 'ss02' 1;
+  letter-spacing: var(--label-sm-track);
   color: #ccc;
   text-align: center;
   display: none;
@@ -215,11 +187,11 @@
 
 .circular-time-dial .completion-btn {
   background: #333;
-  color: white;
+  color: #fff;
   border: 2px solid #555;
   padding: 12px 24px;
   border-radius: 8px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-inter);
   font-size: 1em;
   cursor: pointer;
   transition: all 300ms ease;
