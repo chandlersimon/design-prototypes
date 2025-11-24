@@ -555,15 +555,20 @@ class CircularTimeDial {
             this.debugSettings.colorMode === 'red-temp' &&
             this.tempMode;
 
+        const useRedTempNoTrailNoGreyPalette = this.debugSettings &&
+            this.debugSettings.colorMode === 'red-temp-no-trail-no-grey' &&
+            this.tempMode;
+
         const useRedGreyPalette = this.debugSettings &&
             this.debugSettings.colorMode === 'red-grey-temp' &&
             this.tempMode;
 
-        if (useRedTempPalette) {
+        if (useRedTempPalette || useRedTempNoTrailNoGreyPalette) {
+            const base = '#571004';
             return {
-                base: '#571004',
+                base,
                 selected: '#FA4947',
-                trailStart: '#571004',
+                trailStart: base,
                 trailEnd: '#FA4947'
             };
         }
@@ -2699,7 +2704,9 @@ class CircularTimeDial {
         // Determine color
         let strokeColor;
 
-        const tempNoTrailMode = this.tempMode && this.debugSettings.colorMode === 'red-temp-no-trail';
+        const tempNoTrailMode = this.tempMode &&
+            (this.debugSettings.colorMode === 'red-temp-no-trail' ||
+             this.debugSettings.colorMode === 'red-temp-no-trail-no-grey');
 
         if (tempNoTrailMode) {
             // Force a solid fill from 12 o'clock to the current tick in temp mode
