@@ -152,7 +152,7 @@ export const DEFAULT_DEBUG_SETTINGS = Object.freeze({
     globalTickMode: '72-continuous',
     trailMode: 'standard',
     rapidModeThreshold: 30,
-    colorMode: 'solid-temp-red',
+    colorMode: 'red-temp-no-trail',
     roundedCaps: false,
     showRack: false,
     fontMode: 'default'
@@ -2699,8 +2699,12 @@ class CircularTimeDial {
         // Determine color
         let strokeColor;
 
-        // Handle animated trail mode first
-        if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
+        const tempNoTrailMode = this.tempMode && this.debugSettings.colorMode === 'red-temp-no-trail';
+
+        if (tempNoTrailMode) {
+            // Force a solid fill from 12 o'clock to the current tick in temp mode
+            strokeColor = isFilled ? palette.selected : palette.base;
+        } else if (this.debugSettings.trailMode === 'animated' && tickIndex >= 0) {
             const trailColor = this.getAnimatedTrailColor(tickIndex, currentTickIndex, totalTicks);
             strokeColor = isCurrent ? palette.selected : trailColor;
         } else if (this.debugSettings.gradientColorMode === 'standard') {
